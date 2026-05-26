@@ -1,0 +1,12 @@
+# Node modules
+node_modules/
+package-lock.json
+
+# Environment variables (KHÔNG push lên Git - chứa password DB!)
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*

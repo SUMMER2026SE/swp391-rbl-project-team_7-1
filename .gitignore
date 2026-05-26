@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+package-lock.json
+
+# Environment variables (QUAN TRỌNG: không push lên Git)
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

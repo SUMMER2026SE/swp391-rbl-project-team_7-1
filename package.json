@@ -1,0 +1,14 @@
+{
+  "name": "fjms",
+  "version": "1.0.0",
+  "description": "Freelancer Job Matching System - Root Runner",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names \"CLIENT,SERVER\" --prefix-colors \"cyan,green\" \"npm run dev --prefix fjms-client\" \"npm run dev --prefix fjms-server\"",
+    "client": "npm run dev --prefix fjms-client",
+    "server": "npm run dev --prefix fjms-server",
+    "install:all": "npm install --prefix fjms-client && npm install --prefix fjms-server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
