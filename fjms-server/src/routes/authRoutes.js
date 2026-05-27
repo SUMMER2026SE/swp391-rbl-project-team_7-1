@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, verifyEmail, login, forgotPassword, resendOtp } from '../controllers/authController.js';
+import { register, verifyEmail, login, forgotPassword, resendOtp, googleAuth } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -9,6 +9,8 @@ router.post('/verify-email', verifyEmail);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/resend-otp', resendOtp);
+router.post('/google', googleAuth);
+
 
 export default router;
 

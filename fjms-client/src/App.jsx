@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Projects from './pages/Projects';
 import FreelancerDashboard from './pages/FreelancerDashboard';
 import EmployerDashboard from './pages/EmployerDashboard';
+import Profile from './pages/Profile';
 
 function LandingPage() {
   return (
@@ -278,6 +279,7 @@ export default function App() {
         <Route path="/projects" element={<Projects />} />
         <Route path="/freelancer/dashboard" element={<FreelancerDashboard />} />
         <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+        <Route path="/profile" element={<Profile />} />
         {/* Placeholder for other routes */}
         <Route path="*" element={
           <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-600 p-6">

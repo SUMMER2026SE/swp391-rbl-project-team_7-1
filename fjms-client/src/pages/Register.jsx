@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Register() {
   const [fullName, setFullName] = useState('');
@@ -11,12 +12,61 @@ export default function Register() {
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setErrorMsg('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ credential: credentialResponse.credential })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng ký bằng Google thất bại.');
+      }
+
+      // Save user session
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      alert('Đăng nhập bằng Google thành công!');
+
+      // Role-based routing
+      const userRole = data.user.roleDefault;
+      if (userRole === 'ADMIN') {
+        navigate('/employer/dashboard');
+      } else if (userRole === 'EMPLOYER') {
+        navigate('/employer/dashboard');
+      } else {
+        navigate('/freelancer/dashboard');
+      }
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     
     if (password !== confirmPassword) {
       setErrorMsg("Mật khẩu xác nhận không khớp!");
+      return;
+    }
+
+    // Regex: ít nhất 8 ký tự, 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt (@$!%*?&)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setErrorMsg("Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất: 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt (ví dụ: @, $, !, %, *, ?, &, #).");
       return;
     }
 
@@ -215,6 +265,26 @@ export default function Register() {
             </div>
 
           </form>
+
+          <div className="relative my-lg">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-outline-variant"></div>
+            </div>
+            <div className="relative flex justify-center text-body-sm">
+              <span className="px-sm bg-surface-container-lowest text-on-surface-variant font-label-md">or continue with</span>
+            </div>
+          </div>
+
+          <div className="flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                setErrorMsg('Đăng ký bằng Google thất bại.');
+              }}
+              useOneTap
+            />
+          </div>
+
 
 
           <div className="mt-xl text-center">

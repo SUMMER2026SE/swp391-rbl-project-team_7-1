@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 
 export default function FreelancerDashboard() {
   const handleLogout = () => {
-    alert('Logging out...');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     window.location.href = '/login';
   };
 
@@ -100,11 +101,27 @@ export default function FreelancerDashboard() {
             </Link>
 
             
-            <img
-              alt="Profile"
-              className="w-10 h-10 rounded-full border-2 border-surface-container-lowest shadow-sm"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXfZoFFv-CfWmk_QSzW9llSmwxaOImsCM8Q23-CRrqczLCy9oBYQlfe933co2ooj6ssNgGY4W_d98QJQibkOjc7xasxJcuQhNr4cYsefkh73TJsqnrHDa4I5oBnclxrL1tBF3KbFNdsIZS2wEhrmbbtMOdnp4SOe0vY9gCNRMCjmiCIMu8gLPiOhUnOMPPfsYFM4Va7ULD-pvtyJkl8i04S7LnyFLmH9nqSq1ptGqlMR2JibNzI1zDDbvp7zmoI6AngtDuLxsgQtJk"
-            />
+            <div className="relative group cursor-pointer ml-md">
+              <div className="flex items-center gap-sm hover:opacity-85 transition-opacity">
+                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold border-2 border-surface-container-lowest shadow-sm">
+                  F
+                </div>
+                <span className="material-symbols-outlined text-[16px] text-outline">expand_more</span>
+              </div>
+
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-outline-variant rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                <Link to="/profile" className="flex items-center gap-sm px-4 py-3 text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-label-md">
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                  My Profile
+                </Link>
+                <div className="h-px bg-outline-variant"></div>
+                <div onClick={handleLogout} className="flex items-center gap-sm px-4 py-3 text-error hover:bg-error-container transition-colors font-label-md">
+                  <span className="material-symbols-outlined text-[18px]">logout</span>
+                  Sign Out
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 

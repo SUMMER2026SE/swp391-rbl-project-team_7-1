@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import { poolPromise } from './config/db.js';
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.json());
 
 // Main Authentication routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

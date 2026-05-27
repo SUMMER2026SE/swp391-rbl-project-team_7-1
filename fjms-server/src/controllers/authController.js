@@ -2,6 +2,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sql, poolPromise } from '../config/db.js';
 import { sendOTPEmail } from '../utils/emailService.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 /**
  * Register User
@@ -16,6 +20,14 @@ export const register = async (req, res) => {
   const roleUpper = role.toUpperCase();
   if (roleUpper !== 'FREELANCER' && roleUpper !== 'EMPLOYER') {
     return res.status(400).json({ message: 'Vai trò không hợp lệ. Chỉ chấp nhận FREELANCER hoặc EMPLOYER.' });
+  }
+
+  // Password validation: ít nhất 8 ký tự, 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({ 
+      message: 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm ít nhất: 1 chữ hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt (ví dụ: @, $, !, %, *, ?, &, #).' 
+    });
   }
 
   try {
@@ -54,8 +66,8 @@ export const register = async (req, res) => {
       .input('roleDefault', sql.VarChar, roleUpper)
       .query(`
         INSERT INTO Users (full_name, email, phone, password_hash, role_default, is_email_verified)
-        OUTPUT INSERTED.user_id
-        VALUES (@fullName, @email, @phone, @passwordHash, @roleDefault, 0)
+        VALUES (@fullName, @email, @phone, @passwordHash, @roleDefault, 0);
+        SELECT SCOPE_IDENTITY() AS user_id;
       `);
 
     const userId = userInsertResult.recordset[0].user_id;
@@ -212,7 +224,15 @@ export const login = async (req, res) => {
     }
 
     // Match password
-    const isPasswordValid = bcrypt.compareSync(password, user.password_hash);
+    let isPasswordValid = false;
+    
+    // Fallback for fixed admin accounts that might have plaintext passwords in DB
+    if (user.role_default === 'ADMIN' && password === user.password_hash) {
+      isPasswordValid = true;
+    } else {
+      isPasswordValid = bcrypt.compareSync(password, user.password_hash);
+    }
+
     if (!isPasswordValid) {
       return res.status(400).json({ message: 'Email hoặc mật khẩu không chính xác.' });
     }
@@ -405,4 +425,135 @@ export const resendOtp = async (req, res) => {
     return res.status(500).json({ message: 'Đã xảy ra lỗi khi gửi lại mã xác thực.' });
   }
 };
+
+/**
+ * Google OAuth Login/Register
+ */
+export const googleAuth = async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json({ message: 'Không tìm thấy Google credential.' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    const pool = await poolPromise;
+
+    // Check if user already exists
+    const userResult = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query('SELECT * FROM Users WHERE email = @email');
+
+    let user;
+    if (userResult.recordset.length > 0) {
+      user = userResult.recordset[0];
+      
+      // If user status is not ACTIVE, block
+      if (user.status !== 'ACTIVE') {
+        return res.status(403).json({ message: `Tài khoản của bạn đã bị khóa hoặc đình chỉ (${user.status}).` });
+      }
+      
+      // Update is_email_verified if it wasn't
+      if (!user.is_email_verified) {
+        await pool.request()
+          .input('userId', sql.Int, user.user_id)
+          .query('UPDATE Users SET is_email_verified = 1 WHERE user_id = @userId');
+        user.is_email_verified = true;
+      }
+    } else {
+      // Create new user (Role Default: FREELANCER)
+      const salt = bcrypt.genSaltSync(10);
+      const dummyPassword = Math.random().toString(36).slice(-10) + 'A1!'; // random password string
+      const passwordHash = bcrypt.hashSync(dummyPassword, salt);
+
+      const userInsertResult = await pool.request()
+        .input('fullName', sql.NVarChar, name)
+        .input('email', sql.VarChar, email)
+        .input('passwordHash', sql.VarChar, passwordHash)
+        .input('avatarUrl', sql.VarChar, picture || null)
+        .query(`
+          INSERT INTO Users (full_name, email, password_hash, role_default, is_email_verified, avatar_url, status)
+          VALUES (@fullName, @email, @passwordHash, 'FREELANCER', 1, @avatarUrl, 'ACTIVE');
+          SELECT SCOPE_IDENTITY() AS user_id;
+        `);
+
+      const userId = userInsertResult.recordset[0].user_id;
+
+      // Insert into UserRoles
+      await pool.request()
+        .input('userId', sql.Int, userId)
+        .query(`
+          INSERT INTO UserRoles (user_id, role_name)
+          VALUES (@userId, 'FREELANCER')
+        `);
+
+      // Create Freelancer profile
+      await pool.request()
+        .input('freelancerId', sql.Int, userId)
+        .query(`
+          INSERT INTO FreelancerProfiles (freelancer_id, availability_status, rating_average, total_reviews)
+          VALUES (@freelancerId, 'AVAILABLE', 0.00, 0)
+        `);
+
+      // Retrieve new user info
+      const newUserResult = await pool.request()
+        .input('userId', sql.Int, userId)
+        .query('SELECT * FROM Users WHERE user_id = @userId');
+      user = newUserResult.recordset[0];
+    }
+
+    // Fetch user roles
+    const rolesResult = await pool.request()
+      .input('userId', sql.Int, user.user_id)
+      .query('SELECT role_name FROM UserRoles WHERE user_id = @userId');
+
+    const roles = rolesResult.recordset.map(r => r.role_name);
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: user.user_id,
+        email: user.email,
+        role: user.role_default,
+        roles: roles
+      },
+      process.env.JWT_SECRET || 'fjms_secret_key_extremely_secure_123!@#',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    // Update refresh token
+    await pool.request()
+      .input('userId', sql.Int, user.user_id)
+      .input('token', sql.VarChar, token)
+      .query('UPDATE Users SET refresh_token = @token WHERE user_id = @userId');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Đăng nhập Google thành công!',
+      token,
+      user: {
+        userId: user.user_id,
+        fullName: user.full_name,
+        email: user.email,
+        phone: user.phone,
+        avatarUrl: user.avatar_url,
+        bio: user.bio,
+        roleDefault: user.role_default,
+        roles: roles
+      }
+    });
+
+  } catch (error) {
+    console.error('Error during Google authentication:', error);
+    return res.status(500).json({ message: 'Xác thực Google thất bại hoặc lỗi hệ thống.' });
+  }
+};
+
 

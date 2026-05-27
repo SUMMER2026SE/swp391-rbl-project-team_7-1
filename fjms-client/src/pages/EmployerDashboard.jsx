@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 
 export default function EmployerDashboard() {
   const handleLogout = () => {
-    alert('Logging out from Employer Portal...');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     window.location.href = '/login';
   };
 
@@ -122,16 +123,27 @@ export default function EmployerDashboard() {
             
             <div className="h-8 w-px bg-outline-variant mx-2"></div>
             
-            <div onClick={handleLogout} className="flex items-center gap-sm cursor-pointer hover:opacity-85 transition-opacity">
-              <div className="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant">
-                <img
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV5E44BaBriBWglj-I_k6fwz7toiSkY3RG0i_as2Vx4plgcOeM-ugBtLj5LErl0oXuEReJVuj9Y0IW5lSPdFPogcZavrOMGgS4n3Vh0RKyOoP5K50yloSHNSwKDWcciuFKjMbpkIHFQRJtvgk4cqQG81yUmywRJgN8uc29Ntu1JVC0tx-RUene-ZIGaY0Q0yNNiQ5FpV7EXom55VRkaquFY4Fy6BHa52Qxth80wESlSibki-sYINRQxS3iHPzXf3mqL_AmTP9OEynz"
-                />
+            <div className="relative group cursor-pointer">
+              <div className="flex items-center gap-sm hover:opacity-85 transition-opacity">
+                <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
+                  E
+                </div>
+                <span className="font-label-md text-label-md hidden lg:block text-on-surface">Employer</span>
+                <span className="material-symbols-outlined text-[16px] text-outline">expand_more</span>
               </div>
-              <span className="font-label-md text-label-md hidden lg:block">TechCorp Inc.</span>
-              <span className="material-symbols-outlined text-[16px] text-outline">expand_more</span>
+
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-outline-variant rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                <Link to="/profile" className="flex items-center gap-sm px-4 py-3 text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-label-md">
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                  My Profile
+                </Link>
+                <div className="h-px bg-outline-variant"></div>
+                <div onClick={handleLogout} className="flex items-center gap-sm px-4 py-3 text-error hover:bg-error-container transition-colors font-label-md">
+                  <span className="material-symbols-outlined text-[18px]">logout</span>
+                  Sign Out
+                </div>
+              </div>
             </div>
           </div>
         </header>
