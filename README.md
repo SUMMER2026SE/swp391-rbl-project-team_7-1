@@ -105,21 +105,27 @@ Employers can:
 ---
 
 # Frontend Structure
+# Project Structure
 
 ```text
-src/
- ├── assets/
- ├── components/
- ├── layouts/
- ├── pages/
- ├── routes/
- ├── data/
- ├── hooks/
- ├── services/
- ├── utils/
- └── App.jsx
-```
+frontend/
+  assets/
+  components/
+  layouts/
+  pages/
+  public/
+  App.jsx
+  main.jsx
+  index.css
 
+backend/
+  config/
+  controllers/
+  middleware/
+  routes/
+  utils/
+  server.js
+```
 ---
 
 # Main Routes
