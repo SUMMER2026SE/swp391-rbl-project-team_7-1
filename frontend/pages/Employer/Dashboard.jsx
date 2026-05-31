@@ -3,32 +3,9 @@ import React from 'react';
 export default function EmployerDashboard() {
   return (
     <main className="flex-1 min-h-screen pb-20 md:pb-0">
-{/*  TopNavBar (Web)  */}
-<header className="hidden md:flex fixed top-0 left-64 right-0 h-16 z-30 bg-white border-b border-[#E2E8F0] justify-between items-center px-margin-desktop shadow-sm">
-<div className="flex items-center gap-8">
-{/*  Search could go here  */}
-</div>
-<div className="flex items-center gap-6">
-<nav className="flex items-center gap-6">
-<a className="font-body-base text-body-base text-[#475569] font-medium hover:text-[#0F766E] transition-colors duration-200" href="#">Marketplace</a>
-<a className="font-body-base text-body-base text-[#475569] font-medium hover:text-[#0F766E] transition-colors duration-200" href="#">Solutions</a>
-</nav>
-<div className="h-6 w-px bg-outline-variant"></div>
-<div className="flex items-center gap-4">
-<button className="text-[#475569] hover:text-[#0F766E] transition-colors">
-<span className="material-symbols-outlined">notifications</span>
-</button>
-<button className="text-[#475569] hover:text-[#0F766E] transition-colors">
-<span className="material-symbols-outlined">mail</span>
-</button>
-</div>
-<button className="px-4 py-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg font-body-sm text-body-sm text-[#475569] hover:bg-white hover:text-[#1E293B] transition-all">
-                    Switch to Freelancer
-                </button>
-</div>
-</header>
+
 {/*  Canvas  */}
-<div className="pt-20 md:pt-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div className="pt-8 md:pt-10 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
 {/*  Header  */}
 <div className="mb-8">
 <h1 className="font-display-hero text-display-hero text-[#1E293B] mb-2">Manage your Projects &amp; Hires.</h1>

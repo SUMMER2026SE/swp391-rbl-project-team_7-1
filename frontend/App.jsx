@@ -85,8 +85,8 @@ export default function App() {
           {!token && (
             <>
               <Route path="/browse-projects" element={<BrowseProjects />} />
-              <Route path="/project-details" element={<Navigate to="/login" replace />} />
-              <Route path="/profile" element={<Navigate to="/login" replace />} />
+              <Route path="/project-details" element={<ProjectDetails />} />
+              <Route path="/profile" element={<Profile />} />
             </>
           )}
         </Route>
@@ -99,11 +99,12 @@ export default function App() {
           <Route path="/messages-freelancer" element={<MessagesFreelancer />} />
           <Route path="/submit-work" element={<SubmitWork />} />
           <Route path="/submit-proposal" element={<SubmitProposal />} />
+          {/* Profile is always accessible when logged in (DashboardLayout handles auth) */}
+          <Route path="/profile" element={<Profile />} />
           {token && (
             <>
               <Route path="/browse-projects" element={<BrowseProjects />} />
               <Route path="/project-details" element={<ProjectDetails />} />
-              <Route path="/profile" element={<Profile />} />
             </>
           )}
 

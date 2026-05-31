@@ -167,54 +167,54 @@ export default function BrowseProjects() {
   });
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen flex flex-col w-full">
+    <div className="bg-slate-50 min-h-screen flex flex-col w-full">
       
-      {/* Full-width Hero Banner from the design screenshot */}
-      <section className={`bg-gradient-to-b from-[#F1F5F9] to-[#F8FAFC] border-b border-slate-200/50 py-12 px-margin-mobile md:px-margin-desktop w-full ${!token ? 'pt-[116px] md:pt-[124px]' : 'pt-8'}`}>
-        <div className="max-w-container-max mx-auto">
-          <h1 className="font-headline-2xl-mobile md:font-headline-3xl text-[#1E293B] font-extrabold tracking-tight mb-3">
+      {/* Full-width Hero Banner */}
+      <section className={`bg-gradient-to-br from-teal-50 via-white to-teal-50/50 border-b border-teal-100/50 py-16 px-6 md:px-12 w-full ${!token ? 'pt-[116px] md:pt-[124px]' : 'pt-12'}`}>
+        <div className="max-w-[1440px] mx-auto text-center md:text-left">
+          <h1 className="text-4xl md:text-5xl text-teal-950 font-extrabold tracking-tight mb-4">
             Find High-Value Projects
           </h1>
-          <p className="font-body-md text-slate-500 max-w-2xl font-medium">
+          <p className="text-lg text-slate-600 max-w-2xl font-medium mx-auto md:mx-0">
             Discover opportunities that match your expertise. Filter by budget, skills, and timeline to find your next engagement.
           </p>
         </div>
       </section>
 
       {/* Main Grid View */}
-      <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12 flex flex-col md:flex-row gap-gutter">
+      <main className="flex-grow w-full max-w-[1440px] mx-auto px-6 md:px-12 py-10 flex flex-col md:flex-row gap-8">
         
         {/* Filter Sidebar */}
-        <aside className="w-full md:w-64 flex-shrink-0 mb-8 md:mb-0">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] sticky top-[104px]">
+        <aside className="w-full md:w-72 flex-shrink-0 mb-8 md:mb-0">
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm sticky top-[104px]">
             <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-              <h2 className="font-headline-xl text-headline-xl text-[#1E293B] font-bold">Filters</h2>
+              <h2 className="text-xl text-teal-950 font-bold">Filters</h2>
               <button 
                 onClick={handleClearFilters}
-                className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:underline"
+                className="text-teal-700 text-sm font-semibold hover:underline"
               >
                 Clear All
               </button>
             </div>
 
-            {/* Category / Role Required (Rounded tag style from the screenshot) */}
+            {/* Category / Role Required */}
             <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="font-body-base text-body-base font-semibold text-[#1E293B] mb-3">Role Required</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Role Required</h3>
+              <div className="flex flex-col gap-2">
                 {['Web Development', 'UI/UX Design', 'Mobile Apps'].map(cat => {
                   const active = selectedCategories[cat];
                   return (
-                    <span 
-                      key={cat}
-                      onClick={() => handleCategoryToggle(cat)}
-                      className={`font-body-sm text-body-sm px-3.5 py-1.5 rounded-full cursor-pointer transition-all duration-200 border select-none ${
-                        active 
-                          ? 'bg-[#1E293B]/10 border-[#1E293B] text-[#1E293B] font-semibold' 
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                      }`}
-                    >
-                      {cat === 'Web Development' ? 'Developer' : cat === 'UI/UX Design' ? 'Designer' : 'Mobile Apps'}
-                    </span>
+                    <label key={cat} className="flex items-center gap-3 cursor-pointer group select-none">
+                      <input 
+                        type="checkbox"
+                        className="rounded border-slate-300 text-teal-600 focus:ring-teal-600 w-4 h-4 cursor-pointer"
+                        checked={active}
+                        onChange={() => handleCategoryToggle(cat)}
+                      />
+                      <span className={`text-sm font-medium transition-colors ${active ? 'text-teal-900 font-semibold' : 'text-slate-600 group-hover:text-teal-700'}`}>
+                        {cat === 'Web Development' ? 'Developer' : cat === 'UI/UX Design' ? 'Designer' : 'Mobile Apps'}
+                      </span>
+                    </label>
                   );
                 })}
               </div>
@@ -222,11 +222,11 @@ export default function BrowseProjects() {
 
             {/* Budget Filter */}
             <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="font-body-base text-body-base font-semibold text-[#1E293B] mb-3">Budget Range (USD)</h3>
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Budget Range (USD)</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <input 
-                    className="w-full font-body-sm text-body-sm p-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-[#1E293B] focus:ring-1 focus:ring-[#1E293B] text-slate-700 font-semibold" 
+                    className="w-full text-sm p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 text-slate-800 font-medium transition-all" 
                     placeholder="$ Min" 
                     type="number"
                     value={minBudget}
@@ -234,7 +234,7 @@ export default function BrowseProjects() {
                   />
                   <span className="text-slate-400">-</span>
                   <input 
-                    className="w-full font-body-sm text-body-sm p-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:border-[#1E293B] focus:ring-1 focus:ring-[#1E293B] text-slate-700 font-semibold" 
+                    className="w-full text-sm p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 text-slate-800 font-medium transition-all" 
                     placeholder="$ Max" 
                     type="number"
                     value={maxBudget}
@@ -244,19 +244,19 @@ export default function BrowseProjects() {
               </div>
             </div>
 
-            {/* Project Type Filter (Checkbox style from the screenshot) */}
+            {/* Project Type Filter */}
             <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="font-body-base text-body-base font-semibold text-[#1E293B] mb-3">Project Type</h3>
-              <div className="space-y-2.5">
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Project Type</h3>
+              <div className="space-y-3">
                 {['Fixed Price', 'Hourly Rate'].map(type => (
-                  <label key={type} className="flex items-center gap-2.5 cursor-pointer group select-none">
+                  <label key={type} className="flex items-center gap-3 cursor-pointer group select-none">
                     <input 
                       type="checkbox"
-                      className="rounded border-slate-300 text-[#1E293B] focus:ring-[#1E293B] w-4 h-4 cursor-pointer"
+                      className="rounded border-slate-300 text-teal-600 focus:ring-teal-600 w-4 h-4 cursor-pointer"
                       checked={projectType === type}
                       onChange={() => setProjectType(projectType === type ? '' : type)}
                     />
-                    <span className="font-body-sm text-body-sm text-slate-600 group-hover:text-[#1E293B] transition-colors font-medium">{type}</span>
+                    <span className="text-sm text-slate-600 group-hover:text-teal-700 transition-colors font-medium">{type}</span>
                   </label>
                 ))}
               </div>
@@ -264,18 +264,18 @@ export default function BrowseProjects() {
 
             {/* Skills Tag Filters */}
             <div>
-              <h3 className="font-body-base text-body-base font-semibold text-[#1E293B] mb-3">Skills</h3>
-              <div className="flex flex-wrap gap-1.5">
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Skills</h3>
+              <div className="flex flex-wrap gap-2">
                 {['Figma', 'React', 'Node.js', 'UI/UX', 'Branding', 'React Native'].map(skill => {
                   const active = selectedSkills.includes(skill);
                   return (
                     <span 
                       key={skill}
                       onClick={() => handleSkillToggle(skill)}
-                      className={`font-body-sm text-body-sm px-3 py-1 rounded-full cursor-pointer transition-all duration-200 select-none ${
+                      className={`text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-all duration-200 select-none font-medium ${
                         active 
-                          ? 'bg-[#1E293B] text-white shadow-sm font-semibold' 
-                          : 'bg-[#F1F5F9] text-[#475569] hover:bg-slate-200'
+                          ? 'bg-teal-600 text-white shadow-sm' 
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                       }`}
                     >
                       {skill}
@@ -291,14 +291,14 @@ export default function BrowseProjects() {
         <section className="flex-grow flex flex-col gap-6">
           
           {/* Header/Sort bar */}
-          <div className="flex justify-between items-center bg-white rounded-2xl border border-slate-200 p-4 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
-            <span className="font-body-sm text-body-sm text-slate-600 font-medium">
-              Showing <strong className="text-slate-800 font-semibold">{sortedProjects.length}</strong> projects {searchWord ? `for "${searchWord}"` : ''}
+          <div className="flex justify-between items-center bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <span className="text-sm text-slate-600 font-medium">
+              Showing <strong className="text-teal-900 font-bold">{sortedProjects.length}</strong> projects {searchWord ? `for "${searchWord}"` : ''}
             </span>
-            <div className="flex items-center gap-2">
-              <span className="font-body-sm text-body-sm text-slate-500 font-medium">Sort by:</span>
+            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/60">
+              <span className="text-sm text-slate-500 font-medium">Sort by:</span>
               <select 
-                className="font-body-sm text-body-sm border-none bg-transparent text-[#1E293B] font-bold focus:ring-0 cursor-pointer pl-0 pr-8"
+                className="text-sm border-none bg-transparent text-teal-900 font-bold focus:ring-0 cursor-pointer pl-1 pr-8 py-0"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
@@ -313,66 +313,67 @@ export default function BrowseProjects() {
             {sortedProjects.map(project => (
               <article 
                 key={project.id}
-                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 transition-all duration-300 relative flex flex-col group overflow-hidden"
+                className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-[0_8px_24px_rgba(15,118,110,0.06)] hover:-translate-y-1 transition-all duration-300 relative flex flex-col group overflow-hidden"
               >
                 {/* Premium Badge */}
                 {project.premium && (
-                  <div className="absolute top-0 right-0 bg-[#FFFBEB] text-[#B45309] font-label-caps text-label-caps px-3 py-1 rounded-bl-xl border-l border-b border-[#FDE68A] flex items-center gap-1 shadow-sm font-bold select-none">
-                    <span className="material-symbols-outlined text-[14px]">star</span> Premium
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-100 to-amber-50 text-amber-700 text-xs px-3 py-1.5 rounded-bl-2xl font-bold flex items-center gap-1 shadow-sm select-none border-b border-l border-amber-200/50">
+                    <span className="material-symbols-outlined text-[14px]">stars</span> Premium
                   </div>
                 )}
 
-                <div className={`flex items-start gap-4 mb-4 ${project.premium ? 'mt-2' : ''}`}>
-                  <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center flex-shrink-0 border border-slate-100 overflow-hidden text-[#1E293B]">
+                <div className={`flex items-start gap-4 mb-5 ${project.premium ? 'mt-2' : ''}`}>
+                  <div className="w-14 h-14 rounded-2xl bg-teal-50 flex items-center justify-center flex-shrink-0 text-teal-600 border border-teal-100 shadow-sm group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300">
                     <span className="material-symbols-outlined text-[28px]">
                       {project.category === 'Mobile Apps' ? 'phone_iphone' : project.category === 'UI/UX Design' ? 'palette' : 'code'}
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-headline-xl text-headline-xl text-[#1E293B] mb-1 font-extrabold group-hover:text-[#1E293B] transition-colors cursor-pointer" onClick={() => navigate(token ? '/project-details' : '/login')}>
+                    <h3 className="text-xl text-teal-950 mb-1.5 font-bold group-hover:text-teal-700 transition-colors cursor-pointer tracking-tight" onClick={() => navigate(token ? '/project-details' : '/project-details')}>
                       {project.title}
                     </h3>
-                    <p className="font-body-sm text-body-sm text-slate-500 flex items-center gap-2.5">
+                    <p className="text-sm text-slate-500 flex items-center gap-3">
                       <span className="flex items-center gap-1 font-medium"><span className="material-symbols-outlined text-[16px] text-slate-400">domain</span> {project.company}</span>
                       {project.verified && (
-                        <span className="flex items-center gap-0.5 text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full text-[11px] font-bold border border-slate-200">
-                          <span className="material-symbols-outlined text-[12px] font-fill-1">verified</span> Verified
+                        <span className="flex items-center gap-1 text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full text-xs font-bold border border-teal-100/50">
+                          <span className="material-symbols-outlined text-[14px] font-fill-1 text-teal-600">verified</span> Verified
                         </span>
                       )}
                     </p>
                   </div>
                 </div>
 
-                <p className="font-body-base text-body-base text-slate-600 mb-6 line-clamp-3 flex-grow">
+                <p className="text-sm text-slate-600 mb-6 line-clamp-3 flex-grow leading-relaxed">
                   {project.description}
                 </p>
 
                 {/* Stats Panel */}
-                <div className="grid grid-cols-2 gap-4 mb-6 bg-[#F8FAFC] p-3.5 rounded-xl border border-slate-100">
-                  <div>
-                    <span className="block font-label-caps text-label-caps text-slate-400 mb-0.5">Budget</span>
-                    <span className="font-body-base text-body-base font-bold text-slate-800">{project.budget}</span>
+                <div className="flex gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100/80">
+                  <div className="flex-1">
+                    <span className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Budget</span>
+                    <span className="text-base font-bold text-slate-800">{project.budget}</span>
                   </div>
-                  <div>
-                    <span className="block font-label-caps text-label-caps text-slate-400 mb-0.5">Timeline</span>
-                    <span className="font-body-base text-body-base font-bold text-slate-800">{project.duration}</span>
+                  <div className="w-px bg-slate-200"></div>
+                  <div className="flex-1">
+                    <span className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Timeline</span>
+                    <span className="text-base font-bold text-slate-800">{project.duration}</span>
                   </div>
                 </div>
 
                 {/* Skill Tags */}
-                <div className="flex flex-wrap gap-1.5 mb-6">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {project.skills.map(skill => (
-                    <span key={skill} className="bg-slate-100 text-slate-600 font-body-sm text-body-sm px-2.5 py-0.5 rounded-md border border-slate-200/50 font-medium">
+                    <span key={skill} className="bg-white text-slate-600 text-xs px-2.5 py-1 rounded-lg border border-slate-200 font-medium shadow-sm hover:border-teal-300 transition-colors">
                       {skill}
                     </span>
                   ))}
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-4 mt-auto border-t border-slate-100 pt-4">
+                <div className="flex gap-3 mt-auto border-t border-slate-100 pt-5">
                   <button 
-                    onClick={() => navigate(token ? '/project-details' : '/login')}
-                    className="flex-1 bg-white border border-slate-200 text-slate-700 font-body-sm text-body-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors active:scale-[0.98] text-center"
+                    onClick={() => navigate(token ? '/project-details' : '/project-details')}
+                    className="flex-1 bg-white border border-slate-200 text-slate-700 text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-slate-50 hover:text-teal-700 hover:border-slate-300 transition-all active:scale-[0.98] text-center shadow-sm"
                   >
                     View Detail
                   </button>
@@ -380,7 +381,7 @@ export default function BrowseProjects() {
                     {token ? (
                       <button 
                         onClick={() => navigate('/submit-proposal')}
-                        className="w-full bg-gradient-to-r from-[#1E293B] to-[#334155] text-white font-body-sm text-body-sm font-bold py-2.5 px-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 active:scale-[0.98] text-center border-none"
+                        className="w-full bg-[#0F766E] text-white text-sm font-bold py-2.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all duration-300 active:scale-[0.98] text-center border-none"
                       >
                         Submit Proposal
                       </button>
@@ -388,11 +389,11 @@ export default function BrowseProjects() {
                       <>
                         <button 
                           onClick={() => navigate('/login')}
-                          className="w-full bg-slate-200 text-slate-400 font-body-sm text-body-sm font-semibold py-2.5 px-4 rounded-xl cursor-pointer text-center border-none active:scale-[0.98]"
+                          className="w-full bg-slate-100 text-slate-400 text-sm font-semibold py-2.5 px-4 rounded-xl cursor-pointer text-center border-none active:scale-[0.98]"
                         >
                           Submit Proposal
                         </button>
-                        <div className="tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white font-body-sm text-body-sm rounded-lg opacity-0 invisible transition-all duration-200 whitespace-nowrap z-10 shadow-md">
+                        <div className="tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg opacity-0 invisible transition-all duration-200 whitespace-nowrap z-10 shadow-md">
                           Login to Bid
                           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
                         </div>
@@ -404,13 +405,13 @@ export default function BrowseProjects() {
             ))}
 
             {sortedProjects.length === 0 && (
-              <div className="col-span-full text-center py-16 bg-white border border-slate-200 rounded-2xl text-slate-500 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
-                <span className="material-symbols-outlined text-[48px] text-slate-400 mb-2">find_in_page</span>
-                <h4 className="font-headline-xl text-headline-xl text-slate-700 font-bold mb-1">No Projects Found</h4>
-                <p className="font-body-md text-body-md text-slate-500">We couldn't find any projects matching your exact filters.</p>
+              <div className="col-span-full text-center py-20 bg-white border border-slate-100 rounded-2xl text-slate-500 shadow-sm">
+                <span className="material-symbols-outlined text-6xl text-slate-200 mb-4 block">search_off</span>
+                <h4 className="text-xl text-slate-800 font-bold mb-2">No Projects Found</h4>
+                <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">We couldn't find any projects matching your exact filters. Try adjusting your criteria.</p>
                 <button 
                   onClick={handleClearFilters}
-                  className="mt-4 px-5 py-2.5 bg-gradient-to-r from-[#1E293B] to-[#334155] text-white rounded-xl font-body-sm text-body-sm font-semibold hover:shadow-md transition-colors"
+                  className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
                 >
                   Clear all filters
                 </button>
@@ -420,17 +421,17 @@ export default function BrowseProjects() {
 
           {/* Pagination */}
           {sortedProjects.length > 0 && (
-            <div className="flex justify-center mt-8">
-              <nav className="flex items-center gap-1.5">
-                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors disabled:opacity-50" disabled>
-                  <span className="material-symbols-outlined">chevron_left</span>
+            <div className="flex justify-center mt-10">
+              <nav className="flex items-center gap-2">
+                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-400 hover:bg-slate-50 transition-colors disabled:opacity-50" disabled>
+                  <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                 </button>
-                <button className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#1E293B] to-[#334155] text-white font-body-sm text-body-sm font-semibold flex items-center justify-center shadow-sm">1</button>
-                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-700 font-body-sm text-body-sm hover:bg-slate-50 transition-colors">2</button>
-                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-700 font-body-sm text-body-sm hover:bg-slate-50 transition-colors">3</button>
-                <span className="text-slate-400 px-1 select-none">...</span>
-                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
-                  <span className="material-symbols-outlined">chevron_right</span>
+                <button className="w-10 h-10 rounded-xl bg-[#0F766E] text-white text-sm font-bold flex items-center justify-center shadow-sm hover:bg-[#0D5E58] transition-colors">1</button>
+                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-600 text-sm font-semibold hover:bg-slate-50 hover:text-[#0F766E] transition-colors">2</button>
+                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-600 text-sm font-semibold hover:bg-slate-50 hover:text-[#0F766E] transition-colors">3</button>
+                <span className="text-slate-400 px-1 select-none font-bold">...</span>
+                <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-[#0F766E] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">chevron_right</span>
                 </button>
               </nav>
             </div>

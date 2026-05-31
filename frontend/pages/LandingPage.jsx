@@ -1,95 +1,233 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function LandingPage() {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
   return (
-    <main className="pt-24 pb-20 overflow-hidden">
-{/*  Hero Section  */}
-<section className="relative max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 md:py-24 lg:py-32 flex flex-col lg:flex-row items-center gap-12">
-{/*  Text Content  */}
-<div className="lg:w-1/2 z-10 space-y-8">
-<div className="inline-flex items-center space-x-2 bg-[#F1F5F9] px-4 py-1.5 rounded-full">
-<span className="material-symbols-outlined text-primary text-sm" style={{ "fontVariationSettings": "'FILL' 1" }}>security</span>
-<span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Secured by VNPay Escrow</span>
-</div>
-<h1 className="font-display-hero-mobile text-display-hero-mobile md:font-display-hero md:text-display-hero text-[#1E293B] font-bold leading-tight">
-                    Find Freelancers.<br/>
-                    Post Projects.<br/>
-<span className="text-[#0F766E]">Work Securely.</span>
-</h1>
-<p className="font-body-base text-body-base text-on-surface-variant max-w-lg leading-relaxed text-lg">
-                    The premium marketplace for top-tier talent and enterprise clients. Experience seamless bidding, guaranteed payments via VNPay Escrow, and intelligent matchmaking powered by our AI Chatbox.
-                </p>
-<div className="flex flex-col sm:flex-row gap-4 pt-4">
-<Link className="bg-gradient-to-r from-[#1E293B] to-[#334155] font-body-base text-body-base font-semibold py-4 px-8 rounded-full shadow-lg hover:shadow-[0_0_20px_rgba(15,118,110,0.4)] hover:-translate-y-0.5 transition-all duration-300 text-center active:scale-95 flex items-center justify-center gap-2 text-white" to="/browse-projects">
-                        Browse Projects
-                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
-</Link>
-<Link className="bg-white border border-[#E2E8F0] text-[#1E293B] font-body-base text-body-base font-semibold py-4 px-8 rounded-full text-center active:scale-95 flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300" to="/browse-projects">
-                        Find Freelancers
-                    </Link>
-</div>
-<div className="flex items-center gap-6 pt-6 border-t border-outline-variant/30">
-<div className="flex -space-x-3">
-<img alt="User" className="w-10 h-10 rounded-full border-2 border-surface object-cover" data-alt="A professional headshot of a smiling woman in a bright, modern office setting. High key lighting, clean corporate aesthetic, representing a verified premium freelancer." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfTNBxZnwM7Df5KnDTfBIUWOtqYvLd_9t-870mWl2huCJabJFbnRLmjFH0hWzR43dq4hzsa5WSrUakCIC8FYw7QfvzNNeyVzDNA3SHYXz_DIQyVn3Q8gFRXjb4FFPGs79vgvuzo62zb_PH7fAuB6gZDnuQCYT_EG1g_erg7aqtk89PN4MR53B1y5C84d3e43RZb8qQK_rQXCxCFV5xCILXDti4jDNo7PQaE4Xj-0esPp94THdVJyQwkAhrKrkdYuT3u69rdQ4Fito"/>
-<img alt="User" className="w-10 h-10 rounded-full border-2 border-surface object-cover" data-alt="A professional headshot of a confident man in a bright, modern office setting. High key lighting, clean corporate aesthetic, representing a verified enterprise client." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfFsF-a2_2CaqSthAAtULSndIzKiTwI1kzzwYbEgN2Qm4dPImRG0zgX_4yrsEkgrEbOVrLdMaAckCi4CIrsquE2L1Qrydb_hiMRiHaAO8pvM3hyiIMXS4llKS7IXV5J1Gl1ZhF8tc1jbELtbhXffbe3VuNO7W-p0rXhzWHuTG2yj9sv_K7fGHAYzSLYUZa0YyIqEVwOmhFd8bvxEcjhnmP6dUugvehTrNwgk1o0BQTBSlDLhxV1UwiZcMxZXiKnNQqOid5a-ZBjQM"/>
-<img alt="User" className="w-10 h-10 rounded-full border-2 border-surface object-cover" data-alt="A professional headshot of a young woman with glasses in a bright studio. High key lighting, clean corporate aesthetic, representing a verified premium freelancer." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcNhBB9StmPbqbXRFLhUYl0sxpP9FXnfkmXOidb6VxhVhcdxnUoZSUrbevI4uapfPA_lXfWjSwmltt_yIN_jedWxPpn1QgKLzYLG9u0N4q0jYdTjwlYeeIRV1IDDuKcEs7Q1x40_emdB7hPlLk9cIUY40-1vPtYuP1CubLkU0iQHunTmbqcuuyhPVbxVrLnjyImDrtc-4M0irdMeMQQAbruoDNfIRHkXL9DD6qQ5tbH9DALFOoVVQl6LvFRMDiZtMtwXqa4HQc5K8"/>
-</div>
-<div className="flex flex-col">
-<div className="flex items-center text-primary-container">
-<span className="material-symbols-outlined text-sm" style={{ "fontVariationSettings": "'FILL' 1" }}>star</span>
-<span className="material-symbols-outlined text-sm" style={{ "fontVariationSettings": "'FILL' 1" }}>star</span>
-<span className="material-symbols-outlined text-sm" style={{ "fontVariationSettings": "'FILL' 1" }}>star</span>
-<span className="material-symbols-outlined text-sm" style={{ "fontVariationSettings": "'FILL' 1" }}>star</span>
-<span className="material-symbols-outlined text-sm" style={{ "fontVariationSettings": "'FILL' 1" }}>star</span>
-</div>
-<span className="font-body-sm text-body-sm text-on-surface-variant font-medium">Trusted by 10,000+ professionals</span>
-</div>
-</div>
-</div>
-{/*  Visual Graphic / Floating Cards  */}
-<div className="lg:w-1/2 relative h-[500px] w-full flex items-center justify-center">
-{/*  Abstract Background Elements  */}
-{/*  Main Mockup Image  */}
-<div className="relative w-full max-w-md h-full rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(15,23,42,0.015)] bg-white border border-[#E2E8F0] z-10">
-<img alt="Workspace" className="w-full h-full object-cover opacity-90" data-alt="A clean, minimalist desktop workspace featuring a laptop displaying code, a notebook, and a cup of coffee. The lighting is bright and natural, evoking a premium, productive remote work environment with a calm, professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzXb6lUu1byGJoeWx1GbfinL_GTOjJIdxsd89TL5m29wDfBuVK2yv8GVHTKtWxnyqkT3F2Vkljryx1TKxYXqc4PimY-hwH1zPjToppYP9GEEahLeI7_jNYJBCYcg0cURBO2c5bA0gMIXZK3lXq3n5PkKzIEnScyiruki022mVv9dUsN_nZje7jfCPY0Vlt33jFKaQ8fKYtw88TWHh4ijddPfPsedXiCqetyJnQHhHzbT0tvRDKknZf79GKwLOFfTDRz4r9ToyeiIs"/>
-<div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 to-transparent flex items-end p-8">
-<div className="text-white w-full">
-<div className="flex items-center justify-between mb-2">
-<span className="bg-primary px-3 py-1 rounded-full text-xs font-semibold tracking-wide">Featured Project</span>
-<span className="font-semibold">$5,000 - $8,000</span>
-</div>
-<h3 className="font-headline-xl text-headline-xl font-bold mb-1">Full-Stack FinTech Dashboard</h3>
-<p className="text-sm opacity-90 mb-4">React, Node.js, Postgres • 3 months</p>
-<button className="w-full bg-white text-on-surface font-semibold py-3 rounded-lg hover:bg-surface-container transition-colors">Bid Now</button>
-</div>
-</div>
-</div>
-{/*  Floating Card 1 (Freelancer Preview)  */}
-<div className="absolute top-10 -left-10 w-64 bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-4 float-1 z-20 flex items-center gap-4 hover:-translate-y-0.5 transition-all duration-300">
-<img alt="Freelancer" className="w-12 h-12 rounded-full object-cover" data-alt="A professional headshot of a female software engineer smiling confidently. High key lighting, clean modern aesthetic, conveying trust and expertise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsDUottDPnpRICiVqYReGGtEAfg2ool9Nb9ZQrivT7TEmGgPA0MOlNVfjJPzM1Id1c6ED37aer_n7G4JRscJXydUqPxCnQ-jCK3JBlUe0GmznJKiRn9LrgptSI3G3mXLEIe7birXEf6MLbLRMnJcgdUCOwafb8Dm5XmU4z6KfhhODStjLVCPnH5VN_rrmNirm7LVOmiIESGlA64rZ9yDx_NVIBiykKvNPnvenB9zeEaJ5Uk4YLA6f_LfkfBqZdYhM9WDSaggyyuks"/>
-<div>
-<h4 className="font-semibold text-sm text-on-surface">Sarah Jenkins</h4>
-<p className="text-xs text-on-surface-variant mb-1">Senior UX Designer</p>
-<div className="flex items-center gap-1 text-xs">
-<span className="material-symbols-outlined text-primary-container text-[14px]" style={{ "fontVariationSettings": "'FILL' 1" }}>star</span>
-<span className="font-semibold">4.9</span>
-<span className="text-on-surface-variant">(124 jobs)</span>
-</div>
-</div>
-</div>
-{/*  Floating Card 2 (Payment Security)  */}
-<div className="absolute bottom-20 -right-8 w-56 bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-4 float-2 z-20 hover:-translate-y-0.5 transition-all duration-300">
-<div className="flex items-center gap-3 mb-2">
-<div className="inline-flex items-center space-x-2 bg-[#F1F5F9] px-4 py-1.5 rounded-full">
-<span className="material-symbols-outlined text-sm" style={{ "fontVariationSettings": "'FILL' 1" }}>verified</span>
-</div>
-<h4 className="font-semibold text-sm text-on-surface">Payment Secured</h4>
-</div>
-<p className="text-xs text-on-surface-variant">Funds held safely in VNPay Escrow until milestone approval.</p>
-</div>
-</div>
-</section>
-</main>
+    <main className="pt-24 pb-24 overflow-hidden relative bg-[#F8FAFC] min-h-screen font-sans">
+      
+      {/* Soft Ambient Light Orbs - Luxury Style */}
+      <div className="absolute top-[-5%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-sky-200/40 to-teal-100/40 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[20%] right-[-5%] w-[500px] h-[500px] bg-gradient-to-bl from-teal-200/30 to-blue-200/30 rounded-full blur-[150px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] left-[50%] -translate-x-1/2 w-[800px] h-[400px] bg-slate-200/50 rounded-full blur-[150px] pointer-events-none"></div>
+
+      {/* Floating Mini Cards - ENLARGED & DETAILED */}
+      <div className="absolute top-[10%] left-[5%] w-64 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_30px_60px_rgba(15,118,110,0.15)] border border-white p-4 animate-[float_7s_ease-in-out_infinite] z-0 -rotate-6 hidden md:block group hover:rotate-0 transition-transform duration-500">
+        <div className="h-32 rounded-2xl overflow-hidden mb-4 relative">
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=400&q=80" alt="Web Dev" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+            <span className="material-symbols-outlined text-[12px] text-amber-500" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+            <span className="text-[11px] font-bold text-slate-700">4.9</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 flex items-center justify-center text-teal-600 shadow-sm border border-teal-100">
+             <span className="material-symbols-outlined text-[20px]">code</span>
+          </div>
+          <div>
+            <div className="text-sm font-extrabold text-slate-800">Web Dashboard</div>
+            <div className="text-[11px] font-medium text-slate-500">React & Node.js</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="absolute top-[18%] right-[8%] w-56 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_35px_70px_rgba(99,102,241,0.15)] border border-white p-4 animate-[float_8s_ease-in-out_infinite_reverse] z-0 rotate-12 hidden lg:block group hover:rotate-0 transition-transform duration-500">
+        <div className="h-28 rounded-2xl overflow-hidden mb-4 relative">
+          <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=400&q=80" alt="Design" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+            <span className="material-symbols-outlined text-[12px] text-amber-500" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+            <span className="text-[11px] font-bold text-slate-700">5.0</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100">
+             <span className="material-symbols-outlined text-[20px]">palette</span>
+          </div>
+          <div>
+            <div className="text-sm font-extrabold text-slate-800">UI Redesign</div>
+            <div className="text-[11px] font-medium text-slate-500">Figma Prototype</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="absolute top-[48%] left-[3%] w-60 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_25px_50px_rgba(14,165,233,0.12)] border border-white p-4 animate-[float_6s_ease-in-out_infinite_1s] z-0 rotate-3 hidden md:block group hover:rotate-0 transition-transform duration-500">
+        <div className="h-28 rounded-2xl overflow-hidden mb-4 relative">
+           <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=400&q=80" alt="Backend" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-100 to-sky-50 flex items-center justify-center text-sky-600 shadow-sm border border-sky-100">
+             <span className="material-symbols-outlined text-[20px]">dns</span>
+          </div>
+          <div>
+            <div className="text-sm font-extrabold text-slate-800">API Service</div>
+            <div className="text-[11px] font-medium text-slate-500">Python FastAPI</div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="absolute top-[52%] right-[5%] w-64 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_30px_60px_rgba(245,158,11,0.12)] border border-white p-4 animate-[float_9s_ease-in-out_infinite_2s] z-0 -rotate-12 hidden lg:block group hover:rotate-0 transition-transform duration-500">
+        <div className="h-32 rounded-2xl overflow-hidden mb-4 relative">
+           <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=500&q=80" alt="Marketing" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+           <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+            <span className="material-symbols-outlined text-[12px] text-amber-500" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+            <span className="text-[11px] font-bold text-slate-700">4.8</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center text-amber-600 shadow-sm border border-amber-100">
+             <span className="material-symbols-outlined text-[20px]">campaign</span>
+          </div>
+          <div>
+            <div className="text-sm font-extrabold text-slate-800">Digital Marketing</div>
+            <div className="text-[11px] font-medium text-slate-500">SEO & Ads Strategy</div>
+          </div>
+        </div>
+      </div>
+
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center pt-16">
+        
+        {/* Hero Text */}
+        <div className={`text-center space-y-8 max-w-4xl mx-auto transition-all duration-1000 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <h1 className="text-5xl md:text-6xl lg:text-7xl text-[#020617] font-extrabold tracking-tight leading-[1.1]">
+            Elevate Your Business with <br className="hidden md:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0F766E] to-[#2DD4BF]">
+              Elite Global Talent.
+            </span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
+            Connect with top-tier professionals. Execute visionary projects. Secure every transaction with our enterprise-grade VNPay escrow system.
+          </p>
+        </div>
+
+        {/* Call to Action Buttons (Replaced Search) */}
+        <div className={`mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-1000 delay-200 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          <Link to="/freelancers" className="w-full sm:w-auto px-8 py-4 bg-[#0F766E] text-white rounded-2xl font-bold text-lg hover:bg-[#0D5E58] transition-all duration-300 shadow-[0_10px_30px_rgba(15,118,110,0.2)] hover:shadow-[0_10px_30px_rgba(15,118,110,0.4)] hover:-translate-y-1 flex items-center justify-center gap-2 group">
+            Browse Freelancers
+            <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </Link>
+          <Link to="/browse-projects" className="w-full sm:w-auto px-8 py-4 bg-white text-[#0F766E] rounded-2xl font-bold text-lg hover:bg-teal-50 transition-all duration-300 border border-teal-100 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+            Find Projects
+            <span className="material-symbols-outlined text-[20px]">explore</span>
+          </Link>
+        </div>
+
+        {/* Categories / Tags */}
+        <div className={`mt-16 flex flex-wrap justify-center gap-3 transition-all duration-1000 delay-300 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          {['Web Development', 'UI/UX Design', 'Mobile Apps', 'Digital Marketing', 'Data Science', 'Blockchain'].map((tag) => (
+            <span key={tag} className="px-6 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 hover:border-[#0F766E] hover:text-[#0F766E] hover:shadow-md transition-all cursor-pointer">
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* Featured Section */}
+        <div className={`mt-32 w-full transition-all duration-1000 delay-500 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-[#020617] tracking-tight">Featured Projects</h2>
+              <p className="text-slate-500 mt-3 text-lg font-medium">Opportunities hand-picked for top professionals.</p>
+            </div>
+            <Link to="/browse-projects" className="inline-flex items-center gap-2 text-[#0F766E] font-bold hover:text-[#0D5E58] transition-colors group">
+              View All Projects
+              <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">east</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            {/* Card 1 */}
+            <div className="bg-white rounded-[2rem] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 hover:shadow-[0_25px_50px_rgba(15,118,110,0.12)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer flex flex-col">
+              <div className="relative h-56 rounded-[1.5rem] overflow-hidden mb-6">
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" alt="Dashboard" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-[#0F766E] shadow-sm uppercase tracking-wider">
+                  Web Dev
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col">
+                <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-[#0F766E] transition-colors">FinTech Analytics</h3>
+                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Looking for a Senior React developer to build a comprehensive analytics dashboard with real-time data visualization and complex state management.</p>
+                <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <img src="https://i.pravatar.cc/150?img=32" alt="Avatar" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                    <span className="text-sm font-bold text-[#020617]">TechCorp</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Budget</span>
+                    <span className="font-extrabold text-lg text-[#0F766E]">$4k - $6k</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-white rounded-[2rem] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 hover:shadow-[0_25px_50px_rgba(15,118,110,0.12)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer flex flex-col">
+              <div className="relative h-56 rounded-[1.5rem] overflow-hidden mb-6">
+                <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&q=80" alt="Design" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-indigo-600 shadow-sm uppercase tracking-wider">
+                  UI/UX Design
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col">
+                <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-indigo-600 transition-colors">Luxury E-Commerce</h3>
+                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Need a modern, conversion-focused redesign for a luxury fashion mobile application targeting high-end clientele.</p>
+                <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <img src="https://i.pravatar.cc/150?img=44" alt="Avatar" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                    <span className="text-sm font-bold text-[#020617]">LuxeBrand</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Budget</span>
+                    <span className="font-extrabold text-lg text-indigo-600">$2k - $4k</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3 */}
+            <div className="bg-white rounded-[2rem] p-5 shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 hover:shadow-[0_25px_50px_rgba(15,118,110,0.12)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer flex flex-col">
+              <div className="relative h-56 rounded-[1.5rem] overflow-hidden mb-6">
+                <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80" alt="Code" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-sky-600 shadow-sm uppercase tracking-wider">
+                  Backend
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col">
+                <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-sky-600 transition-colors">AI Engine API</h3>
+                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Seeking a Python/FastAPI expert to architect and build a highly scalable recommendation microservice architecture.</p>
+                <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <img src="https://i.pravatar.cc/150?img=12" alt="Avatar" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                    <span className="text-sm font-bold text-[#020617]">StartupX</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Budget</span>
+                    <span className="font-extrabold text-lg text-sky-600">$8k - $12k</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Global styles for floating animations */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes float {
+          0% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+          100% { transform: translateY(0px) rotate(0deg); }
+        }
+      `}} />
+    </main>
   );
 }

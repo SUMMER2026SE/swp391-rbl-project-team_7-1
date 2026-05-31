@@ -86,20 +86,23 @@ export default function Header({ layout = 'dashboard' }) {
 
   if (layout === 'public') {
     return (
-      <header className="fixed top-0 left-0 w-full z-50 bg-white border-b border-slate-200 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
-        <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-[72px] gap-6">
-          <div className="flex items-center gap-8 shrink-0">
-            <Link className="font-headline-2xl text-headline-2xl text-[#1E293B] font-bold tracking-tight" to="/">
+      <header className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div className="flex justify-between items-center px-6 md:px-12 max-w-[1440px] mx-auto h-[80px] gap-6">
+          <div className="flex items-center gap-10 shrink-0">
+            <Link className="text-4xl lg:text-5xl text-teal-700 font-extrabold tracking-tighter hover:opacity-80 transition-opacity" to="/">
               FJMS
             </Link>
-            <nav className="hidden lg:flex items-center gap-6">
-              <Link className="text-[#475569] font-body-base text-body-base font-medium hover:text-[#1E293B] transition-colors duration-200" to="/">
+            <nav className="hidden lg:flex items-center gap-2 ml-6">
+              <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/">
                 Home
               </Link>
-              <Link className="text-[#475569] font-body-base text-body-base font-medium hover:text-[#1E293B] transition-colors duration-200" to="/browse-projects">
+              <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/browse-projects' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/browse-projects">
                 Browse Projects
               </Link>
-              <Link className="text-[#475569] font-body-base text-body-base font-medium hover:text-[#1E293B] transition-colors duration-200" to="/help-center">
+              <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/freelancers' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/freelancers">
+                Freelancers
+              </Link>
+              <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/help-center' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/help-center">
                 Solutions
               </Link>
             </nav>
@@ -134,7 +137,7 @@ export default function Header({ layout = 'dashboard' }) {
                 <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#1E293B] transition-colors" onClick={handleSwitchRole}>
                   Switch Role
                 </button>
-                <Link className="px-4 py-2 bg-gradient-to-r from-[#1E293B] to-[#334155] text-white rounded-lg font-body-sm text-body-sm font-semibold hover:shadow-[0_0_8px_rgba(30,41,59,0.3)] border border-transparent transition-all duration-300" to="/post-project">
+                <Link className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-body-sm text-body-sm font-bold hover:shadow-[0_0_12px_rgba(45,212,191,0.4)] border border-teal-400/50 transition-all duration-300" to="/post-project">
                   Post Project
                 </Link>
                 <div className="relative" ref={dropdownRef}>
@@ -146,15 +149,15 @@ export default function Header({ layout = 'dashboard' }) {
                   </div>
                   
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2.5 w-56 bg-[#1E293B] text-white rounded-xl border border-slate-700/80 shadow-[0_10px_30px_rgba(15,23,42,0.3)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="px-4 py-2.5 border-b border-slate-700/60 mb-1">
-                        <p className="font-body-sm text-body-sm font-bold text-white truncate">{user?.fullName || 'Alexander'}</p>
-                        <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">{user?.email || 'user@example.com'}</p>
+                    <div className="absolute right-0 mt-2.5 w-56 bg-white text-slate-800 rounded-xl border border-slate-200 shadow-[0_10px_40px_rgba(15,118,110,0.15)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="px-4 py-2.5 border-b border-slate-100 mb-1">
+                        <p className="font-body-sm text-body-sm font-bold text-slate-900 truncate">{user?.fullName || 'Alexander'}</p>
+                        <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">{user?.email || 'user@example.com'}</p>
                       </div>
                       
                       <Link 
                         to="/profile" 
-                        className="flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors"
                         onClick={() => setDropdownOpen(false)}
                       >
                         <span className="material-symbols-outlined text-[18px]">person</span>
@@ -169,7 +172,7 @@ export default function Header({ layout = 'dashboard' }) {
                           else if (userRole === 'EMPLOYER') navigate('/employer-dashboard');
                           else navigate('/freelancer-dashboard');
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors text-left cursor-pointer border-none"
+                        className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                       >
                         <span className="material-symbols-outlined text-[18px]">dashboard</span>
                         My Dashboard
@@ -180,17 +183,17 @@ export default function Header({ layout = 'dashboard' }) {
                           setDropdownOpen(false);
                           handleSwitchRole();
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors text-left cursor-pointer border-none"
+                        className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                       >
                         <span className="material-symbols-outlined text-[18px]">cached</span>
                         Switch Role
                       </button>
                       
-                      <div className="h-px bg-slate-700/60 my-1"></div>
+                      <div className="h-px bg-slate-100 my-1"></div>
                       
                       <button 
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-400 hover:text-red-300 hover:bg-white/10 transition-colors text-left cursor-pointer font-semibold border-none"
+                        className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer font-semibold border-none"
                       >
                         <span className="material-symbols-outlined text-[18px]">logout</span>
                         Sign Out
@@ -258,7 +261,7 @@ export default function Header({ layout = 'dashboard' }) {
           <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#0F766E] transition-colors" onClick={handleSwitchRole}>
             Switch Role
           </button>
-          <Link className="px-4 py-2 bg-gradient-to-r from-[#1E293B] to-[#334155] text-white rounded-lg font-body-sm text-body-sm font-semibold hover:border-[#0F766E] hover:shadow-[0_0_8px_rgba(15,118,110,0.5)] border border-transparent transition-all duration-300 mr-2" to="/post-project">
+          <Link className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-body-sm text-body-sm font-bold hover:shadow-[0_0_12px_rgba(45,212,191,0.4)] border border-teal-400/50 transition-all duration-300 mr-2" to="/post-project">
             Post Project
           </Link>
           <div className="relative" ref={dropdownRef}>
@@ -270,15 +273,15 @@ export default function Header({ layout = 'dashboard' }) {
             </div>
             
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2.5 w-56 bg-[#1E293B] text-white rounded-xl border border-slate-700/80 shadow-[0_10px_30px_rgba(15,23,42,0.3)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="px-4 py-2.5 border-b border-slate-700/60 mb-1 text-left">
-                  <p className="font-body-sm text-body-sm font-bold text-white truncate">{user?.fullName || 'Alexander'}</p>
-                  <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">{user?.email || 'user@example.com'}</p>
+              <div className="absolute right-0 mt-2.5 w-56 bg-white text-slate-800 rounded-xl border border-slate-200 shadow-[0_10px_40px_rgba(15,118,110,0.15)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="px-4 py-2.5 border-b border-slate-100 mb-1 text-left">
+                  <p className="font-body-sm text-body-sm font-bold text-slate-900 truncate">{user?.fullName || 'Alexander'}</p>
+                  <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">{user?.email || 'user@example.com'}</p>
                 </div>
                 
                 <Link 
                   to="/profile" 
-                  className="flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors text-left"
+                  className="flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left"
                   onClick={() => setDropdownOpen(false)}
                 >
                   <span className="material-symbols-outlined text-[18px]">person</span>
@@ -293,7 +296,7 @@ export default function Header({ layout = 'dashboard' }) {
                     else if (userRole === 'EMPLOYER') navigate('/employer-dashboard');
                     else navigate('/freelancer-dashboard');
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors text-left cursor-pointer border-none"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">dashboard</span>
                   My Dashboard
@@ -304,17 +307,17 @@ export default function Header({ layout = 'dashboard' }) {
                     setDropdownOpen(false);
                     handleSwitchRole();
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-200 hover:text-white hover:bg-white/10 transition-colors text-left cursor-pointer border-none"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">cached</span>
                   Switch Role
                 </button>
                 
-                <div className="h-px bg-slate-700/60 my-1"></div>
+                <div className="h-px bg-slate-100 my-1"></div>
                 
                 <button 
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-400 hover:text-red-300 hover:bg-white/10 transition-colors text-left cursor-pointer font-semibold border-none"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer font-semibold border-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">logout</span>
                   Sign Out

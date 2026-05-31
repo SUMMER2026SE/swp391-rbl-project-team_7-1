@@ -33,27 +33,43 @@ export const sendOTPEmail = async (toEmail, otpCode, fullName) => {
   const mailOptions = {
     from: `"FJMS - Job Matching System" <${process.env.EMAIL_USER}>`,
     to: toEmail,
-    subject: `[FJMS] Xác thực tài khoản của bạn - Mã OTP: ${otpCode}`,
+    subject: `[FJMS] Your Verification Code: ${otpCode}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; rounded-lg; background-color: #fcfcfc;">
-        <h2 style="color: #005c55; text-align: center; border-bottom: 2px solid #005c55; padding-bottom: 10px;">XÁC THỰC EMAIL TÀI KHOẢN FJMS</h2>
-        
-        <p>Xin chào <strong>${fullName}</strong>,</p>
-        
-        <p>Cảm ơn bạn đã đăng ký tham gia nền tảng <strong>Freelancer Job Matching System (FJMS)</strong>. Để kích hoạt tài khoản của bạn, vui lòng nhập mã OTP xác thực dưới đây vào trang đăng ký:</p>
-        
-        <div style="background-color: #e6f5f4; border: 1px dashed #005c55; border-radius: 8px; padding: 15px; text-align: center; margin: 20px 0;">
-          <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #005c55;">${otpCode}</span>
+      <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #F8FAFC;">
+        <div style="background-color: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #E2E8F0;">
+          
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1E293B; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">FJMS Security</h1>
+            <p style="color: #64748B; margin-top: 8px; font-size: 15px;">Authentication Request</p>
+          </div>
+          
+          <p style="color: #334155; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+            Hello <strong>${fullName}</strong>,
+          </p>
+          
+          <p style="color: #334155; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+            We received a request to authenticate your account. Please use the following verification code to complete the process:
+          </p>
+          
+          <div style="background: linear-gradient(135deg, #0F766E 0%, #115E59 100%); border-radius: 12px; padding: 24px; text-align: center; margin: 30px 0; box-shadow: 0 10px 15px -3px rgba(15, 118, 110, 0.2);">
+            <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #ffffff;">${otpCode}</span>
+          </div>
+          
+          <p style="color: #64748B; font-size: 14px; line-height: 1.5; margin-bottom: 30px; padding: 12px; background-color: #F1F5F9; border-radius: 8px; border-left: 4px solid #0F766E;">
+            <strong style="color: #1E293B;">Note:</strong> This code is valid for exactly <strong>10 minutes</strong>. For your security, do not share this code with anyone, including FJMS staff.
+          </p>
+          
+          <p style="color: #334155; font-size: 15px; line-height: 1.6;">
+            If you did not request this code, please ignore this email or contact support if you have concerns.
+          </p>
+          
+          <hr style="border: 0; border-top: 1px solid #E2E8F0; margin: 40px 0 20px;" />
+          
+          <p style="font-size: 13px; color: #94A3B8; text-align: center; line-height: 1.5;">
+            This is an automated message from FJMS. Please do not reply.<br/>
+            &copy; ${new Date().getFullYear()} FJMS Team. All rights reserved.
+          </p>
         </div>
-        
-        <p style="color: #666; font-size: 14px;">⚠️ <strong>Lưu ý:</strong> Mã OTP này sẽ hết hạn trong vòng <strong>10 phút</strong> kể từ khi email này được gửi. Hãy bảo mật mã này và không chia sẻ cho bất kỳ ai.</p>
-        
-        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
-        
-        <p style="font-size: 12px; color: #999; text-align: center;">
-          Đây là email tự động từ hệ thống FJMS. Vui lòng không trả lời email này.<br/>
-          &copy; 2026 FJMS Team. All rights reserved.
-        </p>
       </div>
     `
   };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 
@@ -76,7 +76,7 @@ export default function Login() {
         // If account is not verified, redirect to verification page
         if (data.isEmailVerified === false) {
           localStorage.setItem('pendingVerificationEmail', email);
-          setToastMsg('Tài khoản chưa được xác thực email. Đang chuyển hướng đến trang xác nhận OTP...');
+          setToastMsg('Tài khoản chưa được xác thực email. Vui lòng kiểm tra email của bạn.');
           setTimeout(() => {
             navigate('/verify-email');
           }, 1500);
@@ -110,68 +110,120 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center w-full bg-[#F8FAFC] p-6 antialiased relative">
+    <div className="min-h-screen flex items-center justify-center w-full bg-gradient-to-b from-[#E0F2FE] to-[#F0F9FF] p-4 sm:p-6 antialiased relative overflow-hidden font-sans">
+      
+      {/* Background Decorative Circles */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+        <div className="w-[600px] h-[600px] rounded-full border-[1px] border-white/60 absolute"></div>
+        <div className="w-[900px] h-[900px] rounded-full border-[1px] border-white/60 absolute"></div>
+        <div className="w-[1200px] h-[1200px] rounded-full border-[1px] border-white/60 absolute"></div>
+      </div>
+      
+      {/* Soft Cloud-like Blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-white/80 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-white/60 rounded-full blur-[120px] pointer-events-none"></div>
+
       {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-[#1E293B] text-white px-6 py-4 rounded-2xl shadow-xl border border-slate-700/50 max-w-sm animate-bounce">
-          <span className="material-symbols-outlined text-[24px] text-green-400">check_circle</span>
-          <span className="font-body-base font-semibold">{toastMsg}</span>
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white text-slate-800 px-6 py-4 rounded-2xl shadow-xl border border-slate-100 max-w-sm animate-bounce">
+          <span className="material-symbols-outlined text-[24px] text-green-500">check_circle</span>
+          <span className="font-semibold text-sm">{toastMsg}</span>
         </div>
       )}
-      <main className="w-full max-w-[440px] mx-auto">
-        {/*  Login Card  */}
-        <div className="rounded-xl p-8 w-full relative overflow-hidden bg-white" style={{ "border": "1px solid #E2E8F0", "boxShadow": "0 2px 12px rgba(15,23,42,0.015)" }}>
+
+      {/* Split-Screen Container */}
+      <main className="w-full max-w-5xl z-10 flex flex-col md:flex-row bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] overflow-hidden min-h-[600px] border border-white/50 relative">
+        
+        {/* Left Side: Branding Panel (Luxury Dark Teal) */}
+        <div className="md:w-[45%] bg-gradient-to-br from-[#0F766E] via-[#0D5E58] to-[#042F2E] text-white p-10 flex flex-col items-center justify-center relative overflow-hidden z-20 hidden md:flex border-r border-white/10">
           
-          {/*  Header  */}
-          <div className="text-center mb-8">
-            <Link className="font-headline-2xl text-headline-2xl font-bold tracking-tight mb-2 inline-block text-[#1E293B]" to="/">
-              FJMS
+          {/* Glassmorphism Decorative Elements */}
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-10 right-10 w-48 h-48 bg-teal-400/10 rounded-full blur-3xl"></div>
+          
+          <div className="absolute top-1/4 right-[-20%] w-64 h-64 border border-white/5 rounded-full"></div>
+          <div className="absolute bottom-1/4 left-[-20%] w-48 h-48 border border-white/5 rounded-full"></div>
+
+          <div className="text-center z-10">
+            <Link to="/">
+              <div className="w-24 h-24 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-105 transition-all duration-300 border border-white/10 cursor-pointer">
+                <span className="material-symbols-outlined text-5xl text-white">fingerprint</span>
+              </div>
             </Link>
-            <p className="font-body-sm text-body-sm text-slate-500" style={{ "color": "#1E293B", "opacity": "0.8" }}>
-              Welcome back. Please enter your details.
+            
+            <h2 className="text-3xl font-bold mb-4 tracking-tight">Welcome Back!</h2>
+            
+            <p className="text-teal-50 text-sm leading-relaxed max-w-[260px] mx-auto font-medium opacity-80">
+              Sign in to your account to continue building your freelance career and connecting with top clients.
             </p>
+          </div>
+          
+          {/* Bottom Trust Indicators */}
+          <div className="absolute bottom-8 w-full flex justify-center gap-6 text-teal-100/70">
+            <div className="flex flex-col items-center gap-1">
+              <span className="material-symbols-outlined text-[20px]">verified_user</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Secure</span>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="material-symbols-outlined text-[20px]">speed</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Fast</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Form Panel */}
+        <div className="w-full md:w-[55%] bg-white/60 p-10 md:p-14 flex flex-col justify-center relative z-10">
+          
+          {/* Mobile Header (Hidden on Desktop) */}
+          <div className="md:hidden text-center mb-8 flex justify-center">
+            <div className="w-16 h-16 bg-[#0F766E]/10 rounded-2xl flex items-center justify-center text-[#0F766E]">
+              <span className="material-symbols-outlined text-3xl">fingerprint</span>
+            </div>
+          </div>
+
+          <div className="text-center md:text-left mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Sign in to your account</h2>
+            <p className="text-slate-500 mt-2 text-sm">Welcome back! Please enter your details.</p>
           </div>
 
           {errorMsg && (
-            <div className="mb-6 p-4 bg-red-50 text-red-800 border border-red-100 rounded-lg text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-red-600">
-                error
-              </span>
+            <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-100 rounded-xl text-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">error</span>
               <span>{errorMsg}</span>
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email/Phone Input */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block font-body-sm text-body-sm font-medium text-slate-700 mb-1.5" htmlFor="email" style={{ "color": "#1E293B" }}>
-                Email or Phone
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="email">
+                Email Address
               </label>
-              <input
-                className="w-full border border-slate-200 rounded-lg px-4 py-3 font-body-base text-body-base text-slate-900 focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors bg-white outline-none"
-                id="email"
-                name="email"
-                placeholder="Enter your email or phone"
-                required
-                type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">mail</span>
+                </div>
+                <input
+                  className="w-full bg-slate-50 border border-slate-100/50 rounded-xl pl-12 pr-4 py-3.5 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-400 font-medium"
+                  id="email"
+                  name="email"
+                  placeholder="name@example.com"
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
 
-            {/* Password Input */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block font-body-sm text-body-sm font-medium text-slate-700" htmlFor="password" style={{ "color": "#1E293B" }}>
-                  Password
-                </label>
-                <Link className="font-body-sm text-body-sm hover:text-[#0D5E58] transition-colors font-medium" to="/forgot-password" style={{ "color": "#0F766E" }}>
-                  Forgot Password?
-                </Link>
-              </div>
-              <div className="relative">
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="password">
+                Password
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">lock</span>
+                </div>
                 <input
-                  className="w-full border border-slate-200 rounded-lg px-4 py-3 font-body-base text-body-base text-slate-900 focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors pr-12 bg-white outline-none"
+                  className="w-full bg-slate-50 border border-slate-100/50 rounded-xl pl-12 pr-12 py-3.5 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-400 font-medium"
                   id="password"
                   name="password"
                   placeholder="Enter your password"
@@ -181,7 +233,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -192,58 +244,44 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Remember Me Checkbox */}
-            <div className="flex items-center">
-              <input
-                className="h-4 w-4 text-[#0F766E] focus:ring-[#0F766E] border-slate-300 rounded cursor-pointer"
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <label className="ml-2 block font-body-sm text-body-sm text-slate-500 cursor-pointer select-none" htmlFor="remember-me">
-                Remember me
-              </label>
+            <div className="flex items-center justify-end pt-1 pb-2">
+              <Link className="text-sm font-semibold text-[#0F766E] hover:underline transition-colors" to="/forgot-password">
+                Forgot password?
+              </Link>
             </div>
 
-            {/* Submit Button */}
             <button
-              className="w-full text-white font-body-base text-body-base py-3 px-4 rounded-lg transition-all duration-200 mt-2 font-medium bg-gradient-to-r from-[#1E293B] to-[#334155] hover:shadow-[0_0_15px_rgba(15,118,110,0.3)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full text-white py-3.5 px-4 rounded-xl transition-all duration-300 font-bold bg-[#0F766E] hover:bg-[#0D5E58] hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-slate-200"></div>
-            <span className="font-body-sm text-body-sm text-slate-400">or</span>
-            <div className="flex-1 h-px bg-slate-200"></div>
+          <div className="flex items-center gap-4 my-8">
+            <div className="flex-1 h-px border-t border-dashed border-slate-200"></div>
+            <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Or sign in with</span>
+            <div className="flex-1 h-px border-t border-dashed border-slate-200"></div>
           </div>
 
-          {/* Google Sign-In */}
-          <div className="flex justify-center w-full">
+          <div className="flex justify-center w-full mb-6">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
-              onError={() => {
-                setErrorMsg('Đăng nhập bằng Google thất bại.');
-              }}
+              onError={() => setErrorMsg('Đăng nhập bằng Google thất bại.')}
               useOneTap
             />
           </div>
 
-          {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="font-body-sm text-body-sm text-slate-500" style={{ "color": "#1E293B", "opacity": "0.8" }}>
+          <div className="mt-auto pt-4 text-center text-sm">
+            <p className="text-slate-500 font-medium">
               Don't have an account? 
-              <Link className="font-medium ml-1 transition-colors hover:text-[#0D5E58]" to="/register" style={{ "color": "#0F766E" }}>
-                Register
+              <Link className="font-bold text-[#0F766E] hover:underline ml-1.5" to="/register">
+                Sign up
               </Link>
             </p>
           </div>
+
         </div>
       </main>
     </div>

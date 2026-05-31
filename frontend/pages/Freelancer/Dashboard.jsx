@@ -3,36 +3,9 @@ import React from 'react';
 export default function FreelancerDashboard() {
   return (
     <main className="flex-1 min-h-screen pb-20 md:pb-0 flex flex-col">
-{/*  TopNavBar  */}
-<header className="fixed top-0 left-0 md:left-64 right-0 z-30 flex justify-between items-center h-16 px-gutter bg-surface dark:bg-inverse-surface shadow-sm border-b-0 max-w-container-max mx-auto w-full transition-all text-primary dark:text-inverse-primary font-body-base text-body-base">
-<div className="flex items-center flex-1">
-<div className="font-headline-2xl text-headline-2xl font-bold text-primary dark:text-inverse-primary mr-8 md:hidden">FJMS</div>
-{/*  Search  */}
-<div className="hidden md:flex relative w-96">
-<span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input className="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary-container text-sm" placeholder="Search projects, messages..." type="text"/>
-</div>
-</div>
-{/*  Navigation Links & Actions  */}
-<div className="flex items-center space-x-6">
-<nav className="hidden lg:flex space-x-6">
-<a className="text-on-surface-variant dark:text-surface-variant font-medium hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200 py-4 border-b-2 border-transparent" href="#">Marketplace</a>
-<a className="text-primary dark:text-primary-fixed-dim font-bold border-b-2 border-primary pb-1 py-4 hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200" href="#">Find Work</a>
-<a className="text-on-surface-variant dark:text-surface-variant font-medium hover:text-primary dark:hover:text-primary-fixed transition-colors duration-200 py-4 border-b-2 border-transparent" href="#">Solutions</a>
-</nav>
-<div className="flex items-center space-x-4 ml-6 pl-6 border-l border-outline-variant">
-<button className="hidden md:block px-4 py-2 bg-white border border-[#E2E8F0] text-[#0F172A] rounded-lg text-sm font-medium hover:shadow-level-1 transition-all">Switch Role</button>
-<button className="hidden md:block bg-gradient-to-r from-[#1E293B] to-[#334155] hover:ring-2 hover:ring-[#0F766E]/50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">Post Project</button>
-<div className="flex space-x-3 text-on-surface-variant">
-<button className="hover:text-primary transition-colors relative"><span className="material-symbols-outlined">notifications</span><span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span></button>
-<button className="hover:text-primary transition-colors hidden sm:block"><span className="material-symbols-outlined">account_balance_wallet</span></button>
-<button className="hover:text-primary transition-colors hidden sm:block"><span className="material-symbols-outlined">mail</span></button>
-</div>
-</div>
-</div>
-</header>
+
 {/*  Dashboard Content Canvas  */}
-<div className="pt-24 px-gutter pb-12 max-w-container-max mx-auto w-full flex-1">
+<div className="pt-8 md:pt-10 px-gutter pb-12 max-w-container-max mx-auto w-full flex-1">
 {/*  Welcome Section  */}
 <section className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end">
 <div>

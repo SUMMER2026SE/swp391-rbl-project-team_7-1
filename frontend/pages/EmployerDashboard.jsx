@@ -9,167 +9,30 @@ export default function EmployerDashboard() {
   };
 
   return (
-    <div className="bg-surface text-on-surface h-screen flex overflow-hidden font-body-md text-body-md w-full antialiased">
-      
-      {/* SideNavBar (Shared Component) */}
-      <aside className="hidden md:flex flex-col w-64 h-full bg-surface-container-lowest border-r border-outline-variant shrink-0 z-40 transition-all duration-300">
-        
-        {/* Header/Brand */}
-        <div className="p-lg border-b border-outline-variant flex items-center gap-md">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-              business_center
-            </span>
-          </div>
-          <div>
-            <h1 className="font-headline-sm text-headline-sm text-primary">FJMS</h1>
-            <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Employer Portal</p>
-          </div>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto p-md space-y-xs">
-          {/* Active Navigation Item */}
-          <Link className="flex items-center gap-md bg-secondary-container text-on-secondary-container rounded-lg px-md py-sm Active:scale-98 transition-transform" to="/employer/dashboard">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-              dashboard
-            </span>
-            <span className="font-label-md text-label-md">Dashboard</span>
-          </Link>
-
-          {/* Workspace */}
-          <div className="pt-sm pb-xs">
-            <p className="px-md font-label-sm text-label-sm text-outline uppercase tracking-wider">Workspace</p>
-          </div>
-          <Link className="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-variant hover:text-on-surface transition-all duration-200 rounded-lg" to="/projects">
-            <span className="material-symbols-outlined">add_circle</span>
-            <span className="font-label-md text-label-md">Create Project</span>
-          </Link>
-          <Link className="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-variant hover:text-on-surface transition-all duration-200 rounded-lg" to="/projects">
-            <span className="material-symbols-outlined">folder_open</span>
-            <span className="font-label-md text-label-md">My Projects</span>
-          </Link>
-          <Link className="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-variant hover:text-on-surface transition-all duration-200 rounded-lg justify-between" to="/projects">
-            <div className="flex items-center gap-md">
-              <span className="material-symbols-outlined">description</span>
-              <span className="font-label-md text-label-md">Proposals</span>
-            </div>
-            <span className="bg-primary-container text-on-primary-container text-xs font-bold px-2 py-0.5 rounded-full">3</span>
-          </Link>
-          <Link className="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-variant hover:text-on-surface transition-all duration-200 rounded-lg" to="/projects">
-            <span className="material-symbols-outlined">workspaces</span>
-            <span className="font-label-md text-label-md">Workspaces</span>
-          </Link>
-
-          {/* Management */}
-          <div className="pt-md pb-xs">
-            <p className="px-md font-label-sm text-label-sm text-outline uppercase tracking-wider">Management</p>
-          </div>
-          <Link className="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-variant hover:text-on-surface transition-all duration-200 rounded-lg justify-between" to="/projects">
-            <div className="flex items-center gap-md">
-              <span className="material-symbols-outlined">mail</span>
-              <span className="font-label-md text-label-md">Messages</span>
-            </div>
-            <div className="w-2 h-2 rounded-full bg-error"></div>
-          </Link>
-          <Link className="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-variant hover:text-on-surface transition-all duration-200 rounded-lg" to="/projects">
-            <span className="material-symbols-outlined">account_balance_wallet</span>
-            <span className="font-label-md text-label-md">Wallet</span>
-          </Link>
-          <Link className="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-variant hover:text-on-surface transition-all duration-200 rounded-lg" to="/projects">
-            <span className="material-symbols-outlined">bar_chart</span>
-            <span className="font-label-md text-label-md">Reports</span>
-          </Link>
-        </nav>
-
-        {/* Footer Actions */}
-        <div className="p-md border-t border-outline-variant space-y-sm bg-surface-container-low">
-          <Link className="flex items-center justify-center gap-sm w-full py-2 px-4 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md cursor-pointer" to="/freelancer/dashboard">
-            <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
-            Switch to Freelancer
-          </Link>
-        </div>
-      </aside>
-
-      {/* Main Content Canvas */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        
-        {/* Top App Bar */}
-        <header className="h-16 border-b border-outline-variant bg-surface-container-lowest flex items-center justify-between px-lg shrink-0 z-30">
-          <div className="flex items-center gap-md md:hidden">
-            <button className="text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-            <span className="font-headline-sm text-headline-sm font-bold text-primary">FJMS</span>
-          </div>
-          
-          <div className="hidden md:block">
-            {/* Search */}
-            <div className="relative w-64">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
-              <input
-                className="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 font-body-sm text-body-sm focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all outline-none text-on-surface"
-                placeholder="Search projects, freelancers..."
-                type="text"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-md">
-            <button className="relative text-on-surface-variant hover:text-primary transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border border-surface-container-lowest"></span>
-            </button>
-            
-            <div className="h-8 w-px bg-outline-variant mx-2"></div>
-            
-            <div className="relative group cursor-pointer">
-              <div className="flex items-center gap-sm hover:opacity-85 transition-opacity">
-                <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
-                  E
-                </div>
-                <span className="font-label-md text-label-md hidden lg:block text-on-surface">Employer</span>
-                <span className="material-symbols-outlined text-[16px] text-outline">expand_more</span>
-              </div>
-
-              {/* Dropdown Menu */}
-              <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-outline-variant rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-                <Link to="/profile" className="flex items-center gap-sm px-4 py-3 text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-label-md">
-                  <span className="material-symbols-outlined text-[18px]">person</span>
-                  My Profile
-                </Link>
-                <div className="h-px bg-outline-variant"></div>
-                <div onClick={handleLogout} className="flex items-center gap-sm px-4 py-3 text-error hover:bg-error-container transition-colors font-label-md">
-                  <span className="material-symbols-outlined text-[18px]">logout</span>
-                  Sign Out
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
+    <main className="flex-1 flex flex-col h-full bg-[#F8FAFC]">
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-md lg:p-xl scroll-smooth">
           <div className="max-w-container-max mx-auto space-y-xl pb-24">
             
             {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-md">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
-                <h2 className="font-headline-xl text-headline-xl text-on-surface">Overview</h2>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-1">Track your projects, proposals, and team activity.</p>
+                <h2 className="font-headline-xl text-headline-xl text-slate-800 font-bold tracking-tight">Overview</h2>
+                <p className="font-body-md text-body-md text-slate-500 mt-1">Track your projects, proposals, and team activity.</p>
               </div>
               
-              <div className="flex gap-sm">
+              <div className="flex gap-3">
                 <button
                   onClick={() => alert('Exporting report (CSV/Excel)...')}
-                  className="bg-surface-container-lowest border border-primary text-primary hover:bg-surface-container-low font-label-md text-label-md px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm flex items-center gap-2 cursor-pointer"
+                  className="bg-white border border-slate-200 text-slate-600 hover:text-[#0F766E] hover:border-[#0F766E] font-label-md text-label-md px-5 py-2.5 rounded-xl transition-all duration-300 shadow-sm flex items-center gap-2 cursor-pointer font-semibold"
                 >
                   <span className="material-symbols-outlined text-[18px]">download</span>
                   Export Report
                 </button>
                 <Link
                   to="/projects"
-                  className="bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm flex items-center gap-2 cursor-pointer"
+                  className="bg-[#0F766E] text-white hover:bg-[#0D5E58] font-label-md text-label-md px-5 py-2.5 rounded-xl transition-all duration-300 shadow-[0_4px_12px_rgba(15,118,110,0.2)] hover:shadow-[0_6px_16px_rgba(15,118,110,0.3)] hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer font-semibold"
                 >
                   <span className="material-symbols-outlined text-[18px]">add</span>
                   Post New Project
@@ -178,80 +41,81 @@ export default function EmployerDashboard() {
             </div>
 
             {/* Stats Grid (Bento Style) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-md">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               
               {/* Stat 1 */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg bento-hover transition-all duration-300 flex flex-col justify-between hover-lift">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(15,118,110,0.08)] group shadow-sm">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white transition-colors duration-300">
                     <span className="material-symbols-outlined">work</span>
                   </div>
-                  <span className="font-label-sm text-label-sm text-primary flex items-center bg-primary/10 px-2 py-1 rounded-md">
+                  <span className="font-label-sm text-label-sm text-emerald-600 flex items-center bg-emerald-50 px-2.5 py-1 rounded-md font-semibold">
                     <span className="material-symbols-outlined text-[14px] mr-1">trending_up</span> 12%
                   </span>
                 </div>
                 <div>
-                  <p className="font-label-md text-label-md text-on-surface-variant">Posted Projects</p>
-                  <h3 className="font-headline-lg text-headline-lg text-on-surface mt-1">24</h3>
+                  <p className="font-label-md text-label-md text-slate-500 font-medium">Posted Projects</p>
+                  <h3 className="font-headline-lg text-headline-lg text-slate-800 mt-1 font-bold">24</h3>
                 </div>
               </div>
 
               {/* Stat 2 */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg bento-hover transition-all duration-300 flex flex-col justify-between hover-lift">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-full bg-tertiary-container/20 flex items-center justify-center text-tertiary-container">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(15,118,110,0.08)] group shadow-sm">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300">
                     <span className="material-symbols-outlined">description</span>
                   </div>
-                  <span className="font-label-sm text-label-sm text-on-surface-variant flex items-center bg-surface-variant px-2 py-1 rounded-md">
+                  <span className="font-label-sm text-label-sm text-slate-600 flex items-center bg-slate-100 px-2.5 py-1 rounded-md font-semibold">
                     New 3
                   </span>
                 </div>
                 <div>
-                  <p className="font-label-md text-label-md text-on-surface-variant">Pending Proposals</p>
-                  <h3 className="font-headline-lg text-headline-lg text-on-surface mt-1">18</h3>
+                  <p className="font-label-md text-label-md text-slate-500 font-medium">Pending Proposals</p>
+                  <h3 className="font-headline-lg text-headline-lg text-slate-800 mt-1 font-bold">18</h3>
                 </div>
               </div>
 
               {/* Stat 3 */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg bento-hover transition-all duration-300 flex flex-col justify-between hover-lift">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-full bg-secondary-container/50 flex items-center justify-center text-secondary">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(15,118,110,0.08)] group shadow-sm">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
                     <span className="material-symbols-outlined">handshake</span>
                   </div>
                 </div>
                 <div>
-                  <p className="font-label-md text-label-md text-on-surface-variant">Active Contracts</p>
-                  <h3 className="font-headline-lg text-headline-lg text-on-surface mt-1">7</h3>
+                  <p className="font-label-md text-label-md text-slate-500 font-medium">Active Contracts</p>
+                  <h3 className="font-headline-lg text-headline-lg text-slate-800 mt-1 font-bold">7</h3>
                 </div>
               </div>
 
               {/* Stat 4 (Escrow) */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg bento-hover transition-all duration-300 flex flex-col justify-between lg:col-span-1 border-b-4 border-b-primary hover-lift">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-sm">
+              <div className="bg-gradient-to-br from-[#0F766E] to-[#042F2E] border border-teal-800 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between lg:col-span-1 border-b-4 border-b-teal-400 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(15,118,110,0.3)] group shadow-md relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-4 -mt-4 pointer-events-none"></div>
+                <div className="flex justify-between items-start mb-6 relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-white backdrop-blur-sm border border-white/20">
                     <span className="material-symbols-outlined">account_balance</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-surface-container border border-outline-variant px-2 py-1 rounded-full">
-                    <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant font-semibold">VNPay Secure</span>
+                  <div className="flex items-center gap-1 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full backdrop-blur-sm">
+                    <span className="material-symbols-outlined text-[14px] text-teal-300" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                    <span className="font-label-sm text-label-sm text-teal-50 font-semibold">VNPay Secure</span>
                   </div>
                 </div>
-                <div>
-                  <p className="font-label-md text-label-md text-on-surface-variant">Escrow Balance</p>
-                  <h3 className="font-headline-lg text-headline-lg text-on-surface mt-1">300.000.000 đ</h3>
+                <div className="relative z-10">
+                  <p className="font-label-md text-label-md text-teal-200 font-medium">Escrow Balance</p>
+                  <h3 className="font-headline-lg text-headline-lg text-white mt-1 font-bold">300M đ</h3>
                 </div>
               </div>
 
               {/* Stat 5 */}
-              <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg bento-hover transition-all duration-300 flex flex-col justify-between hover-lift">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-outline">
+              <div className="bg-white border border-slate-100 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(15,118,110,0.08)] group shadow-sm">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-700 transition-colors duration-300">
                     <span className="material-symbols-outlined">task_alt</span>
                   </div>
                 </div>
                 <div>
-                  <p className="font-label-md text-label-md text-on-surface-variant">Completed</p>
-                  <h3 className="font-headline-lg text-headline-lg text-on-surface mt-1">156</h3>
+                  <p className="font-label-md text-label-md text-slate-500 font-medium">Completed</p>
+                  <h3 className="font-headline-lg text-headline-lg text-slate-800 mt-1 font-bold">156</h3>
                 </div>
               </div>
 
@@ -264,35 +128,35 @@ export default function EmployerDashboard() {
               <div className="lg:col-span-2 space-y-lg">
                 
                 {/* Pending Submissions */}
-                <div className="bg-tertiary-fixed/30 border border-tertiary-fixed-dim rounded-xl p-lg relative overflow-hidden">
-                  <div className="absolute right-0 top-0 w-32 h-32 bg-tertiary-fixed-dim/20 rounded-bl-full -mr-8 -mt-8 pointer-events-none"></div>
-                  <div className="flex items-start gap-md relative z-10">
-                    <div className="w-12 h-12 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container shrink-0 shadow-sm">
-                      <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>priority_high</span>
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-2xl p-6 relative overflow-hidden shadow-sm">
+                  <div className="absolute right-0 top-0 w-40 h-40 bg-amber-500/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none"></div>
+                  <div className="flex items-start gap-4 relative z-10">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center text-white shrink-0 shadow-md">
+                      <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>priority_high</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-headline-sm text-headline-sm text-on-surface">Action Required: Milestone Approvals</h3>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 mb-4">
+                      <h3 className="font-headline-sm text-headline-sm text-slate-800 font-bold tracking-tight">Action Required: Milestone Approvals</h3>
+                      <p className="font-body-sm text-body-sm text-slate-600 mt-1 mb-5">
                         You have 2 pending submissions from freelancers waiting for your review. Approving releases funds from Escrow.
                       </p>
                       
-                      <div className="space-y-sm">
-                        <div className="bg-surface-container-lowest rounded-lg p-sm px-md border border-outline-variant flex items-center justify-between">
-                          <div className="flex items-center gap-sm">
-                            <span className="material-symbols-outlined text-outline text-[20px]">inventory_2</span>
-                            <span className="font-label-md text-label-md text-on-surface">E-commerce UI Design - Phase 1</span>
+                      <div className="space-y-3">
+                        <div className="bg-white rounded-xl p-3.5 px-4 border border-amber-100 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex items-center gap-3">
+                            <span className="material-symbols-outlined text-amber-500 text-[22px]">inventory_2</span>
+                            <span className="font-label-md text-label-md text-slate-700 font-semibold">E-commerce UI Design - Phase 1</span>
                           </div>
-                          <button onClick={() => alert('Reviewing E-commerce UI Design')} className="text-primary font-label-md text-label-md hover:underline cursor-pointer">
-                            Review Work
+                          <button onClick={() => alert('Reviewing E-commerce UI Design')} className="text-amber-600 font-label-md text-label-md font-bold hover:text-amber-700 cursor-pointer flex items-center gap-1">
+                            Review Work <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                           </button>
                         </div>
-                        <div className="bg-surface-container-lowest rounded-lg p-sm px-md border border-outline-variant flex items-center justify-between">
-                          <div className="flex items-center gap-sm">
-                            <span className="material-symbols-outlined text-outline text-[20px]">code</span>
-                            <span className="font-label-md text-label-md text-on-surface">API Integration Script</span>
+                        <div className="bg-white rounded-xl p-3.5 px-4 border border-amber-100 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex items-center gap-3">
+                            <span className="material-symbols-outlined text-amber-500 text-[22px]">code</span>
+                            <span className="font-label-md text-label-md text-slate-700 font-semibold">API Integration Script</span>
                           </div>
-                          <button onClick={() => alert('Reviewing API Script')} className="text-primary font-label-md text-label-md hover:underline cursor-pointer">
-                            Review Work
+                          <button onClick={() => alert('Reviewing API Script')} className="text-amber-600 font-label-md text-label-md font-bold hover:text-amber-700 cursor-pointer flex items-center gap-1">
+                            Review Work <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                           </button>
                         </div>
                       </div>
@@ -301,60 +165,60 @@ export default function EmployerDashboard() {
                 </div>
 
                 {/* Recent Projects Table */}
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-                  <div className="p-lg border-b border-outline-variant flex justify-between items-center bg-surface-bright">
-                    <h3 className="font-headline-sm text-headline-sm text-on-surface">Recent Projects</h3>
-                    <Link className="text-primary font-label-md text-label-md hover:underline flex items-center cursor-pointer" to="/projects">
-                      View All <span className="material-symbols-outlined text-[16px] ml-1">arrow_forward</span>
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                    <h3 className="font-headline-sm text-headline-sm text-slate-800 font-bold tracking-tight">Recent Projects</h3>
+                    <Link className="text-[#0F766E] font-label-md text-label-md font-bold hover:text-[#0D5E58] flex items-center cursor-pointer transition-colors" to="/projects">
+                      View All <span className="material-symbols-outlined text-[18px] ml-1">arrow_forward</span>
                     </Link>
                   </div>
                   
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
-                          <th className="p-md font-medium">Project Name</th>
-                          <th className="p-md font-medium">Status</th>
-                          <th className="p-md font-medium">Freelancer</th>
-                          <th className="p-md font-medium text-right">Spent</th>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-label-sm text-label-sm uppercase tracking-wider">
+                          <th className="p-4 px-6 font-semibold">Project Name</th>
+                          <th className="p-4 font-semibold">Status</th>
+                          <th className="p-4 font-semibold">Freelancer</th>
+                          <th className="p-4 px-6 font-semibold text-right">Spent</th>
                         </tr>
                       </thead>
-                      <tbody className="font-body-sm text-body-sm text-on-surface">
-                        <tr className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors cursor-pointer">
-                          <td className="p-md font-medium">CRM Dashboard Migration</td>
-                          <td className="p-md">
-                            <span className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs font-semibold flex w-fit items-center gap-1">
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary"></div> In Progress
+                      <tbody className="font-body-sm text-body-sm text-slate-700">
+                        <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group">
+                          <td className="p-4 px-6 font-semibold group-hover:text-[#0F766E] transition-colors">CRM Dashboard Migration</td>
+                          <td className="p-4">
+                            <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold flex w-fit items-center gap-1.5 border border-emerald-100">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> In Progress
                             </span>
                           </td>
-                          <td className="p-md flex items-center gap-2">
-                            <img alt="Freelancer" className="w-6 h-6 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjBlZNIzWxT6IcbVh2b6hE--DsefCpGZXj6GQlVFZC-bO5BtcfGFzdbRRKUIt49FzvNvkUQaSOLvDGH81jggwpy80aEZlq6wqZxtTvuc8K2thln1MKqda6CirVCTvDddBupnFyZPJKxW8kPX5KLQ9uLaEvb7fO6kROgqDP9DRh-380EBT0EFJwtHkirke6uVHLtskftOE64pNNHjTgKPb7uqRx_XhII3aHHvoVsjIwPlffQltfWvzQnQx4IBOtt0lfNKZZrAJ2x36z" />
-                            <span>Sarah J.</span>
+                          <td className="p-4 flex items-center gap-2">
+                            <img alt="Freelancer" className="w-7 h-7 rounded-full object-cover shadow-sm border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjBlZNIzWxT6IcbVh2b6hE--DsefCpGZXj6GQlVFZC-bO5BtcfGFzdbRRKUIt49FzvNvkUQaSOLvDGH81jggwpy80aEZlq6wqZxtTvuc8K2thln1MKqda6CirVCTvDddBupnFyZPJKxW8kPX5KLQ9uLaEvb7fO6kROgqDP9DRh-380EBT0EFJwtHkirke6uVHLtskftOE64pNNHjTgKPb7uqRx_XhII3aHHvoVsjIwPlffQltfWvzQnQx4IBOtt0lfNKZZrAJ2x36z" />
+                            <span className="font-medium">Sarah J.</span>
                           </td>
-                          <td className="p-md text-right font-medium">80.000.000 đ</td>
+                          <td className="p-4 px-6 text-right font-bold text-slate-800">80.000.000 đ</td>
                         </tr>
-                        <tr className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors cursor-pointer">
-                          <td className="p-md font-medium">Mobile App Concept Design</td>
-                          <td className="p-md">
-                            <span className="bg-tertiary-container/10 text-tertiary px-2 py-1 rounded-md text-xs font-semibold flex w-fit items-center gap-1">
-                              <div className="w-1.5 h-1.5 rounded-full bg-tertiary"></div> Review
+                        <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group">
+                          <td className="p-4 px-6 font-semibold group-hover:text-[#0F766E] transition-colors">Mobile App Concept Design</td>
+                          <td className="p-4">
+                            <span className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-bold flex w-fit items-center gap-1.5 border border-amber-100">
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div> Review
                             </span>
                           </td>
-                          <td className="p-md flex items-center gap-2">
-                            <img alt="Freelancer" className="w-6 h-6 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr-lEyw_grSf6UEk4B8rJif4KoisfbufyZv0Wd7INAyVSqzWQMNQZIh5HlIilOrH4Gm2a2V_nE8IW2QGYwMWeHVTs0vxuWhb6l75TuDE_fpwiLxuoEQ22nRbGGM7ZBp-6K8XyzGoLbYCpEasKIUk4BfLcB9lJ-MqZbLjOFNPXk0dEdGdEIrEYObFNIVdm9OCGinxY3Ohd5Ek7jc1UT8Mb7K0vHjj3vwHTXHey1gD9DkagBdPv2BjUcROnelJDhYohCthlXuqGSmRof" />
-                            <span>Marcus T.</span>
+                          <td className="p-4 flex items-center gap-2">
+                            <img alt="Freelancer" className="w-7 h-7 rounded-full object-cover shadow-sm border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr-lEyw_grSf6UEk4B8rJif4KoisfbufyZv0Wd7INAyVSqzWQMNQZIh5HlIilOrH4Gm2a2V_nE8IW2QGYwMWeHVTs0vxuWhb6l75TuDE_fpwiLxuoEQ22nRbGGM7ZBp-6K8XyzGoLbYCpEasKIUk4BfLcB9lJ-MqZbLjOFNPXk0dEdGdEIrEYObFNIVdm9OCGinxY3Ohd5Ek7jc1UT8Mb7K0vHjj3vwHTXHey1gD9DkagBdPv2BjUcROnelJDhYohCthlXuqGSmRof" />
+                            <span className="font-medium">Marcus T.</span>
                           </td>
-                          <td className="p-md text-right font-medium">37.500.000 đ</td>
+                          <td className="p-4 px-6 text-right font-bold text-slate-800">37.500.000 đ</td>
                         </tr>
-                        <tr className="hover:bg-surface-container-low/50 transition-colors cursor-pointer">
-                          <td className="p-md font-medium">SEO Optimization 2024</td>
-                          <td className="p-md">
-                            <span className="bg-surface-variant text-on-surface-variant px-2 py-1 rounded-md text-xs font-semibold flex w-fit items-center gap-1">
-                              <div className="w-1.5 h-1.5 rounded-full bg-outline"></div> Sourcing
+                        <tr className="hover:bg-slate-50 transition-colors cursor-pointer group">
+                          <td className="p-4 px-6 font-semibold group-hover:text-[#0F766E] transition-colors">SEO Optimization 2024</td>
+                          <td className="p-4">
+                            <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold flex w-fit items-center gap-1.5 border border-slate-200">
+                              <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div> Sourcing
                             </span>
                           </td>
-                          <td className="p-md text-outline italic">3 Proposals</td>
-                          <td className="p-md text-right font-medium text-outline-variant">-</td>
+                          <td className="p-4 text-slate-500 italic">3 Proposals</td>
+                          <td className="p-4 px-6 text-right font-bold text-slate-400">-</td>
                         </tr>
                       </tbody>
                     </table>
@@ -366,57 +230,57 @@ export default function EmployerDashboard() {
               {/* Right Column (Sidebar) */}
               <div className="space-y-lg">
                 {/* Freelancer Suggestions */}
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
-                  <div className="flex items-center gap-sm mb-6">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                    <h3 className="font-headline-sm text-headline-sm text-on-surface">Top Talent for You</h3>
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="material-symbols-outlined text-amber-500 text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                    <h3 className="font-headline-sm text-headline-sm text-slate-800 font-bold tracking-tight">Top Talent for You</h3>
                   </div>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">Based on your recent \'React Native\' searches.</p>
+                  <p className="font-body-sm text-body-sm text-slate-500 mb-6">Based on your recent 'React Native' searches.</p>
                   
-                  <div className="space-y-md">
+                  <div className="space-y-4 flex-1">
                     {/* Talent Card 1 */}
-                    <div className="group flex gap-md p-sm -mx-sm rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer">
+                    <div className="group flex gap-4 p-3 -mx-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
                       <div className="relative shrink-0">
-                        <img alt="Talent" className="w-12 h-12 rounded-full object-cover border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkgmoFOT-W3CVER-UmrnvEBpdFyj7t7LYMy9ANhG2hNi0ZfgUJl6EKPKSHCHAchhJ9FwkdMrhmGqOZkywmarGXGS0aOrpexZHyD0qAKd-7RGRpgcQdw2xQwjIn_fDRI09Usb50Wwl2V_NyBLujCK_lgs7_afKq2MbLFYqra0e-sLBJrRZXhO2odKdcRdFHMUFoDwzYT_uSnX3xCS-AfCy1WnrfsMboeEuCUuicBCSx6wHyVfFKG40uuMAdb3A-2VPf8lJYTcE23FA-" />
-                        <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary rounded-full border-2 border-surface-container-lowest"></div>
+                        <img alt="Talent" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkgmoFOT-W3CVER-UmrnvEBpdFyj7t7LYMy9ANhG2hNi0ZfgUJl6EKPKSHCHAchhJ9FwkdMrhmGqOZkywmarGXGS0aOrpexZHyD0qAKd-7RGRpgcQdw2xQwjIn_fDRI09Usb50Wwl2V_NyBLujCK_lgs7_afKq2MbLFYqra0e-sLBJrRZXhO2odKdcRdFHMUFoDwzYT_uSnX3xCS-AfCy1WnrfsMboeEuCUuicBCSx6wHyVfFKG40uuMAdb3A-2VPf8lJYTcE23FA-" />
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white"></div>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
                         <div className="flex justify-between items-start">
-                          <h4 className="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">Elena Rodriguez</h4>
-                          <span className="flex items-center text-tertiary-fixed-dim font-label-sm text-label-sm">
-                            <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span> 4.9
+                          <h4 className="font-label-md text-label-md text-slate-800 font-bold truncate group-hover:text-[#0F766E] transition-colors">Elena Rodriguez</h4>
+                          <span className="flex items-center text-amber-500 font-label-sm text-label-sm font-bold bg-amber-50 px-1.5 py-0.5 rounded">
+                            <span className="material-symbols-outlined text-[14px] mr-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>star</span> 4.9
                           </span>
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant truncate">Senior React Native Dev</p>
+                        <p className="font-body-sm text-body-sm text-slate-500 truncate mt-0.5">Senior React Native Dev</p>
                         <div className="flex gap-2 mt-2">
-                          <span className="bg-primary/5 text-primary text-[10px] font-bold px-2 py-0.5 rounded border border-primary/10">PRO</span>
-                          <span className="text-outline text-xs">850.000 đ/giờ</span>
+                          <span className="bg-[#0F766E]/10 text-[#0F766E] text-[10px] font-bold px-2 py-0.5 rounded border border-[#0F766E]/20">PRO</span>
+                          <span className="text-slate-400 text-xs font-medium">850.000 đ/giờ</span>
                         </div>
                       </div>
                     </div>
                     
                     {/* Talent Card 2 */}
-                    <div className="group flex gap-md p-sm -mx-sm rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer">
+                    <div className="group flex gap-4 p-3 -mx-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
                       <div className="relative shrink-0">
-                        <img alt="Talent" className="w-12 h-12 rounded-full object-cover border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7d5Jgziido1vt-U-JTa9dpm9FWbgGXbg9rRygv4JiqXWYLURHlGmpuOysCvBC5s2i4hD9kN0V77uiIlq-wsc0O23H7t65eOpJzPhEPIyoyraxPaAc7bZd13y8PpDyXMn_jZ4F7dOm9AGRMmZEWI0vB9YK9tnIPTXQy-rox6QhmmRdJm8R59t7YOveljWxbceibkyYQRlqHCGUvlwTwJktk6YeAfSOwvpjfNOwuTP7Ka6gywCHsD4liWLoI25RRelfU8ybo6jDqDRO" />
-                        <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-outline-variant rounded-full border-2 border-surface-container-lowest"></div>
+                        <img alt="Talent" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7d5Jgziido1vt-U-JTa9dpm9FWbgGXbg9rRygv4JiqXWYLURHlGmpuOysCvBC5s2i4hD9kN0V77uiIlq-wsc0O23H7t65eOpJzPhEPIyoyraxPaAc7bZd13y8PpDyXMn_jZ4F7dOm9AGRMmZEWI0vB9YK9tnIPTXQy-rox6QhmmRdJm8R59t7YOveljWxbceibkyYQRlqHCGUvlwTwJktk6YeAfSOwvpjfNOwuTP7Ka6gywCHsD4liWLoI25RRelfU8ybo6jDqDRO" />
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-slate-300 rounded-full border-2 border-white"></div>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 flex flex-col justify-center">
                         <div className="flex justify-between items-start">
-                          <h4 className="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">David Kim</h4>
-                          <span className="flex items-center text-tertiary-fixed-dim font-label-sm text-label-sm">
-                            <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span> 5.0
+                          <h4 className="font-label-md text-label-md text-slate-800 font-bold truncate group-hover:text-[#0F766E] transition-colors">David Kim</h4>
+                          <span className="flex items-center text-amber-500 font-label-sm text-label-sm font-bold bg-amber-50 px-1.5 py-0.5 rounded">
+                            <span className="material-symbols-outlined text-[14px] mr-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>star</span> 5.0
                           </span>
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant truncate">Full Stack Engineer</p>
+                        <p className="font-body-sm text-body-sm text-slate-500 truncate mt-0.5">Full Stack Engineer</p>
                         <div className="flex gap-2 mt-2">
-                          <span className="text-outline text-xs">950.000 đ/giờ</span>
+                          <span className="text-slate-400 text-xs font-medium">950.000 đ/giờ</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <Link to="/projects" className="w-full mt-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-variant transition-colors text-center inline-block cursor-pointer">
+                  <Link to="/freelancers" className="w-full mt-6 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-label-md text-label-md font-bold text-slate-600 hover:bg-slate-100 hover:text-[#0F766E] hover:border-[#0F766E]/30 transition-all text-center inline-block cursor-pointer">
                     Browse Network
                   </Link>
                 </div>

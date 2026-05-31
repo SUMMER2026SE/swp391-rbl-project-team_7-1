@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function ForgotPassword() {
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSendEmail = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     setLoading(true);
@@ -15,19 +21,22 @@ export default function ForgotPassword() {
     try {
       const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Yêu cầu khôi phục mật khẩu thất bại.');
+        throw new Error(data.message || 'Không thể gửi mã xác thực. Vui lòng thử lại.');
       }
 
-      setSubmitted(true);
+      setToastMsg('Mã xác thực đã được gửi đến email của bạn!');
+      setTimeout(() => {
+        setStep(2);
+        setToastMsg('');
+      }, 1500);
+
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -35,164 +44,272 @@ export default function ForgotPassword() {
     }
   };
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Mật khẩu xác nhận không khớp!');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setErrorMsg('Mật khẩu mới phải có ít nhất 8 ký tự.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, newPassword })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Đặt lại mật khẩu thất bại.');
+      }
+
+      setToastMsg('Mật khẩu đã được thay đổi thành công!');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="bg-background min-h-screen flex items-center justify-center w-full">
-      <div className="w-full min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex items-center justify-center w-full bg-gradient-to-b from-[#E0F2FE] to-white p-4 sm:p-6 antialiased relative overflow-hidden">
+      
+      {/* Background Decorative Circles */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+        <div className="w-[600px] h-[600px] rounded-full border-[1px] border-sky-300 absolute"></div>
+        <div className="w-[900px] h-[900px] rounded-full border-[1px] border-sky-300 absolute"></div>
+        <div className="w-[1200px] h-[1200px] rounded-full border-[1px] border-sky-200 absolute"></div>
+      </div>
+      
+      {/* Soft Cloud-like Blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-white/60 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-sky-100/60 rounded-full blur-[120px] pointer-events-none"></div>
+
+      {toastMsg && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white text-[#0F766E] px-6 py-4 rounded-2xl shadow-xl border border-sky-100 max-w-sm animate-bounce">
+          <span className="material-symbols-outlined text-[24px]">check_circle</span>
+          <span className="font-semibold text-sm">{toastMsg}</span>
+        </div>
+      )}
+
+      {/* Split-Screen Container */}
+      <main className="w-full max-w-5xl z-10 flex flex-col md:flex-row bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] overflow-hidden min-h-[600px] border border-white/50 relative">
         
-        {/* Left Side: Brand & Trust (Hidden on Mobile) */}
-        <div className="hidden lg:flex flex-col justify-between py-xl px-xl lg:w-1/2 left-panel-bg">
-          <div className="ambient-glow"></div>
-          <div className="relative z-10 h-full flex flex-col justify-between max-w-xl mx-auto w-full">
-            <div>
-              <Link className="font-headline-md text-headline-md font-bold text-on-primary inline-flex items-center gap-sm" to="/">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  assured_workload
-                </span>
-                FJMS
-              </Link>
-              
-              <div className="mt-32 max-w-lg">
-                <h1 className="font-headline-xl text-headline-xl text-on-primary mb-lg tracking-tight">
-                  Protecting Your Credentials.
-                </h1>
-                <p className="font-body-lg text-body-lg text-primary-fixed-dim/90 leading-relaxed">
-                  We employ rigorous, industry-standard cryptographic practices to ensure your digital workspace and account data remain completely secure.
-                </p>
+        {/* Left Side: Branding Panel (Luxury Dark Teal) */}
+        <div className="md:w-[45%] bg-gradient-to-br from-[#0F766E] via-[#0D5E58] to-[#042F2E] text-white p-10 flex flex-col items-center justify-center relative overflow-hidden z-20 hidden md:flex border-r border-white/10">
+          
+          {/* Glassmorphism Decorative Elements */}
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-10 right-10 w-48 h-48 bg-teal-400/20 rounded-full blur-3xl"></div>
+          
+          <div className="absolute top-1/4 right-[-20%] w-64 h-64 border border-white/10 rounded-full"></div>
+          <div className="absolute bottom-1/4 left-[-20%] w-48 h-48 border border-white/10 rounded-full"></div>
+
+          <div className="text-center z-10">
+            <Link to="/">
+              <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-105 transition-all duration-300 border border-white/20 cursor-pointer">
+                <span className="material-symbols-outlined text-5xl text-white">lock_reset</span>
               </div>
+            </Link>
+            
+            <h2 className="text-3xl font-bold mb-4 tracking-tight">Reset Password</h2>
+            
+            <p className="text-teal-50 text-sm leading-relaxed max-w-[260px] mx-auto font-medium opacity-90">
+              Don't worry, it happens to the best of us. Let's get you back into your account securely.
+            </p>
+          </div>
+          
+          {/* Bottom Trust Indicators */}
+          <div className="absolute bottom-8 w-full flex justify-center gap-6 text-teal-100/80">
+            <div className="flex flex-col items-center gap-1">
+              <span className="material-symbols-outlined text-[20px]">shield</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Protected</span>
             </div>
-
-            <div className="space-y-md mt-16">
-              <div className="flex items-start gap-md bg-white/5 backdrop-blur-md p-lg rounded-2xl border border-white/10 shadow-lg">
-                <div className="bg-secondary/20 p-sm rounded-xl text-secondary-fixed flex-shrink-0 mt-1 flex items-center justify-center">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    key
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-headline-sm text-headline-sm text-on-primary mb-xs">End-to-End Encryption</h3>
-                  <p className="font-body-md text-body-md text-primary-fixed-dim/80">
-                    Passwords are safely salted and hashed using bcrypt before stored, keeping them anonymous to everyone.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-md bg-white/5 backdrop-blur-md p-lg rounded-2xl border border-white/10 shadow-lg">
-                <div className="bg-secondary/20 p-sm rounded-xl text-secondary-fixed flex-shrink-0 mt-1 flex items-center justify-center">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    support_agent
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-headline-sm text-headline-sm text-on-primary mb-xs">Need Assistance?</h3>
-                  <p className="font-body-md text-body-md text-primary-fixed-dim/80">
-                    Our platform support team and AI chatbot are available 24/7 to help you recover your credentials securely.
-                  </p>
-                </div>
-              </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="material-symbols-outlined text-[20px]">sync_lock</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Encrypted</span>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Reset Form */}
-        <div className="flex items-center justify-center py-xl px-gutter lg:px-xl lg:w-1/2 bg-surface-bright h-full min-h-screen w-full">
-          <div className="w-full max-w-md bg-surface-container-lowest border border-outline-variant rounded-2xl p-lg shadow-sm">
-            
-            {/* Mobile Logo (Visible only on mobile) */}
-            <div className="lg:hidden mb-xl text-center">
-              <Link className="font-headline-md text-headline-md font-bold text-primary inline-flex items-center gap-sm" to="/">
-                <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  assured_workload
-                </span>
-                FJMS
-              </Link>
+        {/* Right Side: Form Panel */}
+        <div className="w-full md:w-[55%] bg-white/60 p-10 md:p-14 flex flex-col justify-center relative z-10 overflow-hidden">
+          
+          {/* Mobile Header (Hidden on Desktop) */}
+          <div className="md:hidden text-center mb-8 flex justify-center">
+            <div className="w-16 h-16 bg-[#0F766E]/10 rounded-2xl flex items-center justify-center text-[#0F766E]">
+              <span className="material-symbols-outlined text-3xl">lock_reset</span>
             </div>
+          </div>
 
-            {!submitted ? (
-              <>
-                <div className="mb-lg text-center lg:text-left">
-                  <h2 className="font-headline-lg text-headline-lg text-on-surface mb-xs">Forgot password?</h2>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    No worries! Enter your email below and we'll send you reset instructions.
-                  </p>
+          <div className="text-center md:text-left mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
+              {step === 1 ? 'Forgot Password?' : 'Create New Password'}
+            </h2>
+            <p className="text-slate-500 mt-2 text-sm">
+              {step === 1 ? 'Enter your email address to receive an OTP.' : 'Enter the OTP sent to your email and your new password.'}
+            </p>
+          </div>
+
+          {errorMsg && (
+            <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-100 rounded-xl text-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">error</span>
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <div className="relative min-h-[300px]">
+            {/* Step 1: Send OTP Form */}
+            <form onSubmit={handleSendEmail} className={`space-y-4 absolute inset-0 w-full transition-all duration-500 ease-in-out ${step === 1 ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 -translate-x-full pointer-events-none'}`}>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="email">
+                  Email Address
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
+                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                  </div>
+                  <input
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 text-slate-800 text-sm focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 transition-all hover:bg-white placeholder:text-slate-400"
+                    id="email"
+                    name="email"
+                    placeholder="name@example.com"
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
+              </div>
 
-                {errorMsg && (
-                  <div className="mb-md p-md bg-error-container text-on-error-container border border-error/20 rounded-lg text-body-sm flex items-center gap-sm">
-                    <span className="material-symbols-outlined text-[20px] text-on-error-container" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      error
+              <button
+                className="w-full text-white py-3.5 px-4 rounded-xl transition-all duration-300 mt-4 font-bold bg-[#0F766E] hover:bg-[#0D5E58] hover:shadow-[0_8px_20px_rgba(15,118,110,0.25)] hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? 'Sending OTP...' : 'Send OTP Code'}
+              </button>
+            </form>
+
+            {/* Step 2: Reset Password Form */}
+            <form onSubmit={handleResetPassword} className={`space-y-4 absolute inset-0 w-full transition-all duration-500 ease-in-out ${step === 2 ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 translate-x-full pointer-events-none'}`}>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="otp">
+                  OTP Code
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
+                    <span className="material-symbols-outlined text-[20px]">pin</span>
+                  </div>
+                  <input
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 text-slate-800 text-sm focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 transition-all hover:bg-white placeholder:text-slate-400 font-mono tracking-widest"
+                    id="otp"
+                    maxLength="6"
+                    name="otp"
+                    placeholder="123456"
+                    required
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="newPassword">
+                  New Password
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
+                    <span className="material-symbols-outlined text-[20px]">lock_reset</span>
+                  </div>
+                  <input
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-12 pr-12 py-3.5 text-slate-800 text-sm focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 transition-all hover:bg-white placeholder:text-slate-400"
+                    id="newPassword"
+                    name="newPassword"
+                    placeholder="Enter new password"
+                    required
+                    type={showPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <button
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {showPassword ? 'visibility_off' : 'visibility'}
                     </span>
-                    <span>{errorMsg}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-md">
-                  <div>
-                    <label className="block font-label-md text-label-md text-on-surface mb-xs" htmlFor="email">
-                      Email address
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-sm flex items-center pointer-events-none text-outline">
-                        <span className="material-symbols-outlined text-body-lg">mail</span>
-                      </div>
-                      <input
-                        className="block w-full pl-xl pr-sm py-sm bg-surface rounded-lg border border-outline-variant focus:ring-2 focus:ring-primary focus:border-primary font-body-md text-body-md text-on-surface placeholder-outline transition-colors outline-none"
-                        id="email"
-                        name="email"
-                        placeholder="example@gmail.com"
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-sm">
-                    <button
-                      className="w-full flex justify-center py-sm px-md border border-transparent rounded-lg shadow-sm font-label-md text-label-md text-on-primary bg-primary hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      type="submit"
-                      disabled={loading}
-                    >
-                      {loading ? 'Sending...' : 'Send Reset Instructions'}
-                    </button>
-                  </div>
-                </form>
-
-              </>
-            ) : (
-              <div className="text-center py-md">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-lg text-primary">
-                  <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    mark_email_read
-                  </span>
+                  </button>
                 </div>
-                <h2 className="font-headline-lg text-headline-lg text-on-surface mb-sm">Check your email</h2>
-                <p className="font-body-md text-body-md text-on-surface-variant mb-lg leading-relaxed">
-                  We've sent a password reset link to <br />
-                  <span className="font-semibold text-on-surface">{email}</span>. <br />
-                  Please follow the instructions in the email to set a new password.
-                </p>
-                <button
-                  onClick={() => setSubmitted(false)}
-                  className="font-label-md text-label-md text-primary hover:text-primary-container transition-colors inline-block"
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="confirmPassword">
+                  Confirm Password
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
+                    <span className="material-symbols-outlined text-[20px]">lock_reset</span>
+                  </div>
+                  <input
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 text-slate-800 text-sm focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 transition-all hover:bg-white placeholder:text-slate-400"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    placeholder="Confirm new password"
+                    required
+                    type={showPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <button
+                className="w-full text-white py-3.5 px-4 rounded-xl transition-all duration-300 font-bold bg-[#0F766E] hover:bg-[#0D5E58] hover:shadow-[0_8px_20px_rgba(15,118,110,0.25)] hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? 'Resetting...' : 'Save Password'}
+              </button>
+              
+              <div className="text-center pt-2">
+                <button 
+                  type="button" 
+                  onClick={() => setStep(1)}
+                  className="text-xs text-slate-500 hover:text-[#0F766E] transition-colors hover:underline"
                 >
-                  Resend email link
+                  Need another code? Resend
                 </button>
               </div>
-            )}
-
-            <div className="mt-xl text-center border-t border-outline-variant/30 pt-lg">
-              <Link className="inline-flex items-center gap-xs font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" to="/login">
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                Back to login
-              </Link>
-            </div>
-
+            </form>
           </div>
-        </div>
 
-      </div>
+          {/* Footer */}
+          <div className="mt-8 text-center pt-6 border-t border-slate-100">
+            <Link className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#0F766E] transition-colors group" to="/login">
+              <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
+              Back to login
+            </Link>
+          </div>
+
+        </div>
+      </main>
     </div>
   );
 }

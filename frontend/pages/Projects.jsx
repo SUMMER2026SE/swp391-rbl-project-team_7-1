@@ -159,10 +159,10 @@ export default function Projects() {
           </div>
 
           <div className="flex items-center gap-md">
-            <Link className="hidden md:block font-label-md text-label-md text-primary bg-white border border-primary px-lg py-sm rounded-lg hover:bg-surface-container-low transition-colors" to="/login">
+            <Link className="hidden md:block font-label-md text-label-md text-primary bg-white border border-primary px-lg py-sm rounded-2xl hover:bg-surface-container-low transition-colors" to="/login">
               Login
             </Link>
-            <Link className="font-label-md text-label-md text-white bg-primary px-lg py-sm rounded-lg hover:bg-primary-container transition-colors inline-flex justify-center items-center" to="/register">
+            <Link className="font-label-md text-label-md text-white bg-primary px-lg py-sm rounded-2xl hover:bg-primary-container transition-colors inline-flex justify-center items-center" to="/register">
               Register
             </Link>
             <img
@@ -203,7 +203,7 @@ export default function Projects() {
                   className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-surface-container-low cursor-pointer"
                   type="checkbox"
                 />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
               </label>
             ))}
 
@@ -217,7 +217,7 @@ export default function Projects() {
                   className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-surface-container-low cursor-pointer"
                   type="checkbox"
                 />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
               </label>
             ))}
 
@@ -231,7 +231,7 @@ export default function Projects() {
                   className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-surface-container-low cursor-pointer"
                   type="checkbox"
                 />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
               </label>
             ))}
 
@@ -245,7 +245,7 @@ export default function Projects() {
                   className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-surface-container-low cursor-pointer"
                   type="checkbox"
                 />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
               </label>
             ))}
 
@@ -259,7 +259,7 @@ export default function Projects() {
                   className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-surface-container-low cursor-pointer"
                   type="checkbox"
                 />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
               </label>
             ))}
 
@@ -273,7 +273,7 @@ export default function Projects() {
                   className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 bg-surface-container-low cursor-pointer"
                   type="checkbox"
                 />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">{cat}</span>
               </label>
             ))}
           </div>
@@ -284,13 +284,13 @@ export default function Projects() {
             <h3 className="font-label-md text-label-md text-on-surface font-semibold">Budget (VND)</h3>
             <div className="flex gap-sm items-center">
               <input
-                className="w-full bg-surface-container-low border border-outline-variant rounded-md px-sm py-xs font-body-sm text-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-sm py-xs text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface"
                 placeholder="Minimum"
                 type="number"
               />
               <span className="text-on-surface-variant">-</span>
               <input
-                className="w-full bg-surface-container-low border border-outline-variant rounded-md px-sm py-xs font-body-sm text-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-sm py-xs text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface"
                 placeholder="Maximum"
                 type="number"
               />
@@ -299,19 +299,19 @@ export default function Projects() {
             <div className="flex flex-col gap-xs mt-sm">
               <label className="flex items-center gap-sm cursor-pointer group">
                 <input className="text-primary focus:ring-primary w-4 h-4 border-outline-variant bg-surface-container-low cursor-pointer" name="budget" type="radio" />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Under 10M</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Under 10M</span>
               </label>
               <label className="flex items-center gap-sm cursor-pointer group">
                 <input defaultChecked className="text-primary focus:ring-primary w-4 h-4 border-outline-variant bg-surface-container-low cursor-pointer" name="budget" type="radio" />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">10M - 50M</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">10M - 50M</span>
               </label>
               <label className="flex items-center gap-sm cursor-pointer group">
                 <input className="text-primary focus:ring-primary w-4 h-4 border-outline-variant bg-surface-container-low cursor-pointer" name="budget" type="radio" />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">50M - 250M</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">50M - 250M</span>
               </label>
               <label className="flex items-center gap-sm cursor-pointer group">
                 <input className="text-primary focus:ring-primary w-4 h-4 border-outline-variant bg-surface-container-low cursor-pointer" name="budget" type="radio" />
-                <span className="font-body-sm text-body-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Above 250M</span>
+                <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Above 250M</span>
               </label>
             </div>
           </div>
@@ -323,16 +323,16 @@ export default function Projects() {
             <div className="relative">
               <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">search</span>
               <input
-                className="w-full bg-surface-container-low border border-outline-variant rounded-md pl-lg pr-sm py-sm font-body-sm text-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface"
+                className="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-lg pr-sm py-sm text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface"
                 placeholder="Search skills"
                 type="text"
               />
             </div>
             <div className="flex flex-wrap gap-sm mt-sm">
-              <span className="inline-flex items-center gap-xs px-sm py-xs bg-primary/10 text-primary rounded-md font-label-sm text-label-sm cursor-pointer hover:bg-primary/20 transition-colors">
+              <span className="inline-flex items-center gap-xs px-sm py-xs bg-primary/10 text-primary rounded-lg font-label-sm text-label-sm cursor-pointer hover:bg-primary/20 transition-colors">
                 React <span className="material-symbols-outlined text-[12px]">close</span>
               </span>
-              <span className="inline-flex items-center gap-xs px-sm py-xs bg-primary/10 text-primary rounded-md font-label-sm text-label-sm cursor-pointer hover:bg-primary/20 transition-colors">
+              <span className="inline-flex items-center gap-xs px-sm py-xs bg-primary/10 text-primary rounded-lg font-label-sm text-label-sm cursor-pointer hover:bg-primary/20 transition-colors">
                 TypeScript <span className="material-symbols-outlined text-[12px]">close</span>
               </span>
             </div>
@@ -341,7 +341,7 @@ export default function Projects() {
           {/* Deadline Filter */}
           <div className="flex flex-col gap-sm pb-md">
             <h3 className="font-label-md text-label-md text-on-surface font-semibold">Deadline</h3>
-            <select className="w-full bg-surface-container-low border border-outline-variant rounded-md px-sm py-sm font-body-sm text-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface-variant cursor-pointer">
+            <select className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-sm py-sm text-sm font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface-variant cursor-pointer">
               <option>Any Time</option>
               <option>Less than 1 week</option>
               <option>1 to 4 weeks</option>
@@ -349,7 +349,7 @@ export default function Projects() {
             </select>
           </div>
           
-          <button className="w-full py-sm bg-surface-container-low border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-highest transition-colors mt-auto cursor-pointer">
+          <button className="w-full py-sm bg-surface-container-low border border-outline-variant text-on-surface font-label-md text-label-md rounded-2xl hover:bg-surface-container-highest transition-colors mt-auto cursor-pointer">
             Apply Filters
           </button>
         </aside>
@@ -369,7 +369,7 @@ export default function Projects() {
             <div className="flex items-center gap-sm self-start md:self-auto">
               <span className="font-label-sm text-label-sm text-on-surface-variant">Sort by:</span>
               <select
-                className="bg-surface border border-outline-variant rounded-md px-sm py-xs font-label-md text-label-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none cursor-pointer"
+                className="bg-surface border border-outline-variant rounded-lg px-sm py-xs font-label-md text-label-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none cursor-pointer"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
@@ -408,11 +408,11 @@ export default function Projects() {
                   </button>
                 </div>
 
-                <p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+                <p className="text-sm font-medium text-on-surface-variant line-clamp-2">
                   {project.description}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-md font-body-sm text-body-sm text-on-surface-variant">
+                <div className="flex flex-wrap items-center gap-md text-sm font-medium text-on-surface-variant">
                   <div className="flex items-center gap-xs">
                     <span className="material-symbols-outlined text-[16px]">payments</span>
                     <span className="text-primary font-semibold">{project.budget}</span>
@@ -434,12 +434,12 @@ export default function Projects() {
                 <div className="flex items-center justify-between mt-sm pt-md border-t border-outline-variant/50">
                   <div className="flex flex-wrap gap-sm">
                     {project.skills.map(skill => (
-                      <span key={skill} className="px-sm py-xs bg-primary/10 text-primary rounded-md font-label-sm text-label-sm">
+                      <span key={skill} className="px-sm py-xs bg-primary/10 text-primary rounded-lg font-label-sm text-label-sm">
                         {skill}
                       </span>
                     ))}
                     {project.verified && (
-                      <span className="px-sm py-xs bg-tertiary-container/20 text-tertiary-container rounded-md font-label-sm text-label-sm flex items-center gap-xs">
+                      <span className="px-sm py-xs bg-tertiary-container/20 text-tertiary-container rounded-lg font-label-sm text-label-sm flex items-center gap-xs">
                         <span className="material-symbols-outlined text-[12px]">verified</span> Verified Employer
                       </span>
                     )}
@@ -447,7 +447,7 @@ export default function Projects() {
                   
                   <Link
                     to={`/projects/${project.id}`}
-                    className="font-label-md text-label-md text-white bg-primary px-md py-sm rounded-lg hover:bg-primary-container transition-colors shrink-0 inline-flex items-center justify-center cursor-pointer"
+                    className="font-label-md text-label-md text-white bg-primary px-md py-sm rounded-2xl hover:bg-primary-container transition-colors shrink-0 inline-flex items-center justify-center cursor-pointer"
                   >
                     View Detail
                   </Link>
@@ -489,7 +489,7 @@ export default function Projects() {
         <div className="w-full py-xl px-gutter max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-lg">
           <div className="flex items-center gap-sm">
             <span className="font-headline-sm text-headline-sm text-primary">FJMS</span>
-            <span className="font-body-sm text-body-sm text-on-surface-variant ml-sm">
+            <span className="text-sm font-medium text-on-surface-variant ml-sm">
               © {new Date().getFullYear()} FJMS Premium Marketplace. All rights reserved.
             </span>
           </div>
