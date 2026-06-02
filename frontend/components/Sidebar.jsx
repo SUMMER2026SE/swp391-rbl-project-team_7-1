@@ -24,9 +24,23 @@ export default function Sidebar() {
     role = 'employer';
   }
 
+  const [localUser, setLocalUser] = React.useState(() => {
+    const s = localStorage.getItem('user');
+    return s ? JSON.parse(s) : null;
+  });
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      const s = localStorage.getItem('user');
+      setLocalUser(s ? JSON.parse(s) : null);
+    };
+    window.addEventListener('profileUpdated', handleUpdate);
+    return () => window.removeEventListener('profileUpdated', handleUpdate);
+  }, []);
+
+  const user = localUser;
+
   // When on /profile, determine role from localStorage
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
   if (path === '/profile' && user?.roleDefault) {
     const rd = user.roleDefault.toLowerCase();
     if (rd === 'employer') role = 'employer';
@@ -34,20 +48,10 @@ export default function Sidebar() {
     else role = 'freelancer';
   }
 
-
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/login';
-  };
-
-  const handleSwitchRole = () => {
-    if (role === 'freelancer') {
-      navigate('/employer-dashboard');
-    } else {
-      navigate('/freelancer-dashboard');
-    }
   };
 
   let items = [];
@@ -59,53 +63,53 @@ export default function Sidebar() {
 
   if (role === 'freelancer') {
     items = [
-      { label: 'Dashboard', icon: 'dashboard', link: '/freelancer-dashboard' },
-      { label: 'Browse Projects', icon: 'work', link: '/browse-projects' },
-      { label: 'Wallet', icon: 'payments', link: '/freelancer-wallet' },
-      { label: 'Messages', icon: 'chat', link: '/messages-freelancer' },
-      { label: 'Profile', icon: 'account_circle', link: '/profile' },
+      { label: 'Bảng điều khiển', icon: 'dashboard', link: '/freelancer-dashboard' },
+      { label: 'Khám phá dự án', icon: 'work', link: '/browse-projects' },
+      { label: 'Ví tiền', icon: 'payments', link: '/freelancer-wallet' },
+      { label: 'Tin nhắn', icon: 'chat', link: '/messages-freelancer' },
+      { label: 'Hồ sơ', icon: 'account_circle', link: '/profile' },
     ];
     user_name = user ? user.fullName : 'Alexander';
     user_role = 'Freelancer';
-    avatar = FREELANCER_AVATAR;
-    bottom_btn = 'Find a Project';
+    avatar = user?.avatarUrl || FREELANCER_AVATAR;
+    bottom_btn = 'Tìm dự án';
     bottom_btn_link = '/browse-projects';
   } else if (role === 'employer') {
     items = [
-      { label: 'Dashboard', icon: 'dashboard', link: '/employer-dashboard' },
-      { label: 'My Projects', icon: 'work', link: '/manage-proposals' },
-      { label: 'Find Freelancers', icon: 'group', link: '/browse-projects' },
-      { label: 'Wallet', icon: 'payments', link: '/employer-wallet' },
-      { label: 'Messages', icon: 'chat', link: '/messages-employer' },
-      { label: 'Profile', icon: 'account_circle', link: '/profile' },
+      { label: 'Bảng điều khiển', icon: 'dashboard', link: '/employer-dashboard' },
+      { label: 'Dự án của tôi', icon: 'work', link: '/manage-proposals' },
+      { label: 'Tìm Freelancer', icon: 'group', link: '/browse-projects' },
+      { label: 'Ví tiền', icon: 'payments', link: '/employer-wallet' },
+      { label: 'Tin nhắn', icon: 'chat', link: '/messages-employer' },
+      { label: 'Hồ sơ', icon: 'account_circle', link: '/profile' },
     ];
     user_name = user ? user.fullName : 'TechCorp Inc.';
-    user_role = 'Employer';
-    avatar = EMPLOYER_AVATAR;
-    bottom_btn = 'Post New Project';
+    user_role = 'Nhà tuyển dụng';
+    avatar = user?.avatarUrl || EMPLOYER_AVATAR;
+    bottom_btn = 'Đăng dự án mới';
     bottom_btn_link = '/post-project';
   } else if (role === 'admin') {
     items = [
-      { label: 'Dashboard', icon: 'dashboard', link: '/admin-dashboard' },
-      { label: 'User Management', icon: 'group', link: '/admin-users' },
-      { label: 'Disputes', icon: 'gavel', link: '/admin-disputes' },
-      { label: 'Reports', icon: 'summarize', link: '/admin-generate-report' },
-      { label: 'Analytics', icon: 'analytics', link: '/admin-analytics' },
-      { label: 'Settings', icon: 'settings', link: '/admin-settings' }
+      { label: 'Bảng điều khiển', icon: 'dashboard', link: '/admin-dashboard' },
+      { label: 'Quản lý người dùng', icon: 'group', link: '/admin-users' },
+      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-disputes' },
+      { label: 'Báo cáo', icon: 'summarize', link: '/admin-generate-report' },
+      { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' },
+      { label: 'Cài đặt', icon: 'settings', link: '/admin-settings' }
     ];
     user_name = user ? user.fullName : 'Admin Panel';
-    user_role = 'System Admin';
-    avatar = EMPLOYER_AVATAR;
+    user_role = 'Quản trị viên';
+    avatar = user?.avatarUrl || EMPLOYER_AVATAR;
   }
 
   const isItemActive = (item) => {
     if (item.link === '#') return false;
     if (path === item.link) return true;
-    if (item.label === 'Reports' && path.startsWith('/admin-report')) return true;
-    if (item.label === 'Dashboard' && path.endsWith('-dashboard')) return true;
-    if (item.label === 'Wallet' && path.endsWith('-wallet')) return true;
-    if (item.label === 'Profile' && path === '/profile') return true;
-    if (item.label === 'My Projects' && (path === '/review-submission' || path === '/revision-requested' || path === '/project-details')) return true;
+    if (item.label === 'Báo cáo' && path.startsWith('/admin-report')) return true;
+    if (item.label === 'Bảng điều khiển' && path.endsWith('-dashboard')) return true;
+    if (item.label === 'Ví tiền' && path.endsWith('-wallet')) return true;
+    if (item.label === 'Hồ sơ' && path === '/profile') return true;
+    if (item.label === 'Dự án của tôi' && (path === '/review-submission' || path === '/revision-requested' || path === '/project-details')) return true;
     return false;
   };
 
@@ -163,13 +167,13 @@ export default function Sidebar() {
           <li>
             <Link className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 text-sm font-semibold hover:bg-slate-50 hover:text-slate-800 transition-all" to="/help-center">
               <span className="material-symbols-outlined text-[20px] text-slate-400">help</span>
-              Help Center
+              Trung tâm hỗ trợ
             </Link>
           </li>
           <li>
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 text-sm font-semibold hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer text-left border-none">
               <span className="material-symbols-outlined text-[20px]">logout</span>
-              Logout
+              Đăng xuất
             </button>
           </li>
         </ul>

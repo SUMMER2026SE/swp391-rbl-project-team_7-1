@@ -64,7 +64,7 @@ export default function ForgotPassword() {
       const response = await fetch('http://localhost:5000/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, newPassword })
+        body: JSON.stringify({ email, otpCode: otp, newPassword })
       });
 
       const data = await response.json();
@@ -126,10 +126,10 @@ export default function ForgotPassword() {
               </div>
             </Link>
             
-            <h2 className="text-3xl font-bold mb-4 tracking-tight">Reset Password</h2>
+            <h2 className="text-3xl font-bold mb-4 tracking-tight">Khôi phục Mật khẩu</h2>
             
             <p className="text-teal-50 text-sm leading-relaxed max-w-[260px] mx-auto font-medium opacity-90">
-              Don't worry, it happens to the best of us. Let's get you back into your account securely.
+              Đừng lo lắng, việc quên mật khẩu là bình thường. Chúng tôi sẽ giúp bạn truy cập lại tài khoản một cách an toàn.
             </p>
           </div>
           
@@ -137,11 +137,11 @@ export default function ForgotPassword() {
           <div className="absolute bottom-8 w-full flex justify-center gap-6 text-teal-100/80">
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">shield</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Protected</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Bảo vệ</span>
             </div>
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">sync_lock</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Encrypted</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Mã hóa</span>
             </div>
           </div>
         </div>
@@ -158,10 +158,10 @@ export default function ForgotPassword() {
 
           <div className="text-center md:text-left mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
-              {step === 1 ? 'Forgot Password?' : 'Create New Password'}
+              {step === 1 ? 'Quên mật khẩu?' : 'Tạo mật khẩu mới'}
             </h2>
             <p className="text-slate-500 mt-2 text-sm">
-              {step === 1 ? 'Enter your email address to receive an OTP.' : 'Enter the OTP sent to your email and your new password.'}
+              {step === 1 ? 'Nhập địa chỉ email của bạn để nhận mã OTP.' : 'Nhập mã OTP được gửi tới email và mật khẩu mới của bạn.'}
             </p>
           </div>
 
@@ -177,7 +177,7 @@ export default function ForgotPassword() {
             <form onSubmit={handleSendEmail} className={`space-y-4 absolute inset-0 w-full transition-all duration-500 ease-in-out ${step === 1 ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 -translate-x-full pointer-events-none'}`}>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="email">
-                  Email Address
+                  Địa chỉ Email
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -201,7 +201,7 @@ export default function ForgotPassword() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? 'Sending OTP...' : 'Send OTP Code'}
+                {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
               </button>
             </form>
 
@@ -209,7 +209,7 @@ export default function ForgotPassword() {
             <form onSubmit={handleResetPassword} className={`space-y-4 absolute inset-0 w-full transition-all duration-500 ease-in-out ${step === 2 ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 translate-x-full pointer-events-none'}`}>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="otp">
-                  OTP Code
+                  Mã OTP
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -231,7 +231,7 @@ export default function ForgotPassword() {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="newPassword">
-                  New Password
+                  Mật khẩu mới
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -241,7 +241,7 @@ export default function ForgotPassword() {
                     className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-12 pr-12 py-3.5 text-slate-800 text-sm focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 transition-all hover:bg-white placeholder:text-slate-400"
                     id="newPassword"
                     name="newPassword"
-                    placeholder="Enter new password"
+                    placeholder="Nhập mật khẩu mới"
                     required
                     type={showPassword ? 'text' : 'password'}
                     value={newPassword}
@@ -261,7 +261,7 @@ export default function ForgotPassword() {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="confirmPassword">
-                  Confirm Password
+                  Xác nhận mật khẩu
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -271,7 +271,7 @@ export default function ForgotPassword() {
                     className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-12 pr-4 py-3.5 text-slate-800 text-sm focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 transition-all hover:bg-white placeholder:text-slate-400"
                     id="confirmPassword"
                     name="confirmPassword"
-                    placeholder="Confirm new password"
+                    placeholder="Xác nhận mật khẩu mới"
                     required
                     type={showPassword ? 'text' : 'password'}
                     value={confirmPassword}
@@ -285,7 +285,7 @@ export default function ForgotPassword() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? 'Resetting...' : 'Save Password'}
+                {loading ? 'Đang cập nhật...' : 'Lưu mật khẩu'}
               </button>
               
               <div className="text-center pt-2">
@@ -294,7 +294,7 @@ export default function ForgotPassword() {
                   onClick={() => setStep(1)}
                   className="text-xs text-slate-500 hover:text-[#0F766E] transition-colors hover:underline"
                 >
-                  Need another code? Resend
+                  Cần mã khác? Gửi lại
                 </button>
               </div>
             </form>
@@ -304,7 +304,7 @@ export default function ForgotPassword() {
           <div className="mt-8 text-center pt-6 border-t border-slate-100">
             <Link className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#0F766E] transition-colors group" to="/login">
               <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
-              Back to login
+              Quay lại đăng nhập
             </Link>
           </div>
 

@@ -30,7 +30,7 @@ export default function LandingPage() {
              <span className="material-symbols-outlined text-[20px]">code</span>
           </div>
           <div>
-            <div className="text-sm font-extrabold text-slate-800">Web Dashboard</div>
+            <div className="text-sm font-extrabold text-slate-800">Bảng điều khiển Web</div>
             <div className="text-[11px] font-medium text-slate-500">React & Node.js</div>
           </div>
         </div>
@@ -49,7 +49,7 @@ export default function LandingPage() {
              <span className="material-symbols-outlined text-[20px]">palette</span>
           </div>
           <div>
-            <div className="text-sm font-extrabold text-slate-800">UI Redesign</div>
+            <div className="text-sm font-extrabold text-slate-800">Thiết kế UI</div>
             <div className="text-[11px] font-medium text-slate-500">Figma Prototype</div>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function LandingPage() {
              <span className="material-symbols-outlined text-[20px]">dns</span>
           </div>
           <div>
-            <div className="text-sm font-extrabold text-slate-800">API Service</div>
+            <div className="text-sm font-extrabold text-slate-800">Dịch vụ API</div>
             <div className="text-[11px] font-medium text-slate-500">Python FastAPI</div>
           </div>
         </div>
@@ -83,8 +83,8 @@ export default function LandingPage() {
              <span className="material-symbols-outlined text-[20px]">campaign</span>
           </div>
           <div>
-            <div className="text-sm font-extrabold text-slate-800">Digital Marketing</div>
-            <div className="text-[11px] font-medium text-slate-500">SEO & Ads Strategy</div>
+            <div className="text-sm font-extrabold text-slate-800">Marketing kỹ thuật số</div>
+            <div className="text-[11px] font-medium text-slate-500">SEO & Chiến lược Quảng cáo</div>
           </div>
         </div>
       </div>
@@ -94,32 +94,32 @@ export default function LandingPage() {
         {/* Hero Text */}
         <div className={`text-center space-y-8 max-w-4xl mx-auto transition-all duration-1000 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h1 className="text-5xl md:text-6xl lg:text-7xl text-[#020617] font-extrabold tracking-tight leading-[1.1]">
-            Elevate Your Business with <br className="hidden md:block" />
+            Nâng tầm doanh nghiệp của bạn với <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0F766E] to-[#2DD4BF]">
-              Elite Global Talent.
+              Nhân tài hàng đầu toàn cầu.
             </span>
           </h1>
           
           <p className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
-            Connect with top-tier professionals. Execute visionary projects. Secure every transaction with our enterprise-grade VNPay escrow system.
+            Kết nối với chuyên gia hàng đầu. Thực hiện dự án tầm nhìn. Bảo mật mọi giao dịch bằng hệ thống ky quỹ VNPay cấp doanh nghiệp.
           </p>
         </div>
 
         {/* Call to Action Buttons (Replaced Search) */}
         <div className={`mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-1000 delay-200 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
           <Link to="/freelancers" className="w-full sm:w-auto px-8 py-4 bg-[#0F766E] text-white rounded-2xl font-bold text-lg hover:bg-[#0D5E58] transition-all duration-300 shadow-[0_10px_30px_rgba(15,118,110,0.2)] hover:shadow-[0_10px_30px_rgba(15,118,110,0.4)] hover:-translate-y-1 flex items-center justify-center gap-2 group">
-            Browse Freelancers
+            Khám phá Freelancer
             <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
           </Link>
           <Link to="/browse-projects" className="w-full sm:w-auto px-8 py-4 bg-white text-[#0F766E] rounded-2xl font-bold text-lg hover:bg-teal-50 transition-all duration-300 border border-teal-100 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
-            Find Projects
+            Tìm dự án
             <span className="material-symbols-outlined text-[20px]">explore</span>
           </Link>
         </div>
 
         {/* Categories / Tags */}
         <div className={`mt-16 flex flex-wrap justify-center gap-3 transition-all duration-1000 delay-300 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          {['Web Development', 'UI/UX Design', 'Mobile Apps', 'Digital Marketing', 'Data Science', 'Blockchain'].map((tag) => (
+          {['Phát triển Web', 'Thiết kế UI/UX', 'Ứng dụng di động', 'Marketing kỹ thuật số', 'Khoa học dữ liệu', 'Blockchain'].map((tag) => (
             <span key={tag} className="px-6 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 hover:border-[#0F766E] hover:text-[#0F766E] hover:shadow-md transition-all cursor-pointer">
               {tag}
             </span>
@@ -130,11 +130,11 @@ export default function LandingPage() {
         <div className={`mt-32 w-full transition-all duration-1000 delay-500 transform ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-[#020617] tracking-tight">Featured Projects</h2>
-              <p className="text-slate-500 mt-3 text-lg font-medium">Opportunities hand-picked for top professionals.</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-[#020617] tracking-tight">Dự án Nổi bật</h2>
+              <p className="text-slate-500 mt-3 text-lg font-medium">Cơ hội được tuyển chọn dành cho chuyên gia hàng đầu.</p>
             </div>
             <Link to="/browse-projects" className="inline-flex items-center gap-2 text-[#0F766E] font-bold hover:text-[#0D5E58] transition-colors group">
-              View All Projects
+              Xem tất cả dự án
               <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">east</span>
             </Link>
           </div>
@@ -147,20 +147,20 @@ export default function LandingPage() {
                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" alt="Dashboard" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-[#0F766E] shadow-sm uppercase tracking-wider">
-                  Web Dev
+                  Lập trình Web
                 </div>
               </div>
               <div className="flex-1 flex flex-col">
-                <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-[#0F766E] transition-colors">FinTech Analytics</h3>
-                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Looking for a Senior React developer to build a comprehensive analytics dashboard with real-time data visualization and complex state management.</p>
+                <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-[#0F766E] transition-colors">Phân tích FinTech</h3>
+                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Tìm kiếm lập trình viên React cao cấp để xây dựng bảng điều khiển phân tích toàn diện với trực quan hóa dữ liệu thời gian thực và quản lý trạng thái phức tạp.</p>
                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
                   <div className="flex items-center gap-3">
                     <img src="https://i.pravatar.cc/150?img=32" alt="Avatar" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
                     <span className="text-sm font-bold text-[#020617]">TechCorp</span>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Budget</span>
-                    <span className="font-extrabold text-lg text-[#0F766E]">$4k - $6k</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ngân sách</span>
+                    <span className="font-extrabold text-lg text-[#0F766E]">100M đ - 150M đ</span>
                   </div>
                 </div>
               </div>
@@ -176,16 +176,16 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="flex-1 flex flex-col">
-                <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-indigo-600 transition-colors">Luxury E-Commerce</h3>
-                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Need a modern, conversion-focused redesign for a luxury fashion mobile application targeting high-end clientele.</p>
+                <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-indigo-600 transition-colors">Thương mại Điện tử Cao cấp</h3>
+                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Cần thiết kế lại giao diện hiện đại, tập trung chuyển đổi cho ứng dụng thời trang di động cao cấp phục vụ khách hàng thượng lưu.</p>
                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
                   <div className="flex items-center gap-3">
                     <img src="https://i.pravatar.cc/150?img=44" alt="Avatar" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
                     <span className="text-sm font-bold text-[#020617]">LuxeBrand</span>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Budget</span>
-                    <span className="font-extrabold text-lg text-indigo-600">$2k - $4k</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ngân sách</span>
+                    <span className="font-extrabold text-lg text-indigo-600">50M đ - 100M đ</span>
                   </div>
                 </div>
               </div>
@@ -202,15 +202,15 @@ export default function LandingPage() {
               </div>
               <div className="flex-1 flex flex-col">
                 <h3 className="font-extrabold text-2xl text-[#020617] mb-3 line-clamp-1 group-hover:text-sky-600 transition-colors">AI Engine API</h3>
-                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Seeking a Python/FastAPI expert to architect and build a highly scalable recommendation microservice architecture.</p>
+                <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">Tìm kiếm chuyên gia Python/FastAPI để thiết kế và xây dựng kiến trúc microservice gợi ý có khả năng mở rộng cao.</p>
                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-100">
                   <div className="flex items-center gap-3">
                     <img src="https://i.pravatar.cc/150?img=12" alt="Avatar" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
                     <span className="text-sm font-bold text-[#020617]">StartupX</span>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Budget</span>
-                    <span className="font-extrabold text-lg text-sky-600">$8k - $12k</span>
+                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Ngân sách</span>
+                    <span className="font-extrabold text-lg text-sky-600">200M đ - 300M đ</span>
                   </div>
                 </div>
               </div>

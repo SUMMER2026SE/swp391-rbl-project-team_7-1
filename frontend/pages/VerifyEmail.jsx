@@ -70,7 +70,7 @@ export default function VerifyEmail() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Gửi lại mã OTP thất bại.');
+        throw new Error(data.message || 'Gửi lại mã xác thực thất bại.');
       }
 
       setOtp(['', '', '', '', '', '']);
@@ -79,7 +79,7 @@ export default function VerifyEmail() {
       if (inputRefs.current[0]) {
         inputRefs.current[0].focus();
       }
-      setToastMsg('Mã OTP mới đã được gửi thành công về email của bạn!');
+      setToastMsg('Mã xác thực mới đã được gửi thành công về email của bạn!');
       setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
       setErrorMsg(err.message);
@@ -170,10 +170,10 @@ export default function VerifyEmail() {
               </div>
             </Link>
 
-            <h2 className="text-3xl font-bold mb-4 tracking-tight">Verify Email</h2>
+            <h2 className="text-3xl font-bold mb-4 tracking-tight">Xác thực Email</h2>
 
             <p className="text-teal-50 text-sm leading-relaxed max-w-[260px] mx-auto font-medium opacity-90">
-              Just one more step! We need to verify your email address to ensure the security of your account.
+              Chỉ còn một bước nữa! Vui lòng xác thực địa chỉ email để đảm bảo tính an mật cho tài khoản của bạn.
             </p>
           </div>
 
@@ -181,11 +181,11 @@ export default function VerifyEmail() {
           <div className="absolute bottom-8 w-full flex justify-center gap-6 text-teal-100/80">
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">verified</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Verified</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Đã xác thực</span>
             </div>
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">security</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Secure</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Bảo mật</span>
             </div>
           </div>
         </div>
@@ -201,9 +201,9 @@ export default function VerifyEmail() {
           </div>
 
           <div className="text-center md:text-left mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Check your inbox</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Kiểm tra hộp thư</h2>
             <p className="text-slate-500 mt-2 text-sm">
-              We sent a 6-digit verification code to <span className="font-semibold text-[#0F766E] break-all">{email}</span>
+              Chúng tôi đã gửi mã xác thực 6 chữ số đến <span className="font-semibold text-[#0F766E] break-all">{email}</span>
             </p>
           </div>
 
@@ -237,20 +237,20 @@ export default function VerifyEmail() {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Verifying...' : 'Verify Email'}
+              {loading ? 'Đang xác thực...' : 'Xác thực Email'}
             </button>
           </form>
 
           <div className="mt-8 text-center text-sm border-t border-slate-100 pt-6">
             <p className="text-slate-500 mb-3">
-              Didn't receive the code?
+              Bạn chưa nhận được mã?
             </p>
             <button
               onClick={handleResend}
               disabled={!canResend || loading}
               className="font-semibold text-[#0F766E] hover:underline disabled:text-slate-400 disabled:no-underline disabled:cursor-not-allowed transition-colors"
             >
-              {canResend ? 'Resend Code' : `Resend available in 00:${timeLeft < 10 ? `0${timeLeft}` : timeLeft}`}
+              {canResend ? 'Gửi lại Mã' : `Có thể gửi lại sau 00:${timeLeft < 10 ? `0${timeLeft}` : timeLeft}`}
             </button>
           </div>
 
@@ -258,7 +258,7 @@ export default function VerifyEmail() {
           <div className="mt-6 text-center">
             <Link className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#0F766E] transition-colors group" to="/login">
               <span className="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
-              Back to login
+              Quay lại đăng nhập
             </Link>
           </div>
 

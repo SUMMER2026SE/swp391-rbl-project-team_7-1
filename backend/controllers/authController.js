@@ -411,7 +411,7 @@ export const resetPassword = async (req, res) => {
       .input('userId', sql.Int, userId)
       .input('resetToken', sql.VarChar, otpCode)
       .query(`
-        SELECT TOP 1 token_id, expired_at
+        SELECT TOP 1 reset_id, expired_at
         FROM PasswordResetTokens
         WHERE user_id = @userId AND reset_token = @resetToken AND is_used = 0
         ORDER BY created_at DESC
@@ -421,7 +421,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Mã xác nhận không hợp lệ hoặc đã được sử dụng.' });
     }
 
-    const { token_id, expired_at } = tokenResult.recordset[0];
+    const { reset_id, expired_at } = tokenResult.recordset[0];
 
     if (new Date() > new Date(expired_at)) {
       return res.status(400).json({ message: 'Mã xác nhận đã hết hạn.' });
@@ -439,8 +439,8 @@ export const resetPassword = async (req, res) => {
 
     // Mark token as used
     await pool.request()
-      .input('tokenId', sql.Int, token_id)
-      .query('UPDATE PasswordResetTokens SET is_used = 1 WHERE token_id = @tokenId');
+      .input('resetId', sql.Int, reset_id)
+      .query('UPDATE PasswordResetTokens SET is_used = 1 WHERE reset_id = @resetId');
 
     return res.status(200).json({
       success: true,

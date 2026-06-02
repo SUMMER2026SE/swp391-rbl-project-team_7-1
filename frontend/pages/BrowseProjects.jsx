@@ -4,62 +4,58 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 const ALL_PROJECTS = [
   {
     id: 1,
-    category: 'Web Development',
+    category: 'Lập trình Web',
     projectType: 'Fixed Price',
-    title: 'Enterprise SaaS Dashboard Redesign',
-    description: 'Looking for a senior product designer to overhaul our main enterprise analytics dashboard. Need clean, modern UI with a focus on data visualization, scalable components, and high ease of use.',
-    budget: '$5,000 - $8,000',
-    numericBudget: 6000,
-    duration: '4 Weeks',
-    company: 'TechNova Corp',
+    title: 'Thiết kế lại Bảng điều khiển Doanh nghiệp (SaaS)',
+    description: 'Tìm kiếm một chuyên gia thiết kế sản phẩm để cải tiến bảng điều khiển phân tích chính của chúng tôi. Cần giao diện người dùng hiện đại, gọn gàng với trọng tâm là trực quan hóa dữ liệu, các thành phần có thể mở rộng và tính dễ sử dụng cao.',
+    budget: '120.000.000 đ - 200.000.000 đ',
+    numericBudget: 150000000,
+    duration: '4 Tuần',
+    company: 'Công ty TechNova',
     proposals: 12,
-    skills: ['Figma', 'React', 'UI/UX', 'Dashboard'],
-    premium: true,
+    skills: ['Figma', 'React', 'Thiết kế UI/UX'],
     verified: true
   },
   {
     id: 2,
-    category: 'Mobile Apps',
+    category: 'Ứng dụng Di động',
     projectType: 'Hourly Rate',
-    title: 'React Native App Development',
-    description: 'We need a skilled React Native developer to build a cross-platform mobile app for our new delivery service. Experience with Google Maps API integration is highly desired.',
-    budget: '$3,000 - $4,500',
-    numericBudget: 3000,
-    duration: '2 Months',
-    company: 'Startup Inc.',
+    title: 'Phát triển Ứng dụng Di động React Native',
+    description: 'Chúng tôi cần một lập trình viên React Native có kinh nghiệm để xây dựng ứng dụng di động đa nền tảng cho dịch vụ giao hàng mới của chúng tôi. Rất mong muốn có kinh nghiệm tích hợp API Google Maps.',
+    budget: '75.000.000 đ - 110.000.000 đ',
+    numericBudget: 90000000,
+    duration: '2 Tháng',
+    company: 'Công ty Khởi nghiệp Alpha',
     proposals: 5,
-    skills: ['React Native', 'Mobile Apps', 'Node.js'],
-    premium: false,
+    skills: ['React Native', 'Node.js'],
     verified: false
   },
   {
     id: 3,
-    category: 'UI/UX Design',
+    category: 'Thiết kế UI/UX',
     projectType: 'Fixed Price',
-    title: 'Fintech Brand Identity & High-Fi Prototyping',
-    description: 'We are launching a new fintech startup and need a complete visual identity and landing page design. Looking for a modern, trustworthy look that appeals to youth.',
-    budget: '$2,000 - $3,500',
-    numericBudget: 2000,
-    duration: '10 Days',
+    title: 'Bộ nhận diện thương hiệu Fintech & Prototype',
+    description: 'Chúng tôi đang ra mắt một công ty khởi nghiệp công nghệ tài chính mới và cần một bộ nhận diện hình ảnh và thiết kế trang đích hoàn chỉnh. Tìm kiếm một giao diện hiện đại, đáng tin cậy.',
+    budget: '50.000.000 đ - 80.000.000 đ',
+    numericBudget: 65000000,
+    duration: '10 Ngày',
     company: 'NextGen Finance',
     proposals: 28,
-    skills: ['Figma', 'Branding', 'UI/UX'],
-    premium: true,
+    skills: ['Figma', 'Branding', 'Thiết kế UI/UX'],
     verified: true
   },
   {
     id: 4,
-    category: 'Web Development',
+    category: 'Lập trình Web',
     projectType: 'Fixed Price',
-    title: 'Next.js E-Commerce Platform Overhaul',
-    description: 'Complete storefront refactoring using Next.js 14, TailwindCSS, and Shopify Storefront API. Must ensure excellent SEO scores and fast loading speeds.',
-    budget: '$4,000 - $6,000',
-    numericBudget: 4000,
-    duration: '6 Weeks',
-    company: 'RetailFlow Co.',
+    title: 'Nâng cấp Nền tảng Thương mại Điện tử Next.js',
+    description: 'Viết lại toàn bộ cửa hàng bằng Next.js 14, TailwindCSS và Shopify Storefront API. Phải đảm bảo điểm SEO xuất sắc và tốc độ tải trang nhanh.',
+    budget: '100.000.000 đ - 150.000.000 đ',
+    numericBudget: 120000000,
+    duration: '6 Tuần',
+    company: 'Bán lẻ Việt',
     proposals: 9,
-    skills: ['React', 'Next.js', 'Node.js', 'Tailwind CSS'],
-    premium: false,
+    skills: ['React', 'Next.js', 'Node.js'],
     verified: true
   }
 ];
@@ -76,9 +72,12 @@ export default function BrowseProjects() {
 
   // Dynamic States
   const [selectedCategories, setSelectedCategories] = useState({
-    'Web Development': false,
-    'UI/UX Design': false,
-    'Mobile Apps': false
+    'Lập trình Web': false,
+    'Thiết kế UI/UX': false,
+    'Ứng dụng Di động': false,
+    'Viết nội dung': false,
+    'Dịch thuật': false,
+    'Kế toán': false
   });
   const [minBudget, setMinBudget] = useState('');
   const [maxBudget, setMaxBudget] = useState('');
@@ -105,9 +104,12 @@ export default function BrowseProjects() {
 
   const handleClearFilters = () => {
     setSelectedCategories({
-      'Web Development': false,
-      'UI/UX Design': false,
-      'Mobile Apps': false
+      'Lập trình Web': false,
+      'Thiết kế UI/UX': false,
+      'Ứng dụng Di động': false,
+      'Viết nội dung': false,
+      'Dịch thuật': false,
+      'Kế toán': false
     });
     setMinBudget('');
     setMaxBudget('');
@@ -173,10 +175,10 @@ export default function BrowseProjects() {
       <section className={`bg-gradient-to-br from-teal-50 via-white to-teal-50/50 border-b border-teal-100/50 py-16 px-6 md:px-12 w-full ${!token ? 'pt-[116px] md:pt-[124px]' : 'pt-12'}`}>
         <div className="max-w-[1440px] mx-auto text-center md:text-left">
           <h1 className="text-4xl md:text-5xl text-teal-950 font-extrabold tracking-tight mb-4">
-            Find High-Value Projects
+            Khám phá dự án phù hợp
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl font-medium mx-auto md:mx-0">
-            Discover opportunities that match your expertise. Filter by budget, skills, and timeline to find your next engagement.
+            Tìm kiếm cơ hội việc làm tốt nhất cho kỹ năng của bạn. Lọc theo ngân sách, loại công việc và công nghệ.
           </p>
         </div>
       </section>
@@ -188,20 +190,20 @@ export default function BrowseProjects() {
         <aside className="w-full md:w-72 flex-shrink-0 mb-8 md:mb-0">
           <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm sticky top-[104px]">
             <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-              <h2 className="text-xl text-teal-950 font-bold">Filters</h2>
+              <h2 className="text-xl text-teal-950 font-bold">Bộ lọc</h2>
               <button 
                 onClick={handleClearFilters}
                 className="text-teal-700 text-sm font-semibold hover:underline"
               >
-                Clear All
+                Xóa tất cả
               </button>
             </div>
 
             {/* Category / Role Required */}
             <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="text-base font-semibold text-teal-950 mb-3">Role Required</h3>
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Loại công việc</h3>
               <div className="flex flex-col gap-2">
-                {['Web Development', 'UI/UX Design', 'Mobile Apps'].map(cat => {
+                {Object.keys(selectedCategories).map(cat => {
                   const active = selectedCategories[cat];
                   return (
                     <label key={cat} className="flex items-center gap-3 cursor-pointer group select-none">
@@ -212,7 +214,7 @@ export default function BrowseProjects() {
                         onChange={() => handleCategoryToggle(cat)}
                       />
                       <span className={`text-sm font-medium transition-colors ${active ? 'text-teal-900 font-semibold' : 'text-slate-600 group-hover:text-teal-700'}`}>
-                        {cat === 'Web Development' ? 'Developer' : cat === 'UI/UX Design' ? 'Designer' : 'Mobile Apps'}
+                        {cat}
                       </span>
                     </label>
                   );
@@ -222,12 +224,12 @@ export default function BrowseProjects() {
 
             {/* Budget Filter */}
             <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="text-base font-semibold text-teal-950 mb-3">Budget Range (USD)</h3>
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Ngân sách (VNĐ)</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <input 
                     className="w-full text-sm p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 text-slate-800 font-medium transition-all" 
-                    placeholder="$ Min" 
+                    placeholder="Tối thiểu" 
                     type="number"
                     value={minBudget}
                     onChange={(e) => setMinBudget(e.target.value)}
@@ -235,7 +237,7 @@ export default function BrowseProjects() {
                   <span className="text-slate-400">-</span>
                   <input 
                     className="w-full text-sm p-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 text-slate-800 font-medium transition-all" 
-                    placeholder="$ Max" 
+                    placeholder="Tối đa" 
                     type="number"
                     value={maxBudget}
                     onChange={(e) => setMaxBudget(e.target.value)}
@@ -246,17 +248,20 @@ export default function BrowseProjects() {
 
             {/* Project Type Filter */}
             <div className="mb-6 pb-6 border-b border-slate-100">
-              <h3 className="text-base font-semibold text-teal-950 mb-3">Project Type</h3>
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Loại hợp đồng</h3>
               <div className="space-y-3">
-                {['Fixed Price', 'Hourly Rate'].map(type => (
-                  <label key={type} className="flex items-center gap-3 cursor-pointer group select-none">
+                {[
+                  { value: 'Fixed Price', label: 'Trọn gói' },
+                  { value: 'Hourly Rate', label: 'Theo giờ' }
+                ].map(type => (
+                  <label key={type.value} className="flex items-center gap-3 cursor-pointer group select-none">
                     <input 
                       type="checkbox"
                       className="rounded border-slate-300 text-teal-600 focus:ring-teal-600 w-4 h-4 cursor-pointer"
-                      checked={projectType === type}
-                      onChange={() => setProjectType(projectType === type ? '' : type)}
+                      checked={projectType === type.value}
+                      onChange={() => setProjectType(projectType === type.value ? '' : type.value)}
                     />
-                    <span className="text-sm text-slate-600 group-hover:text-teal-700 transition-colors font-medium">{type}</span>
+                    <span className="text-sm text-slate-600 group-hover:text-teal-700 transition-colors font-medium">{type.label}</span>
                   </label>
                 ))}
               </div>
@@ -264,9 +269,9 @@ export default function BrowseProjects() {
 
             {/* Skills Tag Filters */}
             <div>
-              <h3 className="text-base font-semibold text-teal-950 mb-3">Skills</h3>
+              <h3 className="text-base font-semibold text-teal-950 mb-3">Kỹ năng</h3>
               <div className="flex flex-wrap gap-2">
-                {['Figma', 'React', 'Node.js', 'UI/UX', 'Branding', 'React Native'].map(skill => {
+                {['Figma', 'React', 'Node.js', 'Thiết kế UI/UX', 'Branding', 'React Native'].map(skill => {
                   const active = selectedSkills.includes(skill);
                   return (
                     <span 
@@ -293,17 +298,17 @@ export default function BrowseProjects() {
           {/* Header/Sort bar */}
           <div className="flex justify-between items-center bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
             <span className="text-sm text-slate-600 font-medium">
-              Showing <strong className="text-teal-900 font-bold">{sortedProjects.length}</strong> projects {searchWord ? `for "${searchWord}"` : ''}
+              Hiển thị <strong className="text-teal-900 font-bold">{sortedProjects.length}</strong> dự án {searchWord ? `cho "${searchWord}"` : ''}
             </span>
             <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200/60">
-              <span className="text-sm text-slate-500 font-medium">Sort by:</span>
+              <span className="text-sm text-slate-500 font-medium">Sắp xếp:</span>
               <select 
                 className="text-sm border-none bg-transparent text-teal-900 font-bold focus:ring-0 cursor-pointer pl-1 pr-8 py-0"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
-                <option value="Newest First">Newest First</option>
-                <option value="Highest Budget">Highest Budget</option>
+                <option value="Newest First">Mới nhất</option>
+                <option value="Highest Budget">Ngân sách cao nhất</option>
               </select>
             </div>
           </div>
@@ -315,17 +320,10 @@ export default function BrowseProjects() {
                 key={project.id}
                 className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-[0_8px_24px_rgba(15,118,110,0.06)] hover:-translate-y-1 transition-all duration-300 relative flex flex-col group overflow-hidden"
               >
-                {/* Premium Badge */}
-                {project.premium && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-100 to-amber-50 text-amber-700 text-xs px-3 py-1.5 rounded-bl-2xl font-bold flex items-center gap-1 shadow-sm select-none border-b border-l border-amber-200/50">
-                    <span className="material-symbols-outlined text-[14px]">stars</span> Premium
-                  </div>
-                )}
-
-                <div className={`flex items-start gap-4 mb-5 ${project.premium ? 'mt-2' : ''}`}>
+                <div className="flex items-center gap-4 mb-5">
                   <div className="w-14 h-14 rounded-2xl bg-teal-50 flex items-center justify-center flex-shrink-0 text-teal-600 border border-teal-100 shadow-sm group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300">
                     <span className="material-symbols-outlined text-[28px]">
-                      {project.category === 'Mobile Apps' ? 'phone_iphone' : project.category === 'UI/UX Design' ? 'palette' : 'code'}
+                      {project.category === 'Ứng dụng Di động' ? 'phone_iphone' : project.category === 'Thiết kế UI/UX' ? 'palette' : 'code'}
                     </span>
                   </div>
                   <div>
@@ -336,7 +334,7 @@ export default function BrowseProjects() {
                       <span className="flex items-center gap-1 font-medium"><span className="material-symbols-outlined text-[16px] text-slate-400">domain</span> {project.company}</span>
                       {project.verified && (
                         <span className="flex items-center gap-1 text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full text-xs font-bold border border-teal-100/50">
-                          <span className="material-symbols-outlined text-[14px] font-fill-1 text-teal-600">verified</span> Verified
+                          <span className="material-symbols-outlined text-[14px] font-fill-1 text-teal-600">verified</span> Đã xác thực
                         </span>
                       )}
                     </p>
@@ -350,12 +348,12 @@ export default function BrowseProjects() {
                 {/* Stats Panel */}
                 <div className="flex gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100/80">
                   <div className="flex-1">
-                    <span className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Budget</span>
+                    <span className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Ngân sách</span>
                     <span className="text-base font-bold text-slate-800">{project.budget}</span>
                   </div>
                   <div className="w-px bg-slate-200"></div>
                   <div className="flex-1">
-                    <span className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Timeline</span>
+                    <span className="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Thời gian</span>
                     <span className="text-base font-bold text-slate-800">{project.duration}</span>
                   </div>
                 </div>
@@ -375,7 +373,7 @@ export default function BrowseProjects() {
                     onClick={() => navigate(token ? '/project-details' : '/project-details')}
                     className="flex-1 bg-white border border-slate-200 text-slate-700 text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-slate-50 hover:text-teal-700 hover:border-slate-300 transition-all active:scale-[0.98] text-center shadow-sm"
                   >
-                    View Detail
+                    Xem chi tiết
                   </button>
                   <div className="flex-1 relative tooltip-container">
                     {token ? (
@@ -383,7 +381,7 @@ export default function BrowseProjects() {
                         onClick={() => navigate('/submit-proposal')}
                         className="w-full bg-[#0F766E] text-white text-sm font-bold py-2.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all duration-300 active:scale-[0.98] text-center border-none"
                       >
-                        Submit Proposal
+                        Nộp đề xuất
                       </button>
                     ) : (
                       <>
@@ -391,10 +389,10 @@ export default function BrowseProjects() {
                           onClick={() => navigate('/login')}
                           className="w-full bg-slate-100 text-slate-400 text-sm font-semibold py-2.5 px-4 rounded-xl cursor-pointer text-center border-none active:scale-[0.98]"
                         >
-                          Submit Proposal
+                          Nộp đề xuất
                         </button>
                         <div className="tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg opacity-0 invisible transition-all duration-200 whitespace-nowrap z-10 shadow-md">
-                          Login to Bid
+                          Đăng nhập để đặt giá
                           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
                         </div>
                       </>
@@ -407,13 +405,13 @@ export default function BrowseProjects() {
             {sortedProjects.length === 0 && (
               <div className="col-span-full text-center py-20 bg-white border border-slate-100 rounded-2xl text-slate-500 shadow-sm">
                 <span className="material-symbols-outlined text-6xl text-slate-200 mb-4 block">search_off</span>
-                <h4 className="text-xl text-slate-800 font-bold mb-2">No Projects Found</h4>
-                <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">We couldn't find any projects matching your exact filters. Try adjusting your criteria.</p>
+                <h4 className="text-xl text-slate-800 font-bold mb-2">Không tìm thấy dự án nào</h4>
+                <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">Không tìm thấy dự án nào phù hợp với bộ lọc của bạn. Hãy thử thay đổi tiêu chí.</p>
                 <button 
                   onClick={handleClearFilters}
                   className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors"
                 >
-                  Clear all filters
+                  Xóa tất cả bộ lọc
                 </button>
               </div>
             )}

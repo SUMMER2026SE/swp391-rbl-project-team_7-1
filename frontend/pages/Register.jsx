@@ -132,10 +132,10 @@ export default function Register() {
               </div>
             </Link>
             
-            <h2 className="text-3xl font-bold mb-4 tracking-tight">Join FJMS Today</h2>
+            <h2 className="text-3xl font-bold mb-4 tracking-tight">Tham gia FJMS Ngay</h2>
             
             <p className="text-teal-50 text-sm leading-relaxed max-w-[260px] mx-auto font-medium opacity-80">
-              Create an account to connect with top clients, discover amazing projects, and take your freelance journey to the next level.
+              Tạo tài khoản để kết nối với khách hàng hàng đầu, khám phá các dự án thú vị và đưa sự nghiệp freelance của bạn lên một tầm cao mới.
             </p>
           </div>
           
@@ -143,11 +143,11 @@ export default function Register() {
           <div className="absolute bottom-8 w-full flex justify-center gap-6 text-teal-100/70">
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">workspace_premium</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Premium</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Chất lượng</span>
             </div>
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">public</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Global</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Toàn cầu</span>
             </div>
           </div>
         </div>
@@ -163,8 +163,8 @@ export default function Register() {
           </div>
 
           <div className="text-center md:text-left mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Create your account</h2>
-            <p className="text-slate-500 mt-2 text-sm">Fill in the details below to get started.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Tạo tài khoản</h2>
+            <p className="text-slate-500 mt-2 text-sm">Nhập thông tin bên dưới để bắt đầu.</p>
           </div>
 
           {errorMsg && (
@@ -177,7 +177,7 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="fullname">
-                Full Name
+                Họ và tên
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -187,7 +187,7 @@ export default function Register() {
                   className="w-full bg-slate-50 border border-slate-100/50 rounded-xl pl-12 pr-4 py-3.5 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-400 font-medium"
                   id="fullname"
                   name="fullname"
-                  placeholder="Full Name"
+                  placeholder="Họ và tên"
                   required
                   type="text"
                   value={fullname}
@@ -198,7 +198,7 @@ export default function Register() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="email">
-                Email Address
+                Địa chỉ Email
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -208,7 +208,7 @@ export default function Register() {
                   className="w-full bg-slate-50 border border-slate-100/50 rounded-xl pl-12 pr-4 py-3.5 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-400 font-medium"
                   id="email"
                   name="email"
-                  placeholder="Email address"
+                  placeholder="Địa chỉ email"
                   required
                   type="email"
                   value={email}
@@ -219,7 +219,7 @@ export default function Register() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="phone">
-                Phone Number
+                Số điện thoại
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -242,7 +242,7 @@ export default function Register() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="password">
-                Password
+                Mật khẩu
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -252,7 +252,7 @@ export default function Register() {
                   className="w-full bg-slate-50 border border-slate-100/50 rounded-xl pl-12 pr-12 py-3.5 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-400 font-medium"
                   id="password"
                   name="password"
-                  placeholder="Password"
+                  placeholder="Mật khẩu"
                   required
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -270,20 +270,18 @@ export default function Register() {
               </div>
             </div>
 
-
-
             <button
               className="w-full text-white py-3.5 px-4 rounded-xl transition-all duration-300 font-bold bg-[#0F766E] hover:bg-[#0D5E58] hover:shadow-lg hover:shadow-slate-900/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Creating Account...' : 'Sign Up'}
+              {loading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
             </button>
           </form>
 
           <div className="flex items-center gap-4 my-8">
             <div className="flex-1 h-px border-t border-dashed border-slate-200"></div>
-            <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Or sign up with</span>
+            <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Hoặc đăng ký với</span>
             <div className="flex-1 h-px border-t border-dashed border-slate-200"></div>
           </div>
 
@@ -297,9 +295,9 @@ export default function Register() {
 
           <div className="mt-8 text-center text-sm">
             <p className="text-slate-500 font-medium">
-              Already have an account? 
+              Đã có tài khoản? 
               <Link className="font-semibold text-[#0F766E] hover:underline ml-1.5" to="/login">
-                Sign in
+                Đăng nhập
               </Link>
             </p>
           </div>

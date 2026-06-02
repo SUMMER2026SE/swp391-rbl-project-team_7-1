@@ -50,10 +50,8 @@ export const updateProfile = async (req, res) => {
       request.input('bio', sql.NVarChar, bio || null);
     }
     if (avatarUrl !== undefined) {
-      // Limit avatar_url length (base64 can be very large)
-      const av = avatarUrl && avatarUrl.length > 4000 ? avatarUrl.substring(0, 4000) : (avatarUrl || null);
       updateQuery += `, avatar_url = @avatarUrl`;
-      request.input('avatarUrl', sql.NVarChar(sql.MAX), av);
+      request.input('avatarUrl', sql.NVarChar(sql.MAX), avatarUrl || null);
     }
     // Try to update bio_extras if column exists
     if (bioExtras !== undefined) {

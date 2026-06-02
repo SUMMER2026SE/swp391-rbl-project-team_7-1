@@ -94,16 +94,16 @@ export default function Header({ layout = 'dashboard' }) {
             </Link>
             <nav className="hidden lg:flex items-center gap-2 ml-6">
               <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/">
-                Home
+                Trang chủ
               </Link>
               <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/browse-projects' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/browse-projects">
-                Browse Projects
+                Khám phá dự án
               </Link>
               <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/freelancers' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/freelancers">
-                Freelancers
+                Freelancer
               </Link>
               <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/help-center' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/help-center">
-                Solutions
+                Hỗ trợ
               </Link>
             </nav>
           </div>
@@ -113,7 +113,7 @@ export default function Header({ layout = 'dashboard' }) {
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
             <input
               className="w-full pl-10 pr-4 py-2 bg-[#F1F5F9] border border-slate-200 rounded-full font-body-sm text-body-sm focus:outline-none focus:border-[#1E293B] focus:ring-1 focus:ring-[#1E293B] transition-all text-[#1E293B]"
-              placeholder="Search projects..."
+              placeholder="Tìm kiếm dự án..."
               type="text"
               value={searchVal}
               onChange={handleSearchChange}
@@ -135,10 +135,10 @@ export default function Header({ layout = 'dashboard' }) {
                 </button>
                 <div className="w-[1px] h-6 bg-slate-200 mx-2"></div>
                 <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#1E293B] transition-colors" onClick={handleSwitchRole}>
-                  Switch Role
+                  Đổi vai trò
                 </button>
                 <Link className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-body-sm text-body-sm font-bold hover:shadow-[0_0_12px_rgba(45,212,191,0.4)] border border-teal-400/50 transition-all duration-300" to="/post-project">
-                  Post Project
+                  Đăng dự án
                 </Link>
                 <div className="relative" ref={dropdownRef}>
                   <div 
@@ -161,7 +161,7 @@ export default function Header({ layout = 'dashboard' }) {
                         onClick={() => setDropdownOpen(false)}
                       >
                         <span className="material-symbols-outlined text-[18px]">person</span>
-                        My Profile
+                        Trang cá nhân
                       </Link>
                       
                       <button 
@@ -175,7 +175,7 @@ export default function Header({ layout = 'dashboard' }) {
                         className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                       >
                         <span className="material-symbols-outlined text-[18px]">dashboard</span>
-                        My Dashboard
+                        Bảng điều khiển
                       </button>
 
                       <button 
@@ -186,7 +186,7 @@ export default function Header({ layout = 'dashboard' }) {
                         className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                       >
                         <span className="material-symbols-outlined text-[18px]">cached</span>
-                        Switch Role
+                        Đổi vai trò
                       </button>
                       
                       <div className="h-px bg-slate-100 my-1"></div>
@@ -196,7 +196,7 @@ export default function Header({ layout = 'dashboard' }) {
                         className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer font-semibold border-none"
                       >
                         <span className="material-symbols-outlined text-[18px]">logout</span>
-                        Sign Out
+                        Đăng xuất
                       </button>
                     </div>
                   )}
@@ -205,10 +205,10 @@ export default function Header({ layout = 'dashboard' }) {
             ) : (
               <>
                 <Link className="text-[#475569] font-body-sm text-body-sm font-semibold hover:text-[#1E293B] transition-colors" to="/login">
-                  Login
+                  Đăng nhập
                 </Link>
                 <Link className="px-4 py-2 bg-gradient-to-r from-[#1E293B] to-[#334155] text-white rounded-lg font-body-sm text-body-sm font-semibold hover:shadow-[0_0_8px_rgba(30,41,59,0.3)] border border-transparent transition-all duration-300" to="/register">
-                  Register
+                  Đăng ký
                 </Link>
               </>
             )}
@@ -227,7 +227,7 @@ export default function Header({ layout = 'dashboard' }) {
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
             <input
               className="w-full pl-10 pr-4 py-2 bg-[#F1F5F9] border border-slate-200 rounded-full font-body-sm text-body-sm focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all text-[#1E293B]"
-              placeholder="Search talents or projects..."
+              placeholder="Tìm kiếm nhân tài hoặc dự án..."
               type="text"
               value={searchVal}
               onChange={handleSearchChange}
@@ -259,10 +259,10 @@ export default function Header({ layout = 'dashboard' }) {
           </button>
           <div className="w-[1px] h-6 bg-slate-200 mx-2"></div>
           <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#0F766E] transition-colors" onClick={handleSwitchRole}>
-            Switch Role
+            Đổi vai trò
           </button>
           <Link className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-body-sm text-body-sm font-bold hover:shadow-[0_0_12px_rgba(45,212,191,0.4)] border border-teal-400/50 transition-all duration-300 mr-2" to="/post-project">
-            Post Project
+            Đăng dự án
           </Link>
           <div className="relative" ref={dropdownRef}>
             <div 
@@ -285,7 +285,7 @@ export default function Header({ layout = 'dashboard' }) {
                   onClick={() => setDropdownOpen(false)}
                 >
                   <span className="material-symbols-outlined text-[18px]">person</span>
-                  My Profile
+                  Trang cá nhân
                 </Link>
                 
                 <button 
@@ -299,7 +299,7 @@ export default function Header({ layout = 'dashboard' }) {
                   className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">dashboard</span>
-                  My Dashboard
+                  Bảng điều khiển
                 </button>
 
                 <button 
@@ -310,7 +310,7 @@ export default function Header({ layout = 'dashboard' }) {
                   className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left cursor-pointer border-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">cached</span>
-                  Switch Role
+                  Đổi vai trò
                 </button>
                 
                 <div className="h-px bg-slate-100 my-1"></div>
@@ -320,7 +320,7 @@ export default function Header({ layout = 'dashboard' }) {
                   className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer font-semibold border-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">logout</span>
-                  Sign Out
+                  Đăng xuất
                 </button>
               </div>
             )}

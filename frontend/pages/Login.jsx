@@ -150,10 +150,10 @@ export default function Login() {
               </div>
             </Link>
             
-            <h2 className="text-3xl font-bold mb-4 tracking-tight">Welcome Back!</h2>
+            <h2 className="text-3xl font-bold mb-4 tracking-tight">Chào mừng trở lại!</h2>
             
             <p className="text-teal-50 text-sm leading-relaxed max-w-[260px] mx-auto font-medium opacity-80">
-              Sign in to your account to continue building your freelance career and connecting with top clients.
+              Đăng nhập vào tài khoản để tiếp tục xây dựng sự nghiệp freelance và kết nối với khách hàng hàng đầu.
             </p>
           </div>
           
@@ -161,11 +161,11 @@ export default function Login() {
           <div className="absolute bottom-8 w-full flex justify-center gap-6 text-teal-100/70">
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">verified_user</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Secure</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Bảo mật</span>
             </div>
             <div className="flex flex-col items-center gap-1">
               <span className="material-symbols-outlined text-[20px]">speed</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Fast</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Nhanh chóng</span>
             </div>
           </div>
         </div>
@@ -181,8 +181,8 @@ export default function Login() {
           </div>
 
           <div className="text-center md:text-left mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Sign in to your account</h2>
-            <p className="text-slate-500 mt-2 text-sm">Welcome back! Please enter your details.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">Đăng nhập vào tài khoản</h2>
+            <p className="text-slate-500 mt-2 text-sm">Chào mừng trở lại! Vui lòng nhập thông tin của bạn.</p>
           </div>
 
           {errorMsg && (
@@ -195,7 +195,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="email">
-                Email Address
+                Địa chỉ Email
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -216,7 +216,7 @@ export default function Login() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="password">
-                Password
+                Mật khẩu
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
@@ -226,7 +226,7 @@ export default function Login() {
                   className="w-full bg-slate-50 border border-slate-100/50 rounded-xl pl-12 pr-12 py-3.5 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-slate-200 focus:ring-4 focus:ring-slate-100 transition-all placeholder:text-slate-400 font-medium"
                   id="password"
                   name="password"
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                   required
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -246,7 +246,7 @@ export default function Login() {
 
             <div className="flex items-center justify-end pt-1 pb-2">
               <Link className="text-sm font-semibold text-[#0F766E] hover:underline transition-colors" to="/forgot-password">
-                Forgot password?
+                Quên mật khẩu?
               </Link>
             </div>
 
@@ -255,13 +255,13 @@ export default function Login() {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
 
           <div className="flex items-center gap-4 my-8">
             <div className="flex-1 h-px border-t border-dashed border-slate-200"></div>
-            <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Or sign in with</span>
+            <span className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Hoặc đăng nhập với</span>
             <div className="flex-1 h-px border-t border-dashed border-slate-200"></div>
           </div>
 
@@ -275,9 +275,9 @@ export default function Login() {
 
           <div className="mt-auto pt-4 text-center text-sm">
             <p className="text-slate-500 font-medium">
-              Don't have an account? 
+              Chưa có tài khoản? 
               <Link className="font-bold text-[#0F766E] hover:underline ml-1.5" to="/register">
-                Sign up
+                Đăng ký ngay
               </Link>
             </p>
           </div>

@@ -11,7 +11,7 @@ export const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Contains { id, email, role } based on authController
+    req.user = { ...decoded, id: decoded.userId }; // Contains { id, email, role } based on authController
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Token không hợp lệ hoặc đã hết hạn.' });

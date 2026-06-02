@@ -9,11 +9,11 @@ export default function FreelancerDashboard() {
 {/*  Welcome Section  */}
 <section className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end">
 <div>
-<h1 className="font-display-hero text-display-hero mb-2 text-[#1E293B]">Welcome back, Freelancer Name!</h1>
-<p className="text-on-surface-variant text-lg">Here's what's happening with your freelance business today.</p>
+<h1 className="font-display-hero text-display-hero mb-2 text-[#1E293B]">Chào mừng trở lại, Freelancer!</h1>
+<p className="text-on-surface-variant text-lg">Dưới đây là tóm tắt hoạt động công việc tự do của bạn hôm nay.</p>
 </div>
 <div className="mt-4 md:mt-0 flex items-center bg-white border border-[#E2E8F0] px-4 py-2 rounded-lg shadow-level-1">
-<span className="text-sm font-medium mr-3">Profile Completion</span>
+<span className="text-sm font-medium mr-3">Mức độ hoàn thiện hồ sơ</span>
 <div className="w-32 bg-surface-container-low rounded-full h-2.5">
 <div className="bg-primary-container h-2.5 rounded-full" style={{ "width": "85%" }}></div>
 </div>
@@ -30,7 +30,7 @@ export default function FreelancerDashboard() {
 </div>
 </div>
 <h3 className="text-3xl font-bold mb-1 text-[#1E293B]">4</h3>
-<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Active Projects</p>
+<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Dự án đang thực hiện</p>
 </div>
 {/*  Metric 2  */}
 <div className="bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300 relative">
@@ -40,7 +40,7 @@ export default function FreelancerDashboard() {
 </div>
 </div>
 <h3 className="text-3xl font-bold mb-1 text-[#1E293B]">12</h3>
-<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Submitted Proposals</p>
+<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Đề xuất đã gửi</p>
 </div>
 {/*  Metric 3  */}
 <div className="bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300 relative">
@@ -48,10 +48,10 @@ export default function FreelancerDashboard() {
 <div className="p-2 bg-[#F1F5F9] rounded-lg text-primary-container">
 <span className="material-symbols-outlined">account_balance_wallet</span>
 </div>
-<span className="text-xs font-bold text-primary-container bg-[#F0FDF4] px-2 py-1 rounded-full">+14% this month</span>
+<span className="text-xs font-bold text-primary-container bg-[#F0FDF4] px-2 py-1 rounded-full">+14% trong tháng</span>
 </div>
-<h3 className="text-3xl font-bold mb-1 text-[#1E293B]">$4,250.00</h3>
-<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Total Earnings (Wallet)</p>
+<h3 className="text-3xl font-bold mb-1 text-[#1E293B]">106.250.000 đ</h3>
+<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Tổng thu nhập (Ví)</p>
 </div>
 {/*  Metric 4  */}
 <div className="bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300 relative">
@@ -61,7 +61,7 @@ export default function FreelancerDashboard() {
 </div>
 </div>
 <h3 className="text-3xl font-bold mb-1 text-[#1E293B]">3</h3>
-<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Unread Messages</p>
+<p className="text-on-surface-variant text-sm font-medium text-[#1E293B]">Tin nhắn chưa đọc</p>
 </div>
 </section>
 {/*  Main Split Layout  */}
@@ -69,69 +69,69 @@ export default function FreelancerDashboard() {
 {/*  Active Projects (Col Span 2)  */}
 <section className="lg:col-span-2 space-y-6">
 <div className="flex justify-between items-center mb-2">
-<h2 className="font-display-hero text-display-hero mb-2 text-[#1E293B]">Active Projects</h2>
-<a className="text-sm font-medium text-primary hover:underline" href="#">View all</a>
+<h2 className="font-display-hero text-display-hero mb-2 text-[#1E293B]">Dự án đang thực hiện</h2>
+<a className="text-sm font-medium text-primary hover:underline" href="#">Xem tất cả</a>
 </div>
 {/*  Project Card 1  */}
 <div className="bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300 relative">
 <div className="absolute top-4 right-4 flex items-center space-x-2">
 <span className="bg-[#F1F5F9] text-[#475569] text-xs font-bold px-2 py-1 rounded-full flex items-center">
-<span className="material-symbols-outlined text-[14px] mr-1">sync</span> In Progress
+<span className="material-symbols-outlined text-[14px] mr-1">sync</span> Đang thực hiện
                             </span>
 </div>
-<h3 className="text-lg font-bold text-[#1E293B] mb-2 pr-24">UX/UI Design for FinTech Dashboard</h3>
-<p className="text-sm text-on-surface-variant mb-4">Client: Acme Financial Corp.</p>
+<h3 className="text-lg font-bold text-[#1E293B] mb-2 pr-24">Thiết kế UX/UI cho Bảng điều khiển FinTech</h3>
+<p className="text-sm text-on-surface-variant mb-4">Khách hàng: Acme Financial Corp.</p>
 <div className="flex flex-wrap gap-4 mb-6">
 <div className="flex items-center text-sm text-on-surface-variant">
 <span className="material-symbols-outlined text-[18px] mr-1">payments</span>
-<span className="font-medium">$3,500</span>
+<span className="font-medium">87.500.000 đ</span>
 </div>
 <div className="flex items-center text-sm text-on-surface-variant">
 <span className="material-symbols-outlined text-[18px] mr-1">calendar_today</span>
-<span>Due: Oct 15, 2024</span>
+<span>Hạn chót: 15 Thg 10, 2024</span>
 </div>
 </div>
 <div className="w-full bg-surface-container-low rounded-full h-1.5 mb-2">
 <div className="bg-[#1D4ED8] h-1.5 rounded-full" style={{ "width": "60%" }}></div>
 </div>
 <div className="flex justify-between text-xs text-on-surface-variant">
-<span>Milestone 2/3</span>
-<span>60% Complete</span>
+<span>Giai đoạn 2/3</span>
+<span>Hoàn thành 60%</span>
 </div>
 </div>
 {/*  Project Card 2  */}
 <div className="bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300 relative">
 <div className="absolute top-4 right-4 flex items-center space-x-2">
 <span className="bg-[#F1F5F9] text-[#475569] text-xs font-bold px-2 py-1 rounded-full flex items-center">
-<span className="material-symbols-outlined text-[14px] mr-1">pending_actions</span> Under Review
+<span className="material-symbols-outlined text-[14px] mr-1">pending_actions</span> Đang xét duyệt
                            </span>
 </div>
-<h3 className="text-lg font-bold text-[#1E293B] mb-2 pr-24">E-commerce Mobile App Development</h3>
-<p className="text-sm text-on-surface-variant mb-4">Client: RetailNow LLC</p>
+<h3 className="text-lg font-bold text-[#1E293B] mb-2 pr-24">Phát triển Ứng dụng Di động E-commerce</h3>
+<p className="text-sm text-on-surface-variant mb-4">Khách hàng: RetailNow LLC</p>
 <div className="flex flex-wrap gap-4 mb-6">
 <div className="flex items-center text-sm text-on-surface-variant">
 <span className="material-symbols-outlined text-[18px] mr-1">payments</span>
-<span className="font-medium">$5,200</span>
+<span className="font-medium">130.000.000 đ</span>
 </div>
 <div className="flex items-center text-sm text-on-surface-variant">
 <span className="material-symbols-outlined text-[18px] mr-1">calendar_today</span>
-<span>Due: Nov 01, 2024</span>
+<span>Hạn chót: 01 Thg 11, 2024</span>
 </div>
 </div>
 <div className="w-full bg-surface-container-low rounded-full h-1.5 mb-2">
 <div className="bg-[#B45309] h-1.5 rounded-full" style={{ "width": "95%" }}></div>
 </div>
 <div className="flex justify-between text-xs text-on-surface-variant">
-<span>Final Review</span>
-<span>95% Complete</span>
+<span>Đánh giá cuối cùng</span>
+<span>Hoàn thành 95%</span>
 </div>
 </div>
 </section>
 {/*  Sidebar / Recent Messages (Col Span 1)  */}
 <section className="space-y-6">
 <div className="flex justify-between items-center mb-2">
-<h2 className="font-display-hero text-display-hero mb-2 text-[#1E293B]">Recent Messages</h2>
-<a className="text-sm font-medium text-primary hover:underline" href="#">View inbox</a>
+<h2 className="font-display-hero text-display-hero mb-2 text-[#1E293B]">Tin nhắn gần đây</h2>
+<a className="text-sm font-medium text-primary hover:underline" href="#">Xem hộp thư</a>
 </div>
 <div className="bg-white border border-[#E2E8F0] p-6 rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300 relative">
 {/*  Message 1  */}
@@ -143,8 +143,8 @@ export default function FreelancerDashboard() {
                                 </div>
 <div className="flex-1 min-w-0">
 <h4 className="text-sm font-bold text-on-background truncate">Acme Financial</h4>
-<p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium text-on-background">Can we review the latest wireframes?</p>
-<span className="text-[11px] text-on-surface-variant mt-1 block">10 mins ago</span>
+<p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium text-on-background">Chúng ta có thể xem lại wireframe mới nhất không?</p>
+<span className="text-[11px] text-on-surface-variant mt-1 block">10 phút trước</span>
 </div>
 </div>
 </div>
@@ -156,8 +156,8 @@ export default function FreelancerDashboard() {
                                 </div>
 <div className="flex-1 min-w-0">
 <h4 className="text-sm font-bold text-on-background truncate">RetailNow LLC</h4>
-<p className="text-xs text-on-surface-variant truncate mt-0.5">Payment for milestone 1 has been released.</p>
-<span className="text-[11px] text-on-surface-variant mt-1 block">2 hours ago</span>
+<p className="text-xs text-on-surface-variant truncate mt-0.5">Thanh toán cho giai đoạn 1 đã được giải ngân.</p>
+<span className="text-[11px] text-on-surface-variant mt-1 block">2 giờ trước</span>
 </div>
 </div>
 </div>
@@ -170,8 +170,8 @@ export default function FreelancerDashboard() {
                                 </div>
 <div className="flex-1 min-w-0">
 <h4 className="text-sm font-bold text-on-background truncate">Sarah Jenkins</h4>
-<p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium text-on-background">New opportunity matching your skills.</p>
-<span className="text-[11px] text-on-surface-variant mt-1 block">Yesterday</span>
+<p className="text-xs text-on-surface-variant truncate mt-0.5 font-medium text-on-background">Cơ hội mới phù hợp với kỹ năng của bạn.</p>
+<span className="text-[11px] text-on-surface-variant mt-1 block">Hôm qua</span>
 </div>
 </div>
 </div>
