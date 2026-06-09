@@ -6,22 +6,57 @@ export const getProfile = async (req, res) => {
     const userId = req.user.id;
     const pool = await poolPromise;
     
-    // Try to fetch bio_extras (might not exist in older schema)
-    let query = `SELECT user_id, full_name, email, phone, role_default, avatar_url, bio, created_at, is_email_verified`;
-    try {
-      // Test if bio_extras column exists
-      await pool.request().input('userId', sql.Int, userId).query(`SELECT TOP 0 bio_extras FROM Users WHERE user_id = @userId`);
-      query += `, bio_extras`;
-    } catch { /* column doesn't exist, skip */ }
-    query += ` FROM Users WHERE user_id = @userId`;
+    // 1. Fetch user from users table
+    const userResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`SELECT user_id, full_name, email, phone, role_default, avatar_url, bio, company_name, website_url, address, created_at, is_email_verified FROM users WHERE user_id = @userId`);
 
-    const result = await pool.request().input('userId', sql.Int, userId).query(query);
-
-    if (result.recordset.length === 0) {
+    if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
     }
 
-    res.json({ user: result.recordset[0] });
+    const user = userResult.recordset[0];
+
+    // 2. Fetch freelancer profile from freelancer_profiles
+    const flResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary FROM freelancer_profiles WHERE freelancer_id = @userId`);
+    
+    const fl = flResult.recordset[0] || {};
+
+    // 3. Fetch freelancer skills
+    const skillsResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT s.skill_name 
+        FROM freelancer_skills fs
+        JOIN skills s ON fs.skill_id = s.skill_id
+        WHERE fs.freelancer_id = @userId
+      `);
+    const skills = skillsResult.recordset.map(r => r.skill_name);
+
+    // 4. Construct bio_extras compatibility object for frontend
+    const bioExtrasObj = {
+      title: fl.headline || '',
+      hourlyRate: fl.hourly_rate !== undefined ? fl.hourly_rate.toString() : '',
+      availability: fl.availability_status || 'AVAILABLE',
+      experience: fl.experience_years !== undefined ? 
+        (fl.experience_years <= 1 ? 'ENTRY' : fl.experience_years <= 3 ? 'INTERMEDIATE' : 'EXPERT') : 'INTERMEDIATE',
+      skills: skills,
+      portfolio: fl.portfolio_summary || '',
+      linkedin: '', 
+      github: '',
+      companyName: user.company_name || '',
+      industry: '',
+      companySize: '',
+      website: user.website_url || '',
+      companyDesc: user.bio || '',
+      location: user.address || ''
+    };
+
+    user.bio_extras = JSON.stringify(bioExtrasObj);
+
+    res.json({ user });
   } catch (error) {
     console.error('Error fetching profile:', error);
     res.status(500).json({ message: 'Lỗi server khi lấy thông tin profile.' });
@@ -39,43 +74,174 @@ export const updateProfile = async (req, res) => {
 
     const pool = await poolPromise;
 
-    let updateQuery = `UPDATE Users SET full_name = @fullName, phone = @phone`;
+    // 1. Extract and map bioExtras to actual users table fields
+    let companyName = null;
+    let websiteUrl = null;
+    let address = null;
+    let finalBio = bio || null;
+
+    if (bioExtras) {
+      try {
+        const ex = JSON.parse(bioExtras);
+        companyName = ex.companyName || null;
+        websiteUrl = ex.website || null;
+        address = ex.location || null;
+        if (ex.companyDesc) {
+          finalBio = ex.companyDesc;
+        }
+      } catch (err) {
+        console.error('Error parsing bioExtras:', err);
+      }
+    }
+
+    // Update users table
     const request = pool.request()
       .input('fullName', sql.NVarChar, fullName)
       .input('phone', sql.VarChar, phone || null)
+      .input('bio', sql.NVarChar, finalBio)
+      .input('avatarUrl', sql.VarChar, avatarUrl || null)
+      .input('companyName', sql.NVarChar, companyName)
+      .input('websiteUrl', sql.NVarChar, websiteUrl)
+      .input('address', sql.NVarChar, address)
       .input('userId', sql.Int, userId);
 
-    if (bio !== undefined) {
-      updateQuery += `, bio = @bio`;
-      request.input('bio', sql.NVarChar, bio || null);
-    }
-    if (avatarUrl !== undefined) {
-      updateQuery += `, avatar_url = @avatarUrl`;
-      request.input('avatarUrl', sql.NVarChar(sql.MAX), avatarUrl || null);
-    }
-    // Try to update bio_extras if column exists
-    if (bioExtras !== undefined) {
+    await request.query(`
+      UPDATE users 
+      SET full_name = @fullName, 
+          phone = @phone, 
+          bio = @bio, 
+          avatar_url = @avatarUrl,
+          company_name = @companyName,
+          website_url = @websiteUrl,
+          address = @address
+      WHERE user_id = @userId
+    `);
+
+    // 2. Update freelancer_profiles table
+    if (bioExtras) {
       try {
-        await pool.request().input('userId', sql.Int, userId).query(`SELECT TOP 0 bio_extras FROM Users WHERE user_id = @userId`);
-        updateQuery += `, bio_extras = @bioExtras`;
-        request.input('bioExtras', sql.NVarChar(sql.MAX), bioExtras || null);
-      } catch { /* column doesn't exist, skip gracefully */ }
+        const ex = JSON.parse(bioExtras);
+        const headline = ex.title || null;
+        const hourlyRate = ex.hourlyRate ? parseFloat(ex.hourlyRate) : 0;
+        const availability = ex.availability || 'AVAILABLE';
+        const portfolio = ex.portfolio || null;
+        
+        let experienceYears = 2; // Default to intermediate
+        if (ex.experience === 'ENTRY') experienceYears = 1;
+        if (ex.experience === 'EXPERT') experienceYears = 5;
+
+        // Upsert into freelancer_profiles
+        await pool.request()
+          .input('freelancerId', sql.Int, userId)
+          .input('headline', sql.NVarChar, headline)
+          .input('experienceYears', sql.Int, experienceYears)
+          .input('hourlyRate', sql.Decimal(12, 2), hourlyRate)
+          .input('availabilityStatus', sql.VarChar, availability)
+          .input('portfolioSummary', sql.NVarChar, portfolio)
+          .query(`
+            IF EXISTS (SELECT 1 FROM freelancer_profiles WHERE freelancer_id = @freelancerId)
+            BEGIN
+              UPDATE freelancer_profiles 
+              SET headline = @headline,
+                  experience_years = @experienceYears,
+                  hourly_rate = @hourlyRate,
+                  availability_status = @availabilityStatus,
+                  portfolio_summary = @portfolioSummary,
+                  updated_at = SYSUTCDATETIME()
+              WHERE freelancer_id = @freelancerId;
+            END
+            ELSE
+            BEGIN
+              INSERT INTO freelancer_profiles (freelancer_id, headline, experience_years, hourly_rate, availability_status, portfolio_summary, rating_average, total_reviews, created_at)
+              VALUES (@freelancerId, @headline, @experienceYears, @hourlyRate, @availabilityStatus, @portfolioSummary, 0.00, 0, SYSUTCDATETIME());
+            END
+          `);
+
+        // 3. Update skills in freelancer_skills
+        if (Array.isArray(ex.skills)) {
+          // Clear old skills
+          await pool.request()
+            .input('freelancerId', sql.Int, userId)
+            .query(`DELETE FROM freelancer_skills WHERE freelancer_id = @freelancerId`);
+
+          // Insert new skills
+          for (const skillName of ex.skills) {
+            // First check if skill exists in skills table, if not insert it
+            let skillIdResult = await pool.request()
+              .input('skillName', sql.NVarChar, skillName)
+              .query(`SELECT skill_id FROM skills WHERE skill_name = @skillName`);
+            
+            let skillId;
+            if (skillIdResult.recordset.length === 0) {
+              const insertResult = await pool.request()
+                .input('skillName', sql.NVarChar, skillName)
+                .query(`INSERT INTO skills (skill_name, created_at) VALUES (@skillName, SYSUTCDATETIME()); SELECT SCOPE_IDENTITY() AS skill_id;`);
+              skillId = insertResult.recordset[0].skill_id;
+            } else {
+              skillId = skillIdResult.recordset[0].skill_id;
+            }
+
+            // Insert connection into freelancer_skills
+            await pool.request()
+              .input('freelancerId', sql.Int, userId)
+              .input('skillId', sql.Int, skillId)
+              .query(`
+                IF NOT EXISTS (SELECT 1 FROM freelancer_skills WHERE freelancer_id = @freelancerId AND skill_id = @skillId)
+                BEGIN
+                  INSERT INTO freelancer_skills (freelancer_id, skill_id, skill_level, created_at)
+                  VALUES (@freelancerId, @skillId, 'INTERMEDIATE', SYSUTCDATETIME());
+                END
+              `);
+          }
+        }
+      } catch (err) {
+        console.error('Error updating profile extras:', err);
+      }
     }
 
-    updateQuery += ` WHERE user_id = @userId`;
-    await request.query(updateQuery);
+    // 4. Fetch updated user to return to frontend
+    const updatedUserResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`SELECT user_id, full_name, email, phone, role_default, avatar_url, bio, company_name, website_url, address, created_at, is_email_verified FROM users WHERE user_id = @userId`);
+    
+    const updatedUser = updatedUserResult.recordset[0];
+    
+    const updatedFlResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary FROM freelancer_profiles WHERE freelancer_id = @userId`);
+    const updatedFl = updatedFlResult.recordset[0] || {};
 
-    // Fetch updated user
-    let fetchQuery = `SELECT user_id, full_name, email, phone, role_default, avatar_url, bio, created_at, is_email_verified`;
-    try {
-      await pool.request().input('userId', sql.Int, userId).query(`SELECT TOP 0 bio_extras FROM Users WHERE user_id = @userId`);
-      fetchQuery += `, bio_extras`;
-    } catch { /* skip */ }
-    fetchQuery += ` FROM Users WHERE user_id = @userId`;
+    const updatedSkillsResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT s.skill_name 
+        FROM freelancer_skills fs
+        JOIN skills s ON fs.skill_id = s.skill_id
+        WHERE fs.freelancer_id = @userId
+      `);
+    const updatedSkills = updatedSkillsResult.recordset.map(r => r.skill_name);
 
-    const updated = await pool.request().input('userId', sql.Int, userId).query(fetchQuery);
+    const updatedBioExtrasObj = {
+      title: updatedFl.headline || '',
+      hourlyRate: updatedFl.hourly_rate !== undefined ? updatedFl.hourly_rate.toString() : '',
+      availability: updatedFl.availability_status || 'AVAILABLE',
+      experience: updatedFl.experience_years !== undefined ? 
+        (updatedFl.experience_years <= 1 ? 'ENTRY' : updatedFl.experience_years <= 3 ? 'INTERMEDIATE' : 'EXPERT') : 'INTERMEDIATE',
+      skills: updatedSkills,
+      portfolio: updatedFl.portfolio_summary || '',
+      linkedin: '', 
+      github: '',
+      companyName: updatedUser.company_name || '',
+      industry: '',
+      companySize: '',
+      website: updatedUser.website_url || '',
+      companyDesc: updatedUser.bio || '',
+      location: updatedUser.address || ''
+    };
 
-    res.json({ message: 'Cập nhật thông tin thành công!', user: updated.recordset[0] });
+    updatedUser.bio_extras = JSON.stringify(updatedBioExtrasObj);
+
+    res.json({ message: 'Cập nhật thông tin thành công!', user: updatedUser });
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Lỗi server khi cập nhật profile.' });
@@ -103,7 +269,7 @@ export const changePassword = async (req, res) => {
     
     const userResult = await pool.request()
       .input('userId', sql.Int, userId)
-      .query('SELECT password_hash FROM Users WHERE user_id = @userId');
+      .query('SELECT password_hash FROM users WHERE user_id = @userId');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
@@ -122,7 +288,7 @@ export const changePassword = async (req, res) => {
     await pool.request()
       .input('passwordHash', sql.VarChar, newPasswordHash)
       .input('userId', sql.Int, userId)
-      .query(`UPDATE Users SET password_hash = @passwordHash WHERE user_id = @userId`);
+      .query(`UPDATE users SET password_hash = @passwordHash WHERE user_id = @userId`);
 
     res.json({ message: 'Đổi mật khẩu thành công!' });
   } catch (error) {
@@ -144,7 +310,7 @@ export const deleteAccount = async (req, res) => {
 
     const userResult = await pool.request()
       .input('userId', sql.Int, userId)
-      .query('SELECT password_hash, role_default FROM Users WHERE user_id = @userId');
+      .query('SELECT password_hash, role_default FROM users WHERE user_id = @userId');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
@@ -164,7 +330,7 @@ export const deleteAccount = async (req, res) => {
     // Soft-delete: set status to DELETED
     await pool.request()
       .input('userId', sql.Int, userId)
-      .query(`UPDATE Users SET status = 'DELETED', refresh_token = NULL WHERE user_id = @userId`);
+      .query(`UPDATE users SET status = 'DELETED', refresh_token = NULL WHERE user_id = @userId`);
 
     res.json({ message: 'Tài khoản đã được xóa thành công.' });
   } catch (error) {

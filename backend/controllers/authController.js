@@ -36,7 +36,7 @@ export const register = async (req, res) => {
     // Check if email already exists
     const emailCheckResult = await pool.request()
       .input('email', sql.VarChar, email)
-      .query('SELECT 1 FROM Users WHERE email = @email');
+      .query('SELECT 1 FROM users WHERE email = @email');
 
     if (emailCheckResult.recordset.length > 0) {
       return res.status(400).json({ message: 'Email đã được sử dụng.' });
@@ -51,7 +51,7 @@ export const register = async (req, res) => {
 
       const phoneCheckResult = await pool.request()
         .input('phone', sql.VarChar, phone)
-        .query('SELECT 1 FROM Users WHERE phone = @phone');
+        .query('SELECT 1 FROM users WHERE phone = @phone');
 
       if (phoneCheckResult.recordset.length > 0) {
         return res.status(400).json({ message: 'Số điện thoại đã được sử dụng.' });
@@ -70,20 +70,20 @@ export const register = async (req, res) => {
       .input('passwordHash', sql.VarChar, passwordHash)
       .input('roleDefault', sql.VarChar, roleUpper)
       .query(`
-        INSERT INTO Users (full_name, email, phone, password_hash, role_default, is_email_verified)
+        INSERT INTO users (full_name, email, phone, password_hash, role_default, is_email_verified)
         VALUES (@fullName, @email, @phone, @passwordHash, @roleDefault, 0);
         SELECT SCOPE_IDENTITY() AS user_id;
       `);
 
     const userId = userInsertResult.recordset[0].user_id;
 
-    // Insert into UserRoles
+    // Insert into user_roles
     await pool.request()
       .input('userId', sql.Int, userId)
       .input('roleName', sql.VarChar, roleUpper)
       .query(`
-        INSERT INTO UserRoles (user_id, role_name)
-        VALUES (@userId, @roleName)
+        INSERT INTO user_roles (user_id, role_id)
+        SELECT @userId, role_id FROM roles WHERE role_name = @roleName
       `);
 
     // Create Freelancer profile if registered as Freelancer
@@ -91,7 +91,7 @@ export const register = async (req, res) => {
       await pool.request()
         .input('freelancerId', sql.Int, userId)
         .query(`
-          INSERT INTO FreelancerProfiles (freelancer_id, availability_status, rating_average, total_reviews)
+          INSERT INTO freelancer_profiles (freelancer_id, availability_status, rating_average, total_reviews)
           VALUES (@freelancerId, 'AVAILABLE', 0.00, 0)
         `);
     }
@@ -107,7 +107,7 @@ export const register = async (req, res) => {
       .input('otpCode', sql.VarChar, otpCode)
       .input('expiredAt', sql.DateTime, expiredAt)
       .query(`
-        INSERT INTO EmailVerifications (user_id, verification_code, expired_at, is_used)
+        INSERT INTO email_verifications (user_id, verification_code, expired_at, is_used)
         VALUES (@userId, @otpCode, @expiredAt, 0)
       `);
 
@@ -145,7 +145,7 @@ export const verifyEmail = async (req, res) => {
     // Find User
     const userResult = await pool.request()
       .input('email', sql.VarChar, email)
-      .query('SELECT user_id, is_email_verified FROM Users WHERE email = @email');
+      .query('SELECT user_id, is_email_verified FROM users WHERE email = @email');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy tài khoản với email này.' });
@@ -164,7 +164,7 @@ export const verifyEmail = async (req, res) => {
       .input('code', sql.VarChar, code)
       .query(`
         SELECT TOP 1 verification_id, expired_at
-        FROM EmailVerifications
+        FROM email_verifications
         WHERE user_id = @userId AND verification_code = @code AND is_used = 0
         ORDER BY created_at DESC
       `);
@@ -180,14 +180,14 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'Mã xác thực đã hết hạn.' });
     }
 
-    // Update EmailVerifications and Users table
+    // Update email_verifications and users table
     await pool.request()
       .input('verificationId', sql.Int, verification_id)
-      .query('UPDATE EmailVerifications SET is_used = 1 WHERE verification_id = @verificationId');
+      .query('UPDATE email_verifications SET is_used = 1 WHERE verification_id = @verificationId');
 
     await pool.request()
       .input('userId', sql.Int, userId)
-      .query('UPDATE Users SET is_email_verified = 1 WHERE user_id = @userId');
+      .query('UPDATE users SET is_email_verified = 1 WHERE user_id = @userId');
 
     return res.status(200).json({
       success: true,
@@ -217,7 +217,7 @@ export const login = async (req, res) => {
     // Get user from DB
     const userResult = await pool.request()
       .input('email', sql.VarChar, email)
-      .query('SELECT * FROM Users WHERE email = @email');
+      .query('SELECT * FROM users WHERE email = @email');
 
     if (userResult.recordset.length === 0) {
       return res.status(400).json({ message: 'Email hoặc mật khẩu không chính xác.' });
@@ -256,7 +256,7 @@ export const login = async (req, res) => {
         .input('otpCode', sql.VarChar, otpCode)
         .input('expiredAt', sql.DateTime, expiredAt)
         .query(`
-          INSERT INTO EmailVerifications (user_id, verification_code, expired_at, is_used)
+          INSERT INTO email_verifications (user_id, verification_code, expired_at, is_used)
           VALUES (@userId, @otpCode, @expiredAt, 0)
         `);
 
@@ -275,7 +275,12 @@ export const login = async (req, res) => {
     // Fetch user roles
     const rolesResult = await pool.request()
       .input('userId', sql.Int, user.user_id)
-      .query('SELECT role_name FROM UserRoles WHERE user_id = @userId');
+      .query(`
+        SELECT r.role_name 
+        FROM user_roles ur
+        JOIN roles r ON ur.role_id = r.role_id
+        WHERE ur.user_id = @userId
+      `);
 
     const roles = rolesResult.recordset.map(r => r.role_name);
 
@@ -295,7 +300,7 @@ export const login = async (req, res) => {
     await pool.request()
       .input('userId', sql.Int, user.user_id)
       .input('token', sql.VarChar, token)
-      .query('UPDATE Users SET refresh_token = @token WHERE user_id = @userId');
+      .query('UPDATE users SET refresh_token = @token WHERE user_id = @userId');
 
     return res.status(200).json({
       success: true,
@@ -334,7 +339,7 @@ export const forgotPassword = async (req, res) => {
     // Check if user exists
     const userResult = await pool.request()
       .input('email', sql.VarChar, email)
-      .query('SELECT user_id, full_name FROM Users WHERE email = @email');
+      .query('SELECT user_id, full_name FROM users WHERE email = @email');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy tài khoản với email này.' });
@@ -353,7 +358,7 @@ export const forgotPassword = async (req, res) => {
       .input('resetToken', sql.VarChar, resetToken)
       .input('expiredAt', sql.DateTime, expiredAt)
       .query(`
-        INSERT INTO PasswordResetTokens (user_id, reset_token, expired_at, is_used)
+        INSERT INTO password_reset_tokens (user_id, reset_token, expired_at, is_used)
         VALUES (@userId, @resetToken, @expiredAt, 0)
       `);
 
@@ -398,7 +403,7 @@ export const resetPassword = async (req, res) => {
     // Find User
     const userResult = await pool.request()
       .input('email', sql.VarChar, email)
-      .query('SELECT user_id FROM Users WHERE email = @email');
+      .query('SELECT user_id FROM users WHERE email = @email');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy tài khoản với email này.' });
@@ -412,7 +417,7 @@ export const resetPassword = async (req, res) => {
       .input('resetToken', sql.VarChar, otpCode)
       .query(`
         SELECT TOP 1 reset_id, expired_at
-        FROM PasswordResetTokens
+        FROM password_reset_tokens
         WHERE user_id = @userId AND reset_token = @resetToken AND is_used = 0
         ORDER BY created_at DESC
       `);
@@ -435,12 +440,12 @@ export const resetPassword = async (req, res) => {
     await pool.request()
       .input('userId', sql.Int, userId)
       .input('passwordHash', sql.VarChar, passwordHash)
-      .query('UPDATE Users SET password_hash = @passwordHash WHERE user_id = @userId');
+      .query('UPDATE users SET password_hash = @passwordHash WHERE user_id = @userId');
 
     // Mark token as used
     await pool.request()
       .input('resetId', sql.Int, reset_id)
-      .query('UPDATE PasswordResetTokens SET is_used = 1 WHERE reset_id = @resetId');
+      .query('UPDATE password_reset_tokens SET is_used = 1 WHERE reset_id = @resetId');
 
     return res.status(200).json({
       success: true,
@@ -469,7 +474,7 @@ export const resendOtp = async (req, res) => {
     // Find User
     const userResult = await pool.request()
       .input('email', sql.VarChar, email)
-      .query('SELECT user_id, full_name, is_email_verified FROM Users WHERE email = @email');
+      .query('SELECT user_id, full_name, is_email_verified FROM users WHERE email = @email');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ message: 'Không tìm thấy tài khoản với email này.' });
@@ -492,7 +497,7 @@ export const resendOtp = async (req, res) => {
       .input('otpCode', sql.VarChar, otpCode)
       .input('expiredAt', sql.DateTime, expiredAt)
       .query(`
-        INSERT INTO EmailVerifications (user_id, verification_code, expired_at, is_used)
+        INSERT INTO email_verifications (user_id, verification_code, expired_at, is_used)
         VALUES (@userId, @otpCode, @expiredAt, 0)
       `);
 
@@ -535,7 +540,7 @@ export const googleAuth = async (req, res) => {
     // Check if user already exists
     const userResult = await pool.request()
       .input('email', sql.VarChar, email)
-      .query('SELECT * FROM Users WHERE email = @email');
+      .query('SELECT * FROM users WHERE email = @email');
 
     let user;
     if (userResult.recordset.length > 0) {
@@ -550,7 +555,7 @@ export const googleAuth = async (req, res) => {
       if (!user.is_email_verified) {
         await pool.request()
           .input('userId', sql.Int, user.user_id)
-          .query('UPDATE Users SET is_email_verified = 1 WHERE user_id = @userId');
+          .query('UPDATE users SET is_email_verified = 1 WHERE user_id = @userId');
         user.is_email_verified = true;
       }
     } else {
@@ -565,40 +570,45 @@ export const googleAuth = async (req, res) => {
         .input('passwordHash', sql.VarChar, passwordHash)
         .input('avatarUrl', sql.VarChar, picture || null)
         .query(`
-          INSERT INTO Users (full_name, email, password_hash, role_default, is_email_verified, avatar_url, status)
+          INSERT INTO users (full_name, email, password_hash, role_default, is_email_verified, avatar_url, status)
           VALUES (@fullName, @email, @passwordHash, 'FREELANCER', 1, @avatarUrl, 'ACTIVE');
           SELECT SCOPE_IDENTITY() AS user_id;
         `);
 
       const userId = userInsertResult.recordset[0].user_id;
 
-      // Insert into UserRoles
+      // Insert into user_roles
       await pool.request()
         .input('userId', sql.Int, userId)
         .query(`
-          INSERT INTO UserRoles (user_id, role_name)
-          VALUES (@userId, 'FREELANCER')
+          INSERT INTO user_roles (user_id, role_id)
+          SELECT @userId, role_id FROM roles WHERE role_name = 'FREELANCER'
         `);
 
       // Create Freelancer profile
       await pool.request()
         .input('freelancerId', sql.Int, userId)
         .query(`
-          INSERT INTO FreelancerProfiles (freelancer_id, availability_status, rating_average, total_reviews)
+          INSERT INTO freelancer_profiles (freelancer_id, availability_status, rating_average, total_reviews)
           VALUES (@freelancerId, 'AVAILABLE', 0.00, 0)
         `);
 
       // Retrieve new user info
       const newUserResult = await pool.request()
         .input('userId', sql.Int, userId)
-        .query('SELECT * FROM Users WHERE user_id = @userId');
+        .query('SELECT * FROM users WHERE user_id = @userId');
       user = newUserResult.recordset[0];
     }
 
     // Fetch user roles
     const rolesResult = await pool.request()
       .input('userId', sql.Int, user.user_id)
-      .query('SELECT role_name FROM UserRoles WHERE user_id = @userId');
+      .query(`
+        SELECT r.role_name 
+        FROM user_roles ur
+        JOIN roles r ON ur.role_id = r.role_id
+        WHERE ur.user_id = @userId
+      `);
 
     const roles = rolesResult.recordset.map(r => r.role_name);
 
@@ -618,7 +628,7 @@ export const googleAuth = async (req, res) => {
     await pool.request()
       .input('userId', sql.Int, user.user_id)
       .input('token', sql.VarChar, token)
-      .query('UPDATE Users SET refresh_token = @token WHERE user_id = @userId');
+      .query('UPDATE users SET refresh_token = @token WHERE user_id = @userId');
 
     return res.status(200).json({
       success: true,
