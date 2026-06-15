@@ -1,173 +1,157 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import BankAccountModal from '../../components/Wallet/BankAccountModal';
+import { useNavigate } from 'react-router-dom';
 
 export default function FreelancerWallet() {
+  const [wallet, setWallet] = useState(null);
+  const [bankAccount, setBankAccount] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchWalletData();
+  }, []);
+
+  const fetchWalletData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch Wallet
+      const walletRes = await fetch('http://localhost:5000/api/wallet', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (walletRes.ok) {
+        const walletData = await walletRes.json();
+        setWallet(walletData);
+      }
+
+      // Fetch Bank Account
+      const bankRes = await fetch('http://localhost:5000/api/bank-account', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (bankRes.ok) {
+        const bankData = await bankRes.json();
+        setBankAccount(bankData); // can be null if not created
+      }
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBankUpdateSuccess = (updatedBankAccount) => {
+    setBankAccount(updatedBankAccount);
+  };
+
+  if (loading) {
+    return (
+      <main className="flex-1 p-margin-mobile md:p-margin-desktop bg-[#F8FAFC] max-w-container-max mx-auto w-full flex flex-col">
+        <div className="flex justify-center items-center h-64">
+          <span className="material-symbols-outlined animate-spin text-4xl text-[#0F766E]">progress_activity</span>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="flex-1 p-margin-mobile md:p-margin-desktop bg-[#F8FAFC] max-w-container-max mx-auto w-full flex flex-col">
-      {/*  Header  */}
+      {/* Header */}
       <header className="mb-8 flex justify-between items-end">
         <div>
           <h2 className="font-headline-2xl text-headline-2xl text-on-surface mb-2">Ví & Thu nhập</h2>
-          <p className="font-body-base text-body-base text-on-surface-variant">Quản lý quỹ của bạn, theo dõi ký quỹ và xem xét lịch sử giao dịch.</p>
+          <p className="font-body-base text-body-base text-on-surface-variant">Quản lý quỹ của bạn và tài khoản ngân hàng liên kết.</p>
         </div>
-        <button className="bg-[#0F766E] text-white px-6 py-2 rounded-lg font-body-base text-body-base hover:bg-[#0D5E58] transition-colors shadow-level-1 flex items-center">
+        <button 
+          onClick={() => navigate('/withdraw')}
+          className="bg-[#0F766E] text-white px-6 py-2 rounded-lg font-body-base text-body-base hover:bg-[#0D5E58] transition-colors shadow-level-1 flex items-center"
+          title="Tạo yêu cầu rút tiền"
+        >
           <span className="material-symbols-outlined mr-2">account_balance</span> Rút tiền
         </button>
       </header>
-      {/*  Bento Grid: Balances  */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-12">
-        {/*  Available Balance  */}
-        <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-level-1 card-hover transition-all duration-300 relative overflow-hidden">
+
+      {/* Bento Grid: Balances & Bank */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        {/* Available Balance */}
+        <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-level-1 card-hover transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#0F766E] opacity-10 rounded-bl-full -mr-4 -mt-4"></div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 relative z-10">
             <h3 className="font-label-caps text-label-caps text-on-surface-variant uppercase">Số dư khả dụng</h3>
             <span className="material-symbols-outlined text-[#0F766E] bg-[#0F766E]/10 p-2 rounded-full">account_balance_wallet</span>
           </div>
-          <p className="font-display-hero text-display-hero text-[#334155]">4.250.000 đ</p>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mt-2">Sẵn sàng rút tiền</p>
-        </div>
-        {/*  Escrow Hold  */}
-        <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-level-1 card-hover transition-all duration-300 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-tertiary-container opacity-10 rounded-bl-full -mr-4 -mt-4"></div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-label-caps text-label-caps text-on-surface-variant uppercase flex items-center gap-1">
-              Ký quỹ đang chờ
-              <span className="material-symbols-outlined text-[16px] cursor-help" title="Tiền được giữ an toàn bởi VNPay cho đến khi hoàn thành các giai đoạn của dự án.">info</span>
-            </h3>
-            <span className="material-symbols-outlined text-tertiary-container bg-tertiary-container/10 p-2 rounded-full">lock_clock</span>
-          </div>
-          <p className="font-display-hero text-display-hero text-[#334155]">1.800.000 đ</p>
-          <div className="flex items-center mt-2 space-x-2">
-            <img alt="VNPay Logo" className="h-4 opacity-70" onError={(e) => e.target.style.display='none'} src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2RdkHn-23w5jGN68Nff2085LeALhm5gS9VrQg31ig-io8wbpOkwQr_x8wB4yNwumiZpBHKqqqppzOyq52Li-a7a-oAJPHXcM_eQEXdo4eDRQ2s8ZniuCMXtNwo0Re-eunEkoe_IpJBd4v1ltlXWkGSPEPtp68ax8vIZdpzCo0TEsXbaVPIwpq89BCrRW9LfGLzNQJGhaom5ghCVKZuBMuI-tNUePkema1oAqNjwqjFH0nVifm6-PC3SVz0Gpy2grJSpqXQ4F223c"/>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">Được bảo mật bởi VNPay Escrow</p>
+          <div className="relative z-10">
+            <p className="font-display-hero text-display-hero text-[#334155]">
+              ${wallet?.balance !== undefined ? parseFloat(wallet.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+            </p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-2 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px] text-green-600">check_circle</span>
+              Sẵn sàng rút tiền
+            </p>
+            <p className="font-body-sm text-body-sm text-[#475569] mt-2 text-xs">
+              Mã ví: #{wallet?.wallet_id || 'N/A'}
+            </p>
           </div>
         </div>
-        {/*  Total Earnings  */}
-        <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-level-1 card-hover transition-all duration-300 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[#475569] opacity-10 rounded-bl-full -mr-4 -mt-4"></div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-label-caps text-label-caps text-on-surface-variant uppercase">Tổng thu nhập</h3>
-            <span className="material-symbols-outlined text-[#475569] bg-[#475569]/10 p-2 rounded-full">trending_up</span>
-          </div>
-          <p className="font-display-hero text-display-hero text-[#334155]">24.500.000 đ</p>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mt-2">Thu nhập trọn đời</p>
-        </div>
-      </section>
-      {/*  Transaction History  */}
-      <section className="bg-white rounded-xl border border-[#E2E8F0] shadow-level-1 flex-1 mb-8 overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
-          <h3 className="font-headline-xl text-headline-xl text-[#334155]">Lịch sử Giao dịch</h3>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-surface text-on-surface border border-outline-variant rounded-lg font-body-sm text-body-sm flex items-center hover:bg-[#F8FAFC] transition-colors">
-              <span className="material-symbols-outlined mr-2 text-[18px]">filter_list</span> Lọc
-            </button>
-            <button className="px-4 py-2 bg-surface text-on-surface border border-outline-variant rounded-lg font-body-sm text-body-sm flex items-center hover:bg-[#F8FAFC] transition-colors">
-              <span className="material-symbols-outlined mr-2 text-[18px]">download</span> Xuất
+
+        {/* Saved Bank Account Card */}
+        <div className="bg-[#FFFFFF] rounded-xl p-6 border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-4">
+            <div className="w-10 h-10 rounded-full bg-[#F1F5F9] flex items-center justify-center text-[#475569]">
+              <span className="material-symbols-outlined">account_balance</span>
+            </div>
+            <button 
+              onClick={() => setIsBankModalOpen(true)}
+              className="text-[#475569] hover:text-[#0F766E] transition-colors"
+            >
+              <span className="material-symbols-outlined">{bankAccount ? 'edit' : 'add'}</span>
             </button>
           </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase">Mã</th>
-                <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase">Ngày</th>
-                <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase">Dự án / Chi tiết</th>
-                <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase">Loại</th>
-                <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase text-right">Số tiền</th>
-                <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase">Trạng thái</th>
-                <th className="py-4 px-6 font-label-caps text-label-caps text-on-surface-variant uppercase text-right">Hành động</th>
-              </tr>
-            </thead>
-            <tbody className="font-body-sm text-body-sm divide-y divide-[#E2E8F0]">
-              {/*  Row 1: Payment Credit  */}
-              <tr className="hover:bg-[#F8FAFC] transition-colors group">
-                <td className="py-4 px-6 text-on-surface-variant">#TX-9021</td>
-                <td className="py-4 px-6 text-on-surface-variant">24 Thg 10, 2026</td>
-                <td className="py-4 px-6 font-medium text-on-surface">Thiết kế lại ứng dụng thương mại điện tử</td>
-                <td className="py-4 px-6">
-                  <span className="bg-surface-container px-2 py-1 rounded-full text-on-surface-variant flex items-center w-fit">
-                    <span className="material-symbols-outlined text-[14px] mr-1">arrow_downward</span> Thanh toán
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-medium text-[#0F766E]">+1.250.000 đ</td>
-                <td className="py-4 px-6">
-                  <span className="flex items-center text-[#0F766E]">
-                    <span className="w-2 h-2 rounded-full bg-[#0F766E] mr-2"></span> Hoàn thành
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right">
-                  <a className="text-[#0F766E] hover:text-[#0D5E58] transition-colors opacity-0 group-hover:opacity-100 font-medium" href="#">Xem Hóa đơn</a>
-                </td>
-              </tr>
-              {/*  Row 2: Escrow Hold  */}
-              <tr className="hover:bg-[#F8FAFC] transition-colors group">
-                <td className="py-4 px-6 text-on-surface-variant">#TX-9018</td>
-                <td className="py-4 px-6 text-on-surface-variant">22 Thg 10, 2026</td>
-                <td className="py-4 px-6 font-medium text-on-surface">Xây dựng thương hiệu Doanh nghiệp Giai đoạn 2</td>
-                <td className="py-4 px-6">
-                  <span className="bg-tertiary-container/10 px-2 py-1 rounded-full text-tertiary-container flex items-center w-fit">
-                    <span className="material-symbols-outlined text-[14px] mr-1">lock</span> Đang ký quỹ
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-medium text-on-surface">800.000 đ</td>
-                <td className="py-4 px-6">
-                  <span className="flex items-center text-tertiary-container">
-                    <span className="w-2 h-2 rounded-full bg-tertiary-container mr-2 animate-pulse"></span> Đang chờ
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right">
-                  <a className="text-[#0F766E] hover:text-[#0D5E58] transition-colors opacity-0 group-hover:opacity-100 font-medium" href="#">Chi tiết</a>
-                </td>
-              </tr>
-              {/*  Row 3: Withdrawal  */}
-              <tr className="hover:bg-[#F8FAFC] transition-colors group">
-                <td className="py-4 px-6 text-on-surface-variant">#TX-8995</td>
-                <td className="py-4 px-6 text-on-surface-variant">15 Thg 10, 2026</td>
-                <td className="py-4 px-6 font-medium text-on-surface">Chuyển khoản đến ngân hàng ****4592</td>
-                <td className="py-4 px-6">
-                  <span className="bg-surface-variant px-2 py-1 rounded-full text-on-surface-variant flex items-center w-fit">
-                    <span className="material-symbols-outlined text-[14px] mr-1">arrow_upward</span> Rút tiền
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-medium text-on-surface">-2.000.000 đ</td>
-                <td className="py-4 px-6">
-                  <span className="flex items-center text-[#0F766E]">
-                    <span className="w-2 h-2 rounded-full bg-[#0F766E] mr-2"></span> Hoàn thành
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right">
-                  <a className="text-[#0F766E] hover:text-[#0D5E58] transition-colors opacity-0 group-hover:opacity-100 font-medium" href="#">Biên lai</a>
-                </td>
-              </tr>
-              {/*  Row 4: Payment Credit  */}
-              <tr className="hover:bg-[#F8FAFC] transition-colors group">
-                <td className="py-4 px-6 text-on-surface-variant">#TX-8912</td>
-                <td className="py-4 px-6 text-on-surface-variant">10 Thg 10, 2026</td>
-                <td className="py-4 px-6 font-medium text-on-surface">Thiết lập Đánh giá SEO</td>
-                <td className="py-4 px-6">
-                  <span className="bg-surface-container px-2 py-1 rounded-full text-on-surface-variant flex items-center w-fit">
-                    <span className="material-symbols-outlined text-[14px] mr-1">arrow_downward</span> Thanh toán
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-medium text-[#0F766E]">+500.000 đ</td>
-                <td className="py-4 px-6">
-                  <span className="flex items-center text-[#0F766E]">
-                    <span className="w-2 h-2 rounded-full bg-[#0F766E] mr-2"></span> Hoàn thành
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right">
-                  <a className="text-[#0F766E] hover:text-[#0D5E58] transition-colors opacity-0 group-hover:opacity-100 font-medium" href="#">Xem Hóa đơn</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div className="p-4 border-t border-[#E2E8F0] flex justify-center bg-white">
-          <button className="text-[#475569] font-body-sm text-body-sm font-medium hover:underline flex items-center">
-            Tải thêm <span className="material-symbols-outlined ml-1 text-[18px]">expand_more</span>
-          </button>
+          <div>
+            <p className="font-body-sm text-body-sm text-[#475569] mb-3">Tài khoản ngân hàng liên kết (Dùng để rút tiền)</p>
+            
+            {bankAccount ? (
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] mb-2">
+                <span className="material-symbols-outlined text-[#0F766E]">credit_score</span>
+                <div className="flex-1">
+                  <p className="font-body-sm text-body-sm font-semibold text-[#334155]">{bankAccount.bank_name}</p>
+                  <p className="text-xs text-[#475569]">{bankAccount.account_number} - {bankAccount.account_holder_name}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC] mb-2 cursor-pointer hover:bg-[#F1F5F9]" onClick={() => setIsBankModalOpen(true)}>
+                <span className="material-symbols-outlined text-[#475569]">add_circle</span>
+                <div className="flex-1">
+                  <p className="font-body-sm text-body-sm font-semibold text-[#475569]">Chưa có tài khoản</p>
+                  <p className="text-xs text-[#475569]">Nhấn để thêm tài khoản ngân hàng</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
+
+      {/* Transaction History Banner */}
+      <section className="bg-white rounded-xl border border-[#E2E8F0] shadow-level-1 flex-1 mb-8 overflow-hidden flex flex-col justify-center items-center py-16">
+        <span className="material-symbols-outlined text-4xl text-[#94A3B8] mb-4">history</span>
+        <h3 className="font-headline-xl text-headline-xl text-[#334155] mb-2">Lịch sử giao dịch</h3>
+        <p className="text-[#475569] max-w-md text-center mb-6">Xem toàn bộ lịch sử rút tiền, nhận thanh toán và hoàn tiền trong ví của bạn.</p>
+        <button 
+          onClick={() => navigate('/wallet/transactions')}
+          className="bg-white border border-[#E2E8F0] text-[#0F766E] px-6 py-2 rounded-lg font-medium hover:bg-[#F8FAFC] transition-colors"
+        >
+          Xem chi tiết lịch sử
+        </button>
+      </section>
+
+      <BankAccountModal 
+        isOpen={isBankModalOpen} 
+        onClose={() => setIsBankModalOpen(false)} 
+        initialData={bankAccount}
+        onSuccess={handleBankUpdateSuccess}
+      />
     </main>
   );
 }

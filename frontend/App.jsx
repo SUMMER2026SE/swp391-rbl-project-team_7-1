@@ -14,6 +14,7 @@ import AdminReportHistory from './pages/Admin/ReportHistory';
 import AdminReportSuccess from './pages/Admin/ReportSuccess';
 import AdminSettings from './pages/Admin/Settings';
 import AdminUsers from './pages/Admin/Users';
+import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 
 // Pages - Employer
 import EmployerDashboard from './pages/Employer/Dashboard';
@@ -22,6 +23,12 @@ import EmployerWallet from './pages/Employer/Wallet';
 // Pages - Freelancer
 import FreelancerDashboard from './pages/Freelancer/Dashboard';
 import FreelancerWallet from './pages/Freelancer/Wallet';
+
+// Pages - Wallet & Payment (Iteration 2)
+import TransactionHistoryPage from './pages/Wallet/TransactionHistoryPage';
+import VNPayReturnPage from './pages/Wallet/VNPayReturnPage';
+import EscrowDepositPage from './pages/Project/EscrowDepositPage';
+import WithdrawFunds from './pages/Wallet/WithdrawFunds';
 
 // Pages - Public
 import LandingPage from './pages/LandingPage';
@@ -93,30 +100,40 @@ export default function App() {
 
         {/* --- Dashboard Pages with DashboardLayout (Sidebar & DashboardHeader) --- */}
         <Route element={<DashboardLayout />}>
+          {/* Employer Dashboard Paths */}
+          <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+          <Route path="/employer-wallet" element={<EmployerWallet />} />
+          
           {/* Freelancer Dashboard Paths */}
           <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
           <Route path="/freelancer-wallet" element={<FreelancerWallet />} />
+          
           <Route path="/messages-freelancer" element={<MessagesFreelancer />} />
           <Route path="/submit-work" element={<SubmitWork />} />
           <Route path="/submit-proposal" element={<SubmitProposal />} />
+          
           {/* Profile is always accessible when logged in (DashboardLayout handles auth) */}
           <Route path="/profile" element={<Profile />} />
+          
           {token && (
             <>
               <Route path="/browse-projects" element={<BrowseProjects />} />
               <Route path="/project-details" element={<ProjectDetails />} />
+              
+              {/* Wallet / Payment / Project Routes */}
+              <Route path="/wallet/transactions" element={<TransactionHistoryPage />} />
+              <Route path="/vnpay-return" element={<VNPayReturnPage />} />
+              <Route path="/project/:projectId/fund" element={<EscrowDepositPage />} />
+              <Route path="/withdraw" element={<WithdrawFunds />} />
+              
+              <Route path="/messages-employer" element={<MessagesEmployer />} />
+              <Route path="/manage-proposals" element={<ManageProposals />} />
+              <Route path="/review-submission" element={<ReviewSubmission />} />
+              <Route path="/revision-requested" element={<RevisionRequested />} />
+              <Route path="/post-project" element={<PostProject />} />
+              <Route path="/escrow-checkout" element={<EscrowCheckout />} />
             </>
           )}
-
-          {/* Employer Dashboard Paths */}
-          <Route path="/employer-dashboard" element={<EmployerDashboard />} />
-          <Route path="/employer-wallet" element={<EmployerWallet />} />
-          <Route path="/messages-employer" element={<MessagesEmployer />} />
-          <Route path="/manage-proposals" element={<ManageProposals />} />
-          <Route path="/review-submission" element={<ReviewSubmission />} />
-          <Route path="/revision-requested" element={<RevisionRequested />} />
-          <Route path="/post-project" element={<PostProject />} />
-          <Route path="/escrow-checkout" element={<EscrowCheckout />} />
 
           {/* Admin Dashboard Paths */}
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -127,6 +144,7 @@ export default function App() {
           <Route path="/admin-report-success" element={<AdminReportSuccess />} />
           <Route path="/admin-analytics" element={<AdminAnalytics />} />
           <Route path="/admin-settings" element={<AdminSettings />} />
+          <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
         </Route>
 
         {/* --- Standalone Pages (No Shared Layout) --- */}
