@@ -14,6 +14,13 @@ import AdminReportHistory from './pages/Admin/ReportHistory';
 import AdminReportSuccess from './pages/Admin/ReportSuccess';
 import AdminSettings from './pages/Admin/Settings';
 import AdminUsers from './pages/Admin/Users';
+import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
+
+// Pages - Wallet & Payment (Iteration 2)
+import TransactionHistoryPage from './pages/Wallet/TransactionHistoryPage';
+import VNPayReturnPage from './pages/Wallet/VNPayReturnPage';
+import EscrowDepositPage from './pages/Project/EscrowDepositPage';
+import WithdrawFunds from './pages/Wallet/WithdrawFunds';
 
 // Pages - Employer
 import EmployerDashboard from './pages/Employer/Dashboard';
@@ -94,6 +101,12 @@ export default function App() {
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />
             <Route path="/project-details" element={<ProjectDetails />} />
+            
+            {/* Wallet / Payment / Project Routes */}
+            <Route path="/wallet/transactions" element={<TransactionHistoryPage />} />
+            <Route path="/vnpay-return" element={<VNPayReturnPage />} />
+            <Route path="/project/:projectId/fund" element={<EscrowDepositPage />} />
+            <Route path="/withdraw" element={<WithdrawFunds />} />
           </>
         )}
 
@@ -116,6 +129,7 @@ export default function App() {
         <Route path="/admin-report-success" element={<AdminReportSuccess />} />
         <Route path="/admin-analytics" element={<AdminAnalytics />} />
         <Route path="/admin-settings" element={<AdminSettings />} />
+        <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
       </Route>
 
       {/* --- Standalone Pages (No Shared Layout) --- */}
