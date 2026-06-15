@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ManageProposals() {
+  const navigate = useNavigate();
+
   return (
     <main className="flex-1 p-margin-desktop pt-12 overflow-y-auto">
 <div className="max-w-container-max mx-auto">
@@ -73,7 +76,9 @@ export default function ManageProposals() {
 </div>
 {/*  Right: Actions  */}
 <div className="flex-shrink-0 w-full md:w-56 flex flex-col gap-3 justify-center border-t md:border-t-0 md:border-l border-outline-variant pt-4 md:pt-0 md:pl-6">
-<button className="w-full py-3 bg-[#0F766E] text-white rounded-2xl text-sm font-medium font-semibold border-t border-white/20 border-x border-white/10 shadow-[0_4px_15px_rgba(71,85,105,0.08),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-500 ease-out hover:bg-none hover:bg-[#0F766E] hover:shadow-[0_10px_25px_rgba(15,118,110,0.18)] flex items-center justify-center gap-2">
+<button 
+    onClick={() => navigate('/project/1/fund')}
+    className="w-full py-3 bg-[#0F766E] text-white rounded-2xl text-sm font-medium font-semibold border-t border-white/20 border-x border-white/10 shadow-[0_4px_15px_rgba(71,85,105,0.08),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all duration-500 ease-out hover:bg-none hover:bg-[#0F766E] hover:shadow-[0_10px_25px_rgba(15,118,110,0.18)] flex items-center justify-center gap-2">
 <span className="material-symbols-outlined text-[18px]">account_balance</span>
                                     Thuê &amp; Thanh toán Escrow
                                 </button>
