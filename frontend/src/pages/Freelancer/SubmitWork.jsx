@@ -1,6 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { proposalService } from '../../services/proposalService';
 
 export default function SubmitWork() {
+  const { contractId } = useParams();
+  const navigate = useNavigate();
+
+  const [externalLink, setExternalLink] = useState('');
+  const [submissionNotes, setSubmissionNotes] = useState('');
+  const [files, setFiles] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          formData.append('files', files[i]);
+        }
+      }
+      formData.append('externalLink', externalLink);
+      formData.append('notes', submissionNotes);
+
+      await proposalService.submitWork(contractId || 'default-id', formData);
+      navigate('/dashboard', { state: { message: 'Công việc đã được nộp thành công!' } });
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi nộp công việc.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="flex-grow pt-24 pb-margin-desktop px-gutter w-full max-w-container-max mx-auto md:px-margin-desktop">
 {/*  Context Header  */}
@@ -15,13 +50,19 @@ export default function SubmitWork() {
 <p className="text-base text-slate-600">
                 Submit your final deliverables for Phase 2: High-Fidelity Mockups.
             </p>
+            {errorMsg && (
+              <div className="mt-4 p-4 bg-red-50 text-red-700 border border-red-100 rounded-xl text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px]">error</span>
+                <span>{errorMsg}</span>
+              </div>
+            )}
 </div>
 <div className="grid grid-cols-12 gap-8">
 {/*  Left Column: Form Canvas (Takes up 8 cols on desktop)  */}
 <div className="col-span-12 lg:col-span-8 space-y-6">
 {/*  Submission Card  */}
 <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_2px_12px_rgba(15,23,42,0.015)] overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-<div className="p-6 md:p-8">
+<form onSubmit={handleSubmit} className="p-6 md:p-8">
 {/*  File Upload Area  */}
 <div className="mb-8">
 <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -29,7 +70,7 @@ export default function SubmitWork() {
                                 Deliverables
                             </h2>
 <div className="border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 p-10 flex flex-col items-center justify-center text-center group hover:border-[#0F766E] transition-colors cursor-pointer relative overflow-hidden">
-<input className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple="" type="file"/>
+<input className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" multiple type="file" onChange={(e) => setFiles(e.target.files)}/>
 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
 <span className="material-symbols-outlined text-3xl text-slate-600 group-hover:text-[#0F766E] transition-colors">folder_open</span>
 </div>
@@ -45,7 +86,7 @@ export default function SubmitWork() {
 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 <span className="material-symbols-outlined text-slate-600 text-[20px]">link</span>
 </div>
-<input className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-base text-slate-800 focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] transition-all" placeholder="Figma, GitHub, or Drive link..." type="url"/>
+<input className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-base text-slate-800 focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] transition-all" placeholder="Figma, GitHub, or Drive link..." type="url" value={externalLink} onChange={(e) => setExternalLink(e.target.value)} />
 </div>
 <button className="self-start inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-[#0F766E] hover:opacity-80 transition-colors">
 <span className="material-symbols-outlined text-[16px]">add</span> Add another link
@@ -56,7 +97,7 @@ export default function SubmitWork() {
 <div className="mb-8">
 <label className="block text-base text-slate-800 font-semibold mb-2">Submission Notes</label>
 <p className="text-sm font-medium text-slate-600 mb-3">Provide context, describe what was completed, or note any edge cases the client should review.</p>
-<textarea className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-base text-slate-800 focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] transition-all resize-none" placeholder="e.g., 'Attached are the final 15 screens for the analytics dashboard. I have also included the updated design system library link...'" rows="5"></textarea>
+<textarea className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-base text-slate-800 focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] transition-all resize-none" placeholder="e.g., 'Attached are the final 15 screens for the analytics dashboard. I have also included the updated design system library link...'" rows="5" required value={submissionNotes} onChange={(e) => setSubmissionNotes(e.target.value)}></textarea>
 </div>
 {/*  Divider  */}
 <hr className="border-t border-slate-200 my-6"/>
@@ -68,12 +109,12 @@ export default function SubmitWork() {
                                     Submitting this work will notify the employer for review. Once approved, the milestone payment will be released.
                                 </p>
 </div>
-<button className="w-full md:w-auto px-8 py-3 bg-[#0F766E] text-white text-lg font-bold rounded-2xl hover:bg-none hover:bg-[#0F766E] transition-all duration-500 ease-out hover:shadow-[0_10px_25px_rgba(15,118,110,0.18)] flex items-center justify-center gap-2">
-                                Submit Work
+<button type="submit" disabled={loading} className="w-full md:w-auto px-8 py-3 bg-[#0F766E] text-white text-lg font-bold rounded-2xl hover:bg-[#0D5E58] transition-all duration-500 ease-out hover:shadow-[0_10px_25px_rgba(15,118,110,0.18)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {loading ? 'Submitting...' : 'Submit Work'}
                                 <span className="material-symbols-outlined">send</span>
 </button>
 </div>
-</div>
+</form>
 </div>
 </div>
 {/*  Right Column: Context/Milestone Tracker  */}

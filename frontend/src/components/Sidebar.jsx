@@ -123,7 +123,7 @@ export default function Sidebar() {
         </div>
         <span className="text-3xl text-slate-800 font-extrabold tracking-tighter">FJMS</span>
       </div>
-      
+
       {/* User Profile */}
       <div className="mb-8 px-2">
         <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
@@ -141,11 +141,10 @@ export default function Sidebar() {
           return (
             <li key={idx}>
               <Link
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  isActive
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
                     ? 'bg-teal-50 text-[#0F766E] shadow-sm border border-teal-100/50'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                }`}
+                  }`}
                 to={item.link}
               >
                 <span className={`material-symbols-outlined text-[20px] transition-colors ${isActive ? 'text-[#0F766E]' : 'text-slate-400 group-hover:text-slate-600'}`}>{item.icon}</span>
@@ -155,7 +154,7 @@ export default function Sidebar() {
           );
         })}
       </ul>
-      
+
       <div className="mt-auto pt-6 flex flex-col gap-3 px-1">
         {bottom_btn && (
           <Link to={bottom_btn_link} className="w-full flex items-center justify-center gap-2 py-3 bg-[#0F766E] text-white rounded-xl text-sm font-bold hover:bg-[#0D5E58] hover:shadow-[0_4px_12px_rgba(15,118,110,0.2)] transition-all active:scale-[0.98]">

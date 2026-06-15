@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../../services/authService';
 
 export default function VerifyEmail() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -61,17 +62,7 @@ export default function VerifyEmail() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/resend-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Gửi lại mã xác thực thất bại.');
-      }
+      await authService.resendOtp(email);
 
       setOtp(['', '', '', '', '', '']);
       setTimeLeft(59);
@@ -82,7 +73,7 @@ export default function VerifyEmail() {
       setToastMsg('Mã xác thực mới đã được gửi thành công về email của bạn!');
       setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.response?.data?.message || err.message || 'Gửi lại mã xác thực thất bại.');
     } finally {
       setLoading(false);
     }
@@ -100,17 +91,7 @@ export default function VerifyEmail() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Xác thực tài khoản thất bại.');
-      }
+      await authService.verifyEmail(email, code);
 
       setToastMsg('Tài khoản đã được xác thực thành công!');
       localStorage.removeItem('pendingVerificationEmail');
@@ -118,7 +99,7 @@ export default function VerifyEmail() {
         navigate('/login');
       }, 1500);
     } catch (err) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.response?.data?.message || err.message || 'Xác thực tài khoản thất bại.');
     } finally {
       setLoading(false);
     }

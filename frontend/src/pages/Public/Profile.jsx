@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { userService } from '../../services/userService';
 
-const API = 'http://localhost:5000/api';
 
 /* ─── helpers ─── */
 const initials = (n = '') => n.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
@@ -202,9 +202,8 @@ export default function Profile() {
   const load = async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`${API}/user/profile`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (res.ok) {
+      const data = await userService.getProfile();
+      if (data && data.user) {
         const u = data.user;
         setProfile(u);
         setEName(u.full_name || ''); setEPhone(u.phone || '');
@@ -225,7 +224,7 @@ export default function Profile() {
         setECompanyDesc(ex.companyDesc || '');
         setELocation(ex.location || '');
       }
-    } catch { setAlert({ type:'error', msg:'Lỗi kết nối máy chủ.' }); }
+    } catch (err) { setAlert({ type:'error', msg:'Lỗi kết nối máy chủ.' }); }
     finally { setLoading(false); }
   };
   useEffect(() => { if (token) load(); else setLoading(false); }, []);
@@ -257,23 +256,17 @@ export default function Profile() {
       companyName:eCompanyName, industry:eIndustry, companySize:eCompanySize, website:eWebsite, companyDesc:eCompanyDesc, location:eLocation 
     };
     try {
-      const res  = await fetch(`${API}/user/profile`, {
-        method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify({ fullName:eName.trim(), phone:ePhone||null, bio:eBio||null,
-          avatarUrl: eAvatar||null, bioExtras: JSON.stringify(ex) }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setAlert({ type:'success', msg:'Cập nhật hồ sơ thành công!' });
-        if (data.user) { setProfile(prev => ({ ...prev, ...data.user })); setExtras(ex);
-          const s = localStorage.getItem('user');
-          if (s) {
-            localStorage.setItem('user', JSON.stringify({ ...JSON.parse(s), fullName:data.user.full_name, avatarUrl:data.user.avatar_url }));
-            window.dispatchEvent(new Event('profileUpdated'));
-          }
+      const data = await userService.updateProfile({ fullName:eName.trim(), phone:ePhone||null, bio:eBio||null,
+          avatarUrl: eAvatar||null, bioExtras: JSON.stringify(ex) });
+      setAlert({ type:'success', msg:'Cập nhật hồ sơ thành công!' });
+      if (data.user) { setProfile(prev => ({ ...prev, ...data.user })); setExtras(ex);
+        const s = localStorage.getItem('user');
+        if (s) {
+          localStorage.setItem('user', JSON.stringify({ ...JSON.parse(s), fullName:data.user.full_name, avatarUrl:data.user.avatar_url }));
+          window.dispatchEvent(new Event('profileUpdated'));
         }
-      } else setAlert({ type:'error', msg: data.message || 'Cập nhật thất bại.' });
-    } catch { setAlert({ type:'error', msg:'Lỗi kết nối máy chủ.' }); }
+      }
+    } catch (err) { setAlert({ type:'error', msg: err.response?.data?.message || 'Cập nhật thất bại.' }); }
     finally { setSaving(false); }
   };
 
@@ -283,14 +276,9 @@ export default function Profile() {
     if (newPwd !== conPwd) { setAlert({ type:'error', msg:'Mật khẩu xác nhận không khớp.' }); return; }
     setSavingPwd(true);
     try {
-      const res  = await fetch(`${API}/user/change-password`, {
-        method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify({ oldPassword:oldPwd, newPassword:newPwd }),
-      });
-      const data = await res.json();
-      if (res.ok) { setAlert({ type:'success', msg:'Đổi mật khẩu thành công!' }); setOldPwd(''); setNewPwd(''); setConPwd(''); }
-      else setAlert({ type:'error', msg: data.message });
-    } catch { setAlert({ type:'error', msg:'Lỗi kết nối máy chủ.' }); }
+      await userService.changePassword(oldPwd, newPwd);
+      setAlert({ type:'success', msg:'Đổi mật khẩu thành công!' }); setOldPwd(''); setNewPwd(''); setConPwd('');
+    } catch (err) { setAlert({ type:'error', msg: err.response?.data?.message || 'Đổi mật khẩu thất bại.' }); }
     finally { setSavingPwd(false); }
   };
 
@@ -299,14 +287,9 @@ export default function Profile() {
     if (delText !== 'XÓA TÀI KHOẢN') { setAlert({ type:'error', msg:'Vui lòng nhập đúng cụm xác nhận.' }); return; }
     setDeleting(true);
     try {
-      const res  = await fetch(`${API}/user/account`, {
-        method:'DELETE', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify({ password:delPwd }),
-      });
-      const data = await res.json();
-      if (res.ok) { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/login'; }
-      else { setAlert({ type:'error', msg: data.message }); setShowDel(false); }
-    } catch { setAlert({ type:'error', msg:'Lỗi kết nối máy chủ.' }); setShowDel(false); }
+      await userService.deleteAccount(delPwd);
+      localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/login';
+    } catch (err) { setAlert({ type:'error', msg: err.response?.data?.message || 'Xóa tài khoản thất bại.' }); setShowDel(false); }
     finally { setDeleting(false); }
   };
 

@@ -27,7 +27,7 @@ export default function DashboardLayout() {
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen bg-[#F8FAFC] relative">
         {/* Dashboard Header */}
         <Header layout="dashboard" />
-        
+
         {/* Render child routes */}
         <Outlet />
       </div>

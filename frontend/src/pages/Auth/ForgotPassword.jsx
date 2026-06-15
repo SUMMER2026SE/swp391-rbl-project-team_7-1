@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../../services/authService';
 
 export default function ForgotPassword() {
   const [step, setStep] = useState(1);
@@ -19,17 +20,7 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Không thể gửi mã xác thực. Vui lòng thử lại.');
-      }
+      await authService.forgotPassword(email);
 
       setToastMsg('Mã xác thực đã được gửi đến email của bạn!');
       setTimeout(() => {
@@ -38,7 +29,7 @@ export default function ForgotPassword() {
       }, 1500);
 
     } catch (err) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.response?.data?.message || err.message || 'Không thể gửi mã xác thực. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -61,17 +52,7 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otpCode: otp, newPassword })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Đặt lại mật khẩu thất bại.');
-      }
+      await authService.resetPassword(email, otp, newPassword);
 
       setToastMsg('Mật khẩu đã được thay đổi thành công!');
       setTimeout(() => {
@@ -79,7 +60,7 @@ export default function ForgotPassword() {
       }, 2000);
 
     } catch (err) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.response?.data?.message || err.message || 'Đặt lại mật khẩu thất bại.');
     } finally {
       setLoading(false);
     }

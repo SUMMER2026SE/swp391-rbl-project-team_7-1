@@ -141,30 +141,30 @@ export default function Header({ layout = 'dashboard' }) {
                   Đăng dự án
                 </Link>
                 <div className="relative" ref={dropdownRef}>
-                  <div 
-                    className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:border-slate-400 transition-all duration-200" 
+                  <div
+                    className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:border-slate-400 transition-all duration-200"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                   >
                     <img alt="User Avatar" className="w-full h-full object-cover" src={user?.avatarUrl || TOPNAV_AVATAR} />
                   </div>
-                  
+
                   {dropdownOpen && (
                     <div className="absolute right-0 mt-2.5 w-56 bg-white text-slate-800 rounded-xl border border-slate-200 shadow-[0_10px_40px_rgba(15,118,110,0.15)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="px-4 py-2.5 border-b border-slate-100 mb-1">
                         <p className="font-body-sm text-body-sm font-bold text-slate-900 truncate">{user?.fullName || 'Alexander'}</p>
                         <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">{user?.email || 'user@example.com'}</p>
                       </div>
-                      
-                      <Link 
-                        to="/profile" 
+
+                      <Link
+                        to="/profile"
                         className="flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors"
                         onClick={() => setDropdownOpen(false)}
                       >
                         <span className="material-symbols-outlined text-[18px]">person</span>
                         Trang cá nhân
                       </Link>
-                      
-                      <button 
+
+                      <button
                         onClick={() => {
                           setDropdownOpen(false);
                           const userRole = user?.roleDefault || 'FREELANCER';
@@ -178,7 +178,7 @@ export default function Header({ layout = 'dashboard' }) {
                         Bảng điều khiển
                       </button>
 
-                      <button 
+                      <button
                         onClick={() => {
                           setDropdownOpen(false);
                           handleSwitchRole();
@@ -188,10 +188,10 @@ export default function Header({ layout = 'dashboard' }) {
                         <span className="material-symbols-outlined text-[18px]">cached</span>
                         Đổi vai trò
                       </button>
-                      
+
                       <div className="h-px bg-slate-100 my-1"></div>
-                      
-                      <button 
+
+                      <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer font-semibold border-none"
                       >
@@ -265,30 +265,30 @@ export default function Header({ layout = 'dashboard' }) {
             Đăng dự án
           </Link>
           <div className="relative" ref={dropdownRef}>
-            <div 
-              className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:border-slate-400 transition-all duration-200" 
+            <div
+              className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:border-slate-400 transition-all duration-200"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               <img alt="User Avatar" className="w-full h-full object-cover" src={user?.avatarUrl || TOPNAV_AVATAR} />
             </div>
-            
+
             {dropdownOpen && (
               <div className="absolute right-0 mt-2.5 w-56 bg-white text-slate-800 rounded-xl border border-slate-200 shadow-[0_10px_40px_rgba(15,118,110,0.15)] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="px-4 py-2.5 border-b border-slate-100 mb-1 text-left">
                   <p className="font-body-sm text-body-sm font-bold text-slate-900 truncate">{user?.fullName || 'Alexander'}</p>
                   <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">{user?.email || 'user@example.com'}</p>
                 </div>
-                
-                <Link 
-                  to="/profile" 
+
+                <Link
+                  to="/profile"
                   className="flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-slate-600 hover:text-[#0F766E] hover:bg-teal-50 transition-colors text-left"
                   onClick={() => setDropdownOpen(false)}
                 >
                   <span className="material-symbols-outlined text-[18px]">person</span>
                   Trang cá nhân
                 </Link>
-                
-                <button 
+
+                <button
                   onClick={() => {
                     setDropdownOpen(false);
                     const userRole = user?.roleDefault || 'FREELANCER';
@@ -302,7 +302,7 @@ export default function Header({ layout = 'dashboard' }) {
                   Bảng điều khiển
                 </button>
 
-                <button 
+                <button
                   onClick={() => {
                     setDropdownOpen(false);
                     handleSwitchRole();
@@ -312,10 +312,10 @@ export default function Header({ layout = 'dashboard' }) {
                   <span className="material-symbols-outlined text-[18px]">cached</span>
                   Đổi vai trò
                 </button>
-                
+
                 <div className="h-px bg-slate-100 my-1"></div>
-                
-                <button 
+
+                <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2.5 px-4 py-2 font-body-sm text-body-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer font-semibold border-none"
                 >
