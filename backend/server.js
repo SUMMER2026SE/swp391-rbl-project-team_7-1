@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import walletRoutes from './routes/walletRoutes.js';
@@ -11,8 +11,6 @@ import escrowRoutes from './modules/escrow/escrow.routes.js';
 import withdrawalRoutes from './modules/withdrawal/withdrawal.routes.js';
 import { poolPromise } from './config/db.js';
 import { initDb } from './utils/initDb.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
