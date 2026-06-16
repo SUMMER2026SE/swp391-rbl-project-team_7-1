@@ -116,6 +116,7 @@ export default function App() {
           <Route path="/review-submission" element={<ReviewSubmission />} />
           <Route path="/revision-requested" element={<RevisionRequested />} />
           <Route path="/post-project" element={<PostProject />} />
+          <Route path="/edit-project/:id" element={<PostProject editMode={true} />} />
           <Route path="/escrow-checkout" element={<EscrowCheckout />} />
 
           {/* Admin Dashboard Paths */}

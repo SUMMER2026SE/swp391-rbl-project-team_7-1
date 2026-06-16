@@ -1,66 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 
-const ALL_PROJECTS = [
-  {
-    id: 1,
-    category: 'Lập trình Web',
-    projectType: 'Fixed Price',
-    title: 'Thiết kế lại Bảng điều khiển Doanh nghiệp (SaaS)',
-    description: 'Tìm kiếm một chuyên gia thiết kế sản phẩm để cải tiến bảng điều khiển phân tích chính của chúng tôi. Cần giao diện người dùng hiện đại, gọn gàng với trọng tâm là trực quan hóa dữ liệu, các thành phần có thể mở rộng và tính dễ sử dụng cao.',
-    budget: '120.000.000 đ - 200.000.000 đ',
-    numericBudget: 150000000,
-    duration: '4 Tuần',
-    company: 'Công ty TechNova',
-    proposals: 12,
-    skills: ['Figma', 'React', 'Thiết kế UI/UX'],
-    verified: true
-  },
-  {
-    id: 2,
-    category: 'Ứng dụng Di động',
-    projectType: 'Hourly Rate',
-    title: 'Phát triển Ứng dụng Di động React Native',
-    description: 'Chúng tôi cần một lập trình viên React Native có kinh nghiệm để xây dựng ứng dụng di động đa nền tảng cho dịch vụ giao hàng mới của chúng tôi. Rất mong muốn có kinh nghiệm tích hợp API Google Maps.',
-    budget: '75.000.000 đ - 110.000.000 đ',
-    numericBudget: 90000000,
-    duration: '2 Tháng',
-    company: 'Công ty Khởi nghiệp Alpha',
-    proposals: 5,
-    skills: ['React Native', 'Node.js'],
-    verified: false
-  },
-  {
-    id: 3,
-    category: 'Thiết kế UI/UX',
-    projectType: 'Fixed Price',
-    title: 'Bộ nhận diện thương hiệu Fintech & Prototype',
-    description: 'Chúng tôi đang ra mắt một công ty khởi nghiệp công nghệ tài chính mới và cần một bộ nhận diện hình ảnh và thiết kế trang đích hoàn chỉnh. Tìm kiếm một giao diện hiện đại, đáng tin cậy.',
-    budget: '50.000.000 đ - 80.000.000 đ',
-    numericBudget: 65000000,
-    duration: '10 Ngày',
-    company: 'NextGen Finance',
-    proposals: 28,
-    skills: ['Figma', 'Branding', 'Thiết kế UI/UX'],
-    verified: true
-  },
-  {
-    id: 4,
-    category: 'Lập trình Web',
-    projectType: 'Fixed Price',
-    title: 'Nâng cấp Nền tảng Thương mại Điện tử Next.js',
-    description: 'Viết lại toàn bộ cửa hàng bằng Next.js 14, TailwindCSS và Shopify Storefront API. Phải đảm bảo điểm SEO xuất sắc và tốc độ tải trang nhanh.',
-    budget: '100.000.000 đ - 150.000.000 đ',
-    numericBudget: 120000000,
-    duration: '6 Tuần',
-    company: 'Bán lẻ Việt',
-    proposals: 9,
-    skills: ['React', 'Next.js', 'Node.js'],
-    verified: true
-  }
-];
-
 export default function BrowseProjects() {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const rawToken = localStorage.getItem('token');
   const token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken : null;
   const location = useLocation();
@@ -69,6 +12,43 @@ export default function BrowseProjects() {
   // Search parameters parsing
   const queryParams = new URLSearchParams(location.search);
   const searchWord = queryParams.get('q') || '';
+
+  // Fetch projects from backend database
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/projects');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          const mapped = data.projects.map(p => ({
+            id: p.project_id,
+            category: p.category_name === 'Programming' ? 'Lập trình Web' 
+                    : p.category_name === 'Design' ? 'Thiết kế UI/UX'
+                    : p.category_name === 'Writing' ? 'Viết nội dung'
+                    : p.category_name === 'Translation' ? 'Dịch thuật'
+                    : p.category_name === 'Marketing' ? 'Kế toán' // Fallback matching UI categories
+                    : p.category_name || 'Lập trình Web',
+            projectType: p.budget_type === 'HOURLY' ? 'Hourly Rate' : 'Fixed Price',
+            title: p.title,
+            description: p.description,
+            budget: p.budget_max ? `${Math.round(p.budget_max).toLocaleString('vi-VN')} đ` : 'Liên hệ',
+            numericBudget: p.budget_max || 0,
+            duration: p.deadline ? `Hạn: ${new Date(p.deadline).toLocaleDateString('vi-VN')}` : 'Không hạn chót',
+            company: p.company_name || 'Khách hàng',
+            proposals: p.proposalsCount || 0,
+            skills: p.skills || [],
+            verified: true
+          }));
+          setProjects(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   // Dynamic States
   const [selectedCategories, setSelectedCategories] = useState({
@@ -120,7 +100,7 @@ export default function BrowseProjects() {
   };
 
   // Filter projects dynamically
-  const filteredProjects = ALL_PROJECTS.filter(project => {
+  const filteredProjects = projects.filter(project => {
     // 1. Text Search Filter
     if (searchWord) {
       const query = searchWord.toLowerCase();
