@@ -1,7 +1,7 @@
 import { sql, poolPromise } from '../config/db.js';
 
 /**
- * Get all projects (OPEN status only for public search)
+ * Get all projects (OPEN status only for public search - with Filters)
  */
 export const getProjects = async (req, res) => {
   try {
@@ -45,7 +45,7 @@ export const getProjects = async (req, res) => {
 
     query += ` ORDER BY p.created_at DESC`;
 
-    const result = await query.query;
+    const result = await request.query(query); // Sửa lỗi gọi biến query của bạn ở đây từ `query.query` thành `request.query(query)`
 
     // Fetch skills for each project
     const projects = result.recordset;
@@ -157,6 +157,80 @@ export const getEmployerProjects = async (req, res) => {
 };
 
 /**
+ * Submit a proposal for a project (From develop)
+ */
+export const submitProposal = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const freelancerId = req.user.id; 
+    let { proposedPrice, deliveryTimeDays, coverLetter } = req.body;
+
+    if (!proposedPrice || !deliveryTimeDays) {
+      return res.status(400).json({ message: 'Vui lòng cung cấp giá thầu và thời gian ước tính.' });
+    }
+
+    if (parseFloat(proposedPrice) <= 0) {
+      return res.status(400).json({ message: 'Giá thầu phải lớn hơn 0 VNĐ.' });
+    }
+
+    const pool = await poolPromise;
+
+    const projectCheck = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query('SELECT 1 FROM projects WHERE project_id = @projectId');
+    
+    if (projectCheck.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy dự án để ứng tuyển.' });
+    }
+
+    const proposalCheck = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .input('freelancerId', sql.Int, freelancerId)
+      .query('SELECT 1 FROM proposals WHERE project_id = @projectId AND freelancer_id = @freelancerId');
+
+    if (proposalCheck.recordset.length > 0) {
+      return res.status(400).json({ message: 'Bạn đã nộp đề xuất cho dự án này rồi.' });
+    }
+
+    if (req.file) {
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      coverLetter = `${coverLetter || ''}\n\n----------------------------------------\n[Tệp đính kèm]: ${fileUrl}`;
+    }
+
+    await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .input('freelancerId', sql.Int, freelancerId)
+      .input('proposedPrice', sql.Decimal(12, 2), parseFloat(proposedPrice))
+      .input('deliveryTimeDays', sql.Int, parseInt(deliveryTimeDays))
+      .input('coverLetter', sql.NVarChar, coverLetter || '')
+      .input('status', sql.VarChar, 'PENDING')
+      .query(`
+        INSERT INTO proposals (project_id, freelancer_id, proposed_price, delivery_time_days, cover_letter, status, created_at)
+        VALUES (@projectId, @freelancerId, @proposedPrice, @deliveryTimeDays, @coverLetter, @status, SYSUTCDATETIME())
+      `);
+
+    res.status(201).json({ success: true, message: 'Nộp đề xuất ứng tuyển thành công!' });
+  } catch (error) {
+    console.error('Error submitting proposal:', error);
+    res.status(500).json({ message: 'Lỗi server khi nộp đề xuất.' });
+  }
+};
+
+/**
+ * Get all project categories (From develop)
+ */
+export const getCategories = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT category_id, category_name FROM project_categories');
+    res.json({ success: true, categories: result.recordset });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách danh mục.' });
+  }
+};
+
+/**
  * Create a new Project
  */
 export const createProject = async (req, res) => {
@@ -168,7 +242,6 @@ export const createProject = async (req, res) => {
       return res.status(400).json({ message: 'Vui lòng cung cấp tiêu đề, mô tả và loại ngân sách.' });
     }
 
-    // Map string category labels to ID if string category is sent
     let categoryId = parseInt(category_id);
     if (isNaN(categoryId)) {
       const catMap = {
@@ -178,7 +251,7 @@ export const createProject = async (req, res) => {
         'translation': 4, 'Translation': 4,
         'accounting': 1, 'marketing': 5, 'Marketing': 5
       };
-      categoryId = catMap[category_id] || 1; // Fallback default category
+      categoryId = catMap[category_id] || 1; 
     }
 
     const pool = await poolPromise;
@@ -205,12 +278,10 @@ export const createProject = async (req, res) => {
 
     const projectId = result.recordset[0].project_id;
 
-    // Process skills tags
     if (Array.isArray(skills) && skills.length > 0) {
       for (let skillName of skills) {
         if (!skillName.trim()) continue;
 
-        // Check or insert skill
         let skillResult = await pool.request()
           .input('skillName', sql.NVarChar, skillName.trim())
           .query(`SELECT skill_id FROM skills WHERE skill_name = @skillName`);
@@ -229,7 +300,6 @@ export const createProject = async (req, res) => {
           skillId = skillResult.recordset[0].skill_id;
         }
 
-        // Link skill to project
         await pool.request()
           .input('projectId', sql.Int, projectId)
           .input('skillId', sql.Int, skillId)
@@ -265,7 +335,6 @@ export const updateProject = async (req, res) => {
 
     const pool = await poolPromise;
 
-    // Verify ownership
     const ownerCheck = await pool.request()
       .input('projectId', sql.Int, id)
       .query(`SELECT employer_id FROM projects WHERE project_id = @projectId`);
@@ -294,7 +363,6 @@ export const updateProject = async (req, res) => {
     const numFreelancers = required_freelancer_count ? parseInt(required_freelancer_count) : 1;
     const deadlineDate = deadline ? new Date(deadline) : null;
 
-    // Update project
     await pool.request()
       .input('projectId', sql.Int, id)
       .input('categoryId', sql.Int, categoryId)
@@ -319,7 +387,6 @@ export const updateProject = async (req, res) => {
         WHERE project_id = @projectId
       `);
 
-    // Sync skills (delete and insert)
     await pool.request()
       .input('projectId', sql.Int, id)
       .query(`DELETE FROM project_skills WHERE project_id = @projectId`);
@@ -375,7 +442,6 @@ export const closeProject = async (req, res) => {
     const { id } = req.params;
     const pool = await poolPromise;
 
-    // Verify ownership
     const ownerCheck = await pool.request()
       .input('projectId', sql.Int, id)
       .query(`SELECT employer_id FROM projects WHERE project_id = @projectId`);

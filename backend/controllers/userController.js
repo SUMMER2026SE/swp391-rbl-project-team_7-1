@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { sql, poolPromise } from '../config/db.js';
+import { getUserById, fetchAllUsers, updateUserStatusById } from '../services/userService.js';
 
 export const getProfile = async (req, res) => {
   try {
@@ -336,5 +337,67 @@ export const deleteAccount = async (req, res) => {
   } catch (error) {
     console.error('Error deleting account:', error);
     res.status(500).json({ message: 'Lỗi server khi xóa tài khoản.' });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await fetchAllUsers();
+    res.json({ users });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách người dùng.' });
+  }
+};
+
+export const banUser = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    if (Number.isNaN(userId)) {
+      return res.status(400).json({ message: 'Id người dùng không hợp lệ.' });
+    }
+
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+    }
+
+    if (user.role_default === 'ADMIN') {
+      return res.status(403).json({ message: 'Không thể cấm tài khoản Admin.' });
+    }
+
+    if (user.status === 'BANNED') {
+      return res.status(400).json({ message: 'Người dùng đã bị cấm trước đó.' });
+    }
+
+    await updateUserStatusById(userId, 'BANNED');
+    res.json({ message: 'Người dùng đã được cấm thành công.' });
+  } catch (error) {
+    console.error('Error banning user:', error);
+    res.status(500).json({ message: 'Lỗi server khi cấm người dùng.' });
+  }
+};
+
+export const unbanUser = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    if (Number.isNaN(userId)) {
+      return res.status(400).json({ message: 'Id người dùng không hợp lệ.' });
+    }
+
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+    }
+
+    if (user.status !== 'BANNED') {
+      return res.status(400).json({ message: 'Người dùng không ở trạng thái bị cấm.' });
+    }
+
+    await updateUserStatusById(userId, 'ACTIVE');
+    res.json({ message: 'Người dùng đã được mở cấm thành công.' });
+  } catch (error) {
+    console.error('Error unbanning user:', error);
+    res.status(500).json({ message: 'Lỗi server khi mở cấm người dùng.' });
   }
 };

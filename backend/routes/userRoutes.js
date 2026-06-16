@@ -1,6 +1,6 @@
 import express from 'express';
-import { getProfile, updateProfile, changePassword, deleteAccount } from '../controllers/userController.js';
-import { verifyToken } from '../middleware/authMiddleware.js';
+import { getProfile, updateProfile, changePassword, deleteAccount, getAllUsers, banUser, unbanUser } from '../controllers/userController.js';
+import { verifyToken, verifyAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -11,5 +11,10 @@ router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
 router.put('/change-password', changePassword);
 router.delete('/account', deleteAccount);
+
+// Admin-only user management routes
+router.get('/admin', verifyAdmin, getAllUsers);
+router.put('/admin/:userId/ban', verifyAdmin, banUser);
+router.put('/admin/:userId/unban', verifyAdmin, unbanUser);
 
 export default router;
