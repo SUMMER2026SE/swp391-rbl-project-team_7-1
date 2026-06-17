@@ -14,7 +14,7 @@ export default function Sidebar() {
     role = 'admin';
   } else if (
     path.includes('employer') ||
-    path === '/manage-proposals' ||
+    path.startsWith('/manage-proposals') ||
     path === '/review-submission' ||
     path === '/revision-requested' ||
     path === '/project-details' ||
@@ -77,7 +77,7 @@ export default function Sidebar() {
   } else if (role === 'employer') {
     items = [
       { label: 'Bảng điều khiển', icon: 'dashboard', link: '/employer-dashboard' },
-      { label: 'Dự án của tôi', icon: 'work', link: '/manage-proposals' },
+      { label: 'Dự án của tôi', icon: 'work', link: '/employer-dashboard' },
       { label: 'Tìm Freelancer', icon: 'group', link: '/browse-projects' },
       { label: 'Ví tiền', icon: 'payments', link: '/employer-wallet' },
       { label: 'Tin nhắn', icon: 'chat', link: '/messages-employer' },

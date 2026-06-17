@@ -94,7 +94,7 @@ export default function App() {
         <Route path="/freelancer-wallet" element={<FreelancerWallet />} />
         <Route path="/messages-freelancer" element={<MessagesFreelancer />} />
         <Route path="/submit-work" element={<SubmitWork />} />
-        <Route path="/submit-proposal" element={<SubmitProposal />} />
+        <Route path="/submit-proposal/:projectId" element={<SubmitProposal />} />
         {/* Profile is always accessible when logged in (DashboardLayout handles auth) */}
         <Route path="/profile" element={<Profile />} />
         {token && (
@@ -114,7 +114,7 @@ export default function App() {
         <Route path="/employer-dashboard" element={<EmployerDashboard />} />
         <Route path="/employer-wallet" element={<EmployerWallet />} />
         <Route path="/messages-employer" element={<MessagesEmployer />} />
-        <Route path="/manage-proposals" element={<ManageProposals />} />
+        <Route path="/manage-proposals/:projectId" element={<ManageProposals />} />
         <Route path="/review-submission" element={<ReviewSubmission />} />
         <Route path="/revision-requested" element={<RevisionRequested />} />
         <Route path="/post-project" element={<PostProject />} />

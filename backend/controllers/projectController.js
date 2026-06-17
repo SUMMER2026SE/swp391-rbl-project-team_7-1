@@ -203,7 +203,7 @@ export const submitProposal = async (req, res) => {
       .input('proposedPrice', sql.Decimal(12, 2), parseFloat(proposedPrice))
       .input('deliveryTimeDays', sql.Int, parseInt(deliveryTimeDays))
       .input('coverLetter', sql.NVarChar, coverLetter || '')
-      .input('status', sql.VarChar, 'PENDING')
+      .input('status', sql.VarChar, 'SUBMITTED')
       .query(`
         INSERT INTO proposals (project_id, freelancer_id, proposed_price, delivery_time_days, cover_letter, status, created_at)
         VALUES (@projectId, @freelancerId, @proposedPrice, @deliveryTimeDays, @coverLetter, @status, SYSUTCDATETIME())
@@ -236,7 +236,15 @@ export const getCategories = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     const employerId = req.user.id;
-    const { title, description, category_id, budget_type, budget_min, budget_max, required_freelancer_count, deadline, skills } = req.body;
+    const title = req.body.title;
+    const description = req.body.description;
+    const category_id = req.body.category_id || req.body.categoryId;
+    const budget_type = req.body.budget_type || req.body.budgetType;
+    const budget_min = req.body.budget_min || req.body.budgetMin;
+    const budget_max = req.body.budget_max || req.body.budgetMax;
+    const required_freelancer_count = req.body.required_freelancer_count || req.body.requiredFreelancerCount;
+    const deadline = req.body.deadline;
+    const skills = req.body.skills;
 
     if (!title || !description || !budget_type) {
       return res.status(400).json({ message: 'Vui lòng cung cấp tiêu đề, mô tả và loại ngân sách.' });
@@ -259,6 +267,14 @@ export const createProject = async (req, res) => {
     const bType = budget_type.toUpperCase() === 'HOURLY' ? 'HOURLY' : 'FIXED';
     const numFreelancers = required_freelancer_count ? parseInt(required_freelancer_count) : 1;
     const deadlineDate = deadline ? new Date(deadline) : null;
+
+    if (deadlineDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (deadlineDate < today) {
+        return res.status(400).json({ message: 'Hạn chót hoàn thành không được ở trong quá khứ.' });
+      }
+    }
 
     const result = await pool.request()
       .input('employerId', sql.Int, employerId)
@@ -327,10 +343,27 @@ export const updateProject = async (req, res) => {
   try {
     const employerId = req.user.id;
     const { id } = req.params;
-    const { title, description, category_id, budget_type, budget_min, budget_max, required_freelancer_count, deadline, skills } = req.body;
+    const title = req.body.title;
+    const description = req.body.description;
+    const category_id = req.body.category_id || req.body.categoryId;
+    const budget_type = req.body.budget_type || req.body.budgetType;
+    const budget_min = req.body.budget_min || req.body.budgetMin;
+    const budget_max = req.body.budget_max || req.body.budgetMax;
+    const required_freelancer_count = req.body.required_freelancer_count || req.body.requiredFreelancerCount;
+    const deadline = req.body.deadline;
+    const skills = req.body.skills;
 
     if (!title || !description || !budget_type) {
       return res.status(400).json({ message: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc.' });
+    }
+
+    const deadlineDate = deadline ? new Date(deadline) : null;
+    if (deadlineDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (deadlineDate < today) {
+        return res.status(400).json({ message: 'Hạn chót hoàn thành không được ở trong quá khứ.' });
+      }
     }
 
     const pool = await poolPromise;
@@ -361,7 +394,6 @@ export const updateProject = async (req, res) => {
 
     const bType = budget_type.toUpperCase() === 'HOURLY' ? 'HOURLY' : 'FIXED';
     const numFreelancers = required_freelancer_count ? parseInt(required_freelancer_count) : 1;
-    const deadlineDate = deadline ? new Date(deadline) : null;
 
     await pool.request()
       .input('projectId', sql.Int, id)
@@ -467,5 +499,115 @@ export const closeProject = async (req, res) => {
   } catch (error) {
     console.error('Error closing project:', error);
     res.status(500).json({ message: 'Lỗi hệ thống khi đóng dự án.' });
+  }
+};
+
+/**
+ * Get all proposals for a specific project (Employer only)
+ */
+export const getProjectProposals = async (req, res) => {
+  try {
+    const employerId = req.user.id;
+    const { projectId } = req.params;
+    const pool = await poolPromise;
+
+    // Verify project owner
+    const projectCheck = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query('SELECT employer_id, title FROM projects WHERE project_id = @projectId');
+
+    if (projectCheck.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy dự án.' });
+    }
+
+    if (projectCheck.recordset[0].employer_id !== employerId) {
+      return res.status(403).json({ message: 'Bạn không có quyền xem các đề xuất của dự án này.' });
+    }
+
+    const proposalsResult = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT 
+          p.proposal_id,
+          p.project_id,
+          p.freelancer_id,
+          p.proposed_price,
+          p.delivery_time_days,
+          p.cover_letter,
+          p.status,
+          p.created_at,
+          p.updated_at,
+          u.full_name as freelancer_name,
+          u.avatar_url as freelancer_avatar,
+          fp.rating_average,
+          fp.total_reviews,
+          c.contract_id
+        FROM proposals p
+        JOIN users u ON p.freelancer_id = u.user_id
+        LEFT JOIN freelancer_profiles fp ON p.freelancer_id = fp.freelancer_id
+        LEFT JOIN contracts c ON p.project_id = c.project_id AND p.freelancer_id = c.freelancer_id
+        WHERE p.project_id = @projectId
+        ORDER BY p.created_at DESC
+      `);
+
+    res.json({ 
+      success: true, 
+      projectTitle: projectCheck.recordset[0].title,
+      proposals: proposalsResult.recordset 
+    });
+  } catch (error) {
+    console.error('Error fetching project proposals:', error);
+    res.status(500).json({ message: 'Lỗi hệ thống khi lấy danh sách đề xuất.' });
+  }
+};
+
+/**
+ * Update proposal status (Employer only)
+ */
+export const updateProposalStatus = async (req, res) => {
+  try {
+    const employerId = req.user.id;
+    const { proposalId } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = ['ACCEPTED', 'REJECTED', 'SHORTLISTED', 'SUBMITTED', 'WITHDRAWN', 'CANCELED'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Trạng thái đề xuất không hợp lệ.' });
+    }
+
+    const pool = await poolPromise;
+
+    // Verify that the proposal exists and that the employer owns the project
+    const proposalCheck = await pool.request()
+      .input('proposalId', sql.Int, proposalId)
+      .query(`
+        SELECT p.status, pr.employer_id, pr.project_id
+        FROM proposals p
+        JOIN projects pr ON p.project_id = pr.project_id
+        WHERE p.proposal_id = @proposalId
+      `);
+
+    if (proposalCheck.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy đề xuất.' });
+    }
+
+    const proposal = proposalCheck.recordset[0];
+    if (proposal.employer_id !== employerId) {
+      return res.status(403).json({ message: 'Bạn không có quyền cập nhật đề xuất này.' });
+    }
+
+    await pool.request()
+      .input('proposalId', sql.Int, proposalId)
+      .input('status', sql.VarChar(30), status)
+      .query(`
+        UPDATE proposals
+        SET status = @status, updated_at = SYSUTCDATETIME()
+        WHERE proposal_id = @proposalId
+      `);
+
+    res.json({ success: true, message: 'Cập nhật trạng thái đề xuất thành công!' });
+  } catch (error) {
+    console.error('Error updating proposal status:', error);
+    res.status(500).json({ message: 'Lỗi hệ thống khi cập nhật trạng thái đề xuất.' });
   }
 };

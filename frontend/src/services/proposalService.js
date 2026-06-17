@@ -17,5 +17,15 @@ export const proposalService = {
     
     const response = await api.post(`/contracts/${contractId}/submissions`, workData, config);
     return response.data;
+  },
+
+  getProjectProposals: async (projectId) => {
+    const response = await api.get(`/projects/${projectId}/proposals`);
+    return response.data;
+  },
+
+  updateProposalStatus: async (proposalId, status) => {
+    const response = await api.put(`/projects/proposals/${proposalId}/status`, { status });
+    return response.data;
   }
 };

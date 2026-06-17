@@ -10,7 +10,9 @@ import {
   getProjectById, 
   getEmployerProjects,
   submitProposal,
-  getCategories
+  getCategories,
+  getProjectProposals,
+  updateProposalStatus
 } from '../controllers/projectController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
@@ -71,5 +73,9 @@ router.put('/:id/close', closeProject);
 
 // API nộp đề xuất ứng tuyển của Freelancer kèm file đính kèm (Từ develop)
 router.post('/:projectId/proposals', upload.single('attachment'), submitProposal);
+
+// API quản lý đề xuất của Employer
+router.get('/:projectId/proposals', getProjectProposals);
+router.put('/proposals/:proposalId/status', updateProposalStatus);
 
 export default router;

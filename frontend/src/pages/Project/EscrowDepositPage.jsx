@@ -1,13 +1,56 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 export default function EscrowDepositPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const [amount, setAmount] = useState('');
+  const location = useLocation();
+
+  // Extract amount from query parameter ?amount=xxx
+  const [amount, setAmount] = useState(() => {
+    const query = new URLSearchParams(window.location.search);
+    return query.get('amount') || '';
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  const handleVNPayRedirect = async () => {
+    setError('');
+    const depositAmount = parseFloat(amount);
+    if (!depositAmount || depositAmount <= 0) {
+      setError('Vui lòng nhập số tiền hợp lệ để nạp.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/payment/vnpay/create_url`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: depositAmount })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Không thể tạo link thanh toán VNPay.');
+      }
+
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error('Không nhận được link thanh toán từ VNPay.');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDeposit = async (e) => {
     e.preventDefault();
@@ -70,8 +113,18 @@ export default function EscrowDepositPage() {
         <p className="text-[#475569] mb-6">Chuyển tiền từ Ví vào Escrow cho dự án #{projectId}</p>
         
         {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-            {error}
+          <div className="mb-4 p-4 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm flex flex-col gap-3">
+            <span>{error}</span>
+            {error.toLowerCase().includes('không đủ') && (
+              <button
+                type="button"
+                onClick={handleVNPayRedirect}
+                className="w-full bg-[#0F766E] hover:bg-[#0d615b] text-white py-2.5 px-4 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer border-none shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">qr_code_2</span>
+                Nạp tiền bằng VNPay (Quét mã QR)
+              </button>
+            )}
           </div>
         )}
 

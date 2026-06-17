@@ -59,6 +59,33 @@ export const depositEscrow = async (req, res) => {
         .input('type', sql.NVarChar(50), 'DEPOSIT')
         .query('INSERT INTO EscrowTransactions (escrow_id, amount, type) VALUES (@escrow_id, @amount, @type)');
 
+      // Find the ACCEPTED proposal for this project to get the freelancer_id and proposal info
+      const proposalRes = await request
+        .query("SELECT TOP 1 proposal_id, freelancer_id, proposed_price FROM proposals WHERE project_id = @project_id AND status = 'ACCEPTED' ORDER BY created_at DESC");
+      
+      if (proposalRes.recordset.length > 0) {
+        const prop = proposalRes.recordset[0];
+        
+        // Find project title
+        const projectRes = await request
+          .query("SELECT title FROM projects WHERE project_id = @project_id");
+        const projectTitle = projectRes.recordset[0]?.title || 'Dự án';
+
+        // Insert Contract
+        await request
+          .input('freelancer_id_val', sql.Int, prop.freelancer_id)
+          .input('proposal_id_val', sql.Int, prop.proposal_id)
+          .input('contract_title_val', sql.NVarChar, `Hợp đồng: ${projectTitle}`)
+          .input('total_amount_val', sql.Decimal(18, 2), prop.proposed_price)
+          .query(`
+            INSERT INTO contracts (project_id, employer_id, freelancer_id, proposal_id, contract_title, total_amount, status, started_at, created_at, updated_at)
+            VALUES (@project_id, @employer_id, @freelancer_id_val, @proposal_id_val, @contract_title_val, @total_amount_val, 'ACTIVE', SYSUTCDATETIME(), SYSUTCDATETIME(), SYSUTCDATETIME())
+          `);
+          
+        // Update project status to ACTIVE
+        await request.query("UPDATE projects SET status = 'ACTIVE' WHERE project_id = @project_id");
+      }
+
       await transaction.commit();
 
       res.status(200).json({ message: 'Ký quỹ thành công', escrowId });

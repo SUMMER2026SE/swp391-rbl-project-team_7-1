@@ -101,6 +101,17 @@ export default function PostProject({ editMode = false }) {
       return;
     }
 
+    if (deadline) {
+      const selectedDate = new Date(deadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        setErrorMsg('Hạn chót hoàn thành không được ở trong quá khứ.');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const projectData = {
         title,
@@ -297,6 +308,7 @@ export default function PostProject({ editMode = false }) {
                     className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all text-base text-slate-800 focus:outline-none cursor-pointer" 
                     id="deadline" 
                     type="date"
+                    min={new Date().toISOString().substring(0, 10)}
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
                   />

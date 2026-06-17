@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
 
 export default function MessagesEmployer() {
   const { user } = useAuth();
+  const location = useLocation();
   const [conversations, setConversations] = useState([]);
   const [activeConv, setActiveConv] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -29,9 +31,20 @@ export default function MessagesEmployer() {
     const fetchConversations = async () => {
       try {
         const data = await chatService.getConversations();
-        setConversations(data.conversations || []);
-        if (data.conversations && data.conversations.length > 0) {
-          setActiveConv(data.conversations[0]);
+        const convList = data.conversations || [];
+        setConversations(convList);
+        
+        // Auto-select targeted conversation if passed via location state
+        if (location.state?.selectConvId) {
+          const target = convList.find(c => c.id === location.state.selectConvId);
+          if (target) {
+            setActiveConv(target);
+            return;
+          }
+        }
+
+        if (convList.length > 0) {
+          setActiveConv(convList[0]);
         }
       } catch (err) {
         console.error('Failed to load conversations', err);
@@ -49,11 +62,11 @@ export default function MessagesEmployer() {
 
     socketRef.current.on('receive_message', (msg) => {
       const active = activeConvRef.current;
-      if (active && msg.project_id === active.projectId) {
+      if (active && Number(msg.project_id) === Number(active.projectId)) {
         if (active.type === 'GROUP' && msg.contract_id === null) {
           setMessages((prev) => [...prev, msg]);
         } else if (active.type === 'DIRECT' && 
-          (msg.sender_id === active.partnerId || msg.sender_id === user.user_id)) {
+          (Number(msg.sender_id) === Number(active.partnerId) || Number(msg.sender_id) === Number(user?.userId || user?.user_id || user?.id))) {
           setMessages((prev) => [...prev, msg]);
         }
       }
@@ -61,8 +74,10 @@ export default function MessagesEmployer() {
       // Update last message in sidebar
       setConversations((prevConvs) => 
         prevConvs.map((conv) => {
-          const isMatch = conv.projectId === msg.project_id && 
-            (conv.type === 'GROUP' ? msg.contract_id === null : (msg.sender_id === conv.partnerId || msg.sender_id === user.user_id));
+          const isMatch = Number(conv.projectId) === Number(msg.project_id) && 
+            (conv.type === 'GROUP' 
+              ? msg.contract_id === null 
+              : (Number(msg.sender_id) === Number(conv.partnerId) || Number(msg.sender_id) === Number(user?.userId || user?.user_id || user?.id)));
           if (isMatch) {
             return {
               ...conv,
@@ -104,7 +119,8 @@ export default function MessagesEmployer() {
     const messageData = {
       projectId: activeConv.projectId,
       contractId: activeConv.contractId || null,
-      senderId: user.user_id || user.id,
+      senderId: user?.userId || user?.user_id || user?.id,
+      recipientId: activeConv.partnerId || null,
       messageContent: messageText,
       messageType: 'TEXT',
       room: activeConv.id
@@ -167,7 +183,7 @@ export default function MessagesEmployer() {
                       )}
                     </div>
                     <p className="text-xs text-slate-700 truncate font-semibold">
-                      {conv.lastMessageSender === (user.user_id || user.id) ? 'Bạn: ' : ''}{conv.lastMessage}
+                      {Number(conv.lastMessageSender) === Number(user?.userId || user?.user_id || user?.id) ? 'Bạn: ' : ''}{conv.lastMessage}
                     </p>
                     <p className="text-[10px] text-teal-700 mt-1.5 truncate font-medium bg-white px-2 py-0.5 rounded border border-teal-100 w-fit">{conv.projectName}</p>
                   </div>
@@ -219,7 +235,7 @@ export default function MessagesEmployer() {
             {/*  Chat History Area  */}
             <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-slate-50 flex flex-col">
               {messages.map((msg, index) => {
-                const isMe = msg.sender_id === (user.user_id || user.id);
+                const isMe = Number(msg.sender_id) === Number(user?.userId || user?.user_id || user?.id);
                 return (
                   <div key={index} className={`flex gap-4 max-w-2xl ${isMe ? 'self-end' : ''}`}>
                     {!isMe && (

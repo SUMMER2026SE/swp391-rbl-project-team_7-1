@@ -93,15 +93,28 @@ export default function BankAccountModal({ isOpen, onClose, initialData, onSucce
             <label className="block text-sm font-medium text-[#475569] mb-1">
               Tên ngân hàng
             </label>
-            <input
-              type="text"
+            <select
               name="bank_name"
               value={formData.bank_name}
               onChange={handleChange}
-              placeholder="VD: Vietcombank, Techcombank..."
-              className="w-full px-4 py-2 border border-[#E2E8F0] rounded-lg focus:ring-[#0F766E] focus:border-[#0F766E] outline-none transition-colors"
+              className="w-full px-4 py-2 border border-[#E2E8F0] rounded-lg focus:ring-[#0F766E] focus:border-[#0F766E] outline-none transition-colors bg-white cursor-pointer"
               required
-            />
+            >
+              <option value="" disabled>-- Chọn ngân hàng --</option>
+              <option value="Vietcombank">Vietcombank (VCB)</option>
+              <option value="Techcombank">Techcombank (TCB)</option>
+              <option value="BIDV">BIDV</option>
+              <option value="VietinBank">VietinBank</option>
+              <option value="Agribank">Agribank</option>
+              <option value="MB Bank">MB Bank (MB)</option>
+              <option value="ACB">ACB</option>
+              <option value="VPBank">VPBank</option>
+              <option value="TPBank">TPBank</option>
+              <option value="Sacombank">Sacombank</option>
+              <option value="VIB">VIB</option>
+              <option value="HDBank">HDBank</option>
+              <option value="SHB">SHB</option>
+            </select>
           </div>
           
           <div className="mb-4">

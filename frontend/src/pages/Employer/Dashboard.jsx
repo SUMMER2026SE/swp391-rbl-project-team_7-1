@@ -206,7 +206,7 @@ export default function EmployerDashboard() {
                       <td className="py-4 text-right">
                         <div className="flex justify-end items-center gap-2">
                           <Link 
-                            to="/manage-proposals" 
+                            to={`/manage-proposals/${project.project_id}`} 
                             className="px-3 py-1.5 text-xs font-bold text-[#0F766E] hover:bg-teal-50 rounded-lg transition-all"
                           >
                             Đề xuất

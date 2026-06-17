@@ -358,7 +358,7 @@ export default function BrowseProjects() {
                   <div className="flex-1 relative tooltip-container">
                     {token ? (
                       <button 
-                        onClick={() => navigate('/submit-proposal')}
+                        onClick={() => navigate(`/submit-proposal/${project.id}`)}
                         className="w-full bg-[#0F766E] text-white text-sm font-bold py-2.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all duration-300 active:scale-[0.98] text-center border-none"
                       >
                         Nộp đề xuất

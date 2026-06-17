@@ -75,19 +75,44 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_message', async (data) => {
-    const { projectId, contractId, senderId, messageContent, messageType, room } = data;
+    const { projectId, contractId, senderId, recipientId, messageContent, messageType, room } = data;
     try {
+      let finalRecipientId = recipientId || null;
+      
+      // Fallback: If direct chat and recipientId is not provided, try to extract freelancerId from room name
+      if (!finalRecipientId && room && room.startsWith('direct-')) {
+        const parts = room.split('-');
+        if (parts.length >= 3) {
+          const freelancerId = parseInt(parts[2]);
+          if (freelancerId) {
+            if (senderId === freelancerId) {
+              // Recipient must be the employer of this project
+              const pool = await poolPromise;
+              const projectRes = await pool.request()
+                .input('projectId', sql.Int, projectId)
+                .query('SELECT employer_id FROM projects WHERE project_id = @projectId');
+              if (projectRes.recordset.length > 0) {
+                finalRecipientId = projectRes.recordset[0].employer_id;
+              }
+            } else {
+              finalRecipientId = freelancerId;
+            }
+          }
+        }
+      }
+
       const pool = await poolPromise;
       await pool.request()
         .input('projectId', sql.Int, projectId)
         .input('contractId', sql.Int, contractId || null)
         .input('senderId', sql.Int, senderId)
+        .input('recipientId', sql.Int, finalRecipientId)
         .input('messageContent', sql.NVarChar, messageContent)
         .input('messageType', sql.VarChar, messageType || 'TEXT')
         .input('isRead', sql.Bit, 0)
         .query(`
-          INSERT INTO messages (project_id, contract_id, sender_id, message_content, message_type, is_read, sent_at)
-          VALUES (@projectId, @contractId, @senderId, @messageContent, @messageType, @isRead, SYSUTCDATETIME())
+          INSERT INTO messages (project_id, contract_id, sender_id, recipient_id, message_content, message_type, is_read, sent_at)
+          VALUES (@projectId, @contractId, @senderId, @recipientId, @messageContent, @messageType, @isRead, SYSUTCDATETIME())
         `);
 
       // Broadcast to room members
@@ -95,6 +120,7 @@ io.on('connection', (socket) => {
         project_id: projectId,
         contract_id: contractId || null,
         sender_id: senderId,
+        recipient_id: finalRecipientId,
         message_content: messageContent,
         message_type: messageType || 'TEXT',
         is_read: false,

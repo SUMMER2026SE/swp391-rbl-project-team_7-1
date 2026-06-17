@@ -51,8 +51,10 @@ export const getConversations = async (req, res) => {
               SELECT TOP 1 message_content, sent_at, sender_id
               FROM messages
               WHERE project_id = @projectId 
-                AND ((sender_id = @freelancerId) OR (sender_id = @employerId))
-                AND (contract_id IS NULL OR contract_id = (SELECT contract_id FROM contracts WHERE project_id = @projectId AND freelancer_id = @freelancerId AND status = 'ACTIVE'))
+                AND (
+                  (sender_id = @employerId AND recipient_id = @freelancerId) OR
+                  (sender_id = @freelancerId AND recipient_id = @employerId)
+                )
               ORDER BY sent_at DESC
             `);
 
@@ -86,7 +88,7 @@ export const getConversations = async (req, res) => {
             .query(`
               SELECT TOP 1 message_content, sent_at, sender_id
               FROM messages
-              WHERE project_id = @projectId AND contract_id IS NULL
+              WHERE project_id = @projectId AND contract_id IS NULL AND recipient_id IS NULL
               ORDER BY sent_at DESC
             `);
 
@@ -135,8 +137,10 @@ export const getConversations = async (req, res) => {
             SELECT TOP 1 message_content, sent_at, sender_id
             FROM messages
             WHERE project_id = @projectId 
-              AND ((sender_id = @freelancerId) OR (sender_id = @employerId))
-              AND (contract_id IS NULL OR contract_id = (SELECT contract_id FROM contracts WHERE project_id = @projectId AND freelancer_id = @freelancerId AND status = 'ACTIVE'))
+              AND (
+                (sender_id = @freelancerId AND recipient_id = @employerId) OR
+                (sender_id = @employerId AND recipient_id = @freelancerId)
+              )
             ORDER BY sent_at DESC
           `);
 
@@ -169,7 +173,7 @@ export const getConversations = async (req, res) => {
             .query(`
               SELECT TOP 1 message_content, sent_at, sender_id
               FROM messages
-              WHERE project_id = @projectId AND contract_id IS NULL
+              WHERE project_id = @projectId AND contract_id IS NULL AND recipient_id IS NULL
               ORDER BY sent_at DESC
             `);
 
@@ -220,7 +224,7 @@ export const getMessages = async (req, res) => {
         SELECT m.*, u.full_name as sender_name, u.avatar_url as sender_avatar
         FROM messages m
         JOIN users u ON m.sender_id = u.user_id
-        WHERE m.project_id = @projectId AND m.contract_id IS NULL
+        WHERE m.project_id = @projectId AND m.contract_id IS NULL AND m.recipient_id IS NULL
         ORDER BY m.sent_at ASC
       `;
     } else {
@@ -239,13 +243,8 @@ export const getMessages = async (req, res) => {
         JOIN users u ON m.sender_id = u.user_id
         WHERE m.project_id = @projectId
           AND (
-            (m.sender_id = @userId AND (
-              SELECT COUNT(1) FROM proposals WHERE project_id = @projectId AND (freelancer_id = @otherUserId OR @otherUserId = (SELECT employer_id FROM projects WHERE project_id = @projectId))
-            ) > 0)
-            OR
-            (m.sender_id = @otherUserId AND (
-              SELECT COUNT(1) FROM proposals WHERE project_id = @projectId AND (freelancer_id = @userId OR @userId = (SELECT employer_id FROM projects WHERE project_id = @projectId))
-            ) > 0)
+            (m.sender_id = @userId AND m.recipient_id = @otherUserId) OR
+            (m.sender_id = @otherUserId AND m.recipient_id = @userId)
           )
         ORDER BY m.sent_at ASC
       `;
@@ -265,7 +264,7 @@ export const getMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const senderId = req.user.id;
-    const { projectId, contractId, messageContent, messageType } = req.body;
+    const { projectId, contractId, messageContent, messageType, recipientId } = req.body;
 
     if (!projectId || !messageContent) {
       return res.status(400).json({ message: 'Thiếu thông tin dự án hoặc nội dung tin nhắn.' });
@@ -276,12 +275,13 @@ export const sendMessage = async (req, res) => {
       .input('projectId', sql.Int, projectId)
       .input('contractId', sql.Int, contractId || null)
       .input('senderId', sql.Int, senderId)
+      .input('recipientId', sql.Int, recipientId || null)
       .input('messageContent', sql.NVarChar, messageContent)
       .input('messageType', sql.VarChar, messageType || 'TEXT')
       .input('isRead', sql.Bit, 0)
       .query(`
-        INSERT INTO messages (project_id, contract_id, sender_id, message_content, message_type, is_read, sent_at)
-        VALUES (@projectId, @contractId, @senderId, @messageContent, @messageType, @isRead, SYSUTCDATETIME())
+        INSERT INTO messages (project_id, contract_id, sender_id, recipient_id, message_content, message_type, is_read, sent_at)
+        VALUES (@projectId, @contractId, @senderId, @recipientId, @messageContent, @messageType, @isRead, SYSUTCDATETIME())
       `);
 
     res.status(201).json({ success: true, message: 'Gửi tin nhắn thành công!' });
@@ -290,3 +290,4 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi gửi tin nhắn.' });
   }
 };
+

@@ -8,9 +8,9 @@ export const createPaymentUrl = (req, amount, orderInfo, returnUrl) => {
   let ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
   if (ipAddr === '::1') ipAddr = '127.0.0.1';
 
-  const tmnCode = process.env.VNP_TMNCODE;
-  const secretKey = process.env.VNP_HASHSECRET;
-  let vnpUrl = process.env.VNP_URL;
+  const tmnCode = process.env.VNP_TMNCODE || 'CGXZXD5P';
+  const secretKey = process.env.VNP_HASHSECRET || 'RAMDUPWUPKVTNUXMUBXWFNZOBYHAHYJE';
+  let vnpUrl = process.env.VNP_URL || 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
 
   const date = new Date();
   const createDate = moment(date).format('YYYYMMDDHHmmss');
@@ -49,7 +49,7 @@ export const verifyReturnUrl = (vnp_Params) => {
 
   const sortedParams = sortObject(vnp_Params);
   const signData = qs.stringify(sortedParams, { encode: false });
-  const secretKey = process.env.VNP_HASHSECRET;
+  const secretKey = process.env.VNP_HASHSECRET || 'RAMDUPWUPKVTNUXMUBXWFNZOBYHAHYJE';
 
   const hmac = crypto.createHmac('sha512', secretKey);
   const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
