@@ -56,9 +56,26 @@ export default function Header({ layout = 'dashboard' }) {
 
   // Helper to determine the opposite dashboard role when clicking "Switch Role"
   const handleSwitchRole = () => {
-    if (path.includes('freelancer')) {
+    let currentRole = 'freelancer';
+    if (
+      path.includes('employer') ||
+      path.startsWith('/manage-proposals') ||
+      path === '/review-submission' ||
+      path === '/revision-requested' ||
+      path === '/project-details' ||
+      path === '/post-project' ||
+      path === '/escrow-checkout'
+    ) {
+      currentRole = 'employer';
+    } else if (path.startsWith('/admin')) {
+      currentRole = 'admin';
+    }
+
+    if (currentRole === 'freelancer') {
+      localStorage.setItem('active_role', 'employer');
       navigate('/employer-dashboard');
     } else {
+      localStorage.setItem('active_role', 'freelancer');
       navigate('/freelancer-dashboard');
     }
   };

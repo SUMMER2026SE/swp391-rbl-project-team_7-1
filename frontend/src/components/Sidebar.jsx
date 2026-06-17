@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { chatService } from '../services/chatService';
 
 const FREELANCER_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXuCioT3d29HAboKCh5FtH6yfJpreH6DQUNNdw8JVFoWTx6CMJJV0VXmJh5I4syj9A0nIm_Gn_kL4WN6hfVI3NVC1kL3X5kfRJVJyhppVo7GXsDb968rw3xdoxDmwSwigUm0d5Kj5VgB_1-w1p2eLFKTMOkAjmBe5lwKPjINix_mvuV2Cs99sGXjriNMQP2UhQRV6Xn1lM9CDkekRwQrNn2cP4aNr1sPsokHcK5zgQ6pdDtwQYOddnNJI8opkRkmtbH-OjupriQb1o5g";
 const EMPLOYER_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXu5Fhk-ytABwDE8c_Mn6mvYTC_3C7zksVlCcGgU8B6GSnt-6Rf9KpS5hs2iaprobtQ6UsK3MBqV8G1lHLZFeg1A3jmXRyhfwzQCqnVHUL6z0FW6pg-r4okgr9n93xAPkFgFtmjxAsawka2dQyzgThp0UUwiYARotIOrpccljPZKGv3QQAeDDpTATUEqRXqQ4bHeaMBPyMctfwD--N2zqSHdVNmNJHm5ZgG3SJ4c8Wxf7SnMEOjiwbDx3E_XSvwzRUU7fpKhAzHFoY0";
@@ -29,6 +30,8 @@ export default function Sidebar() {
     return s ? JSON.parse(s) : null;
   });
 
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
   React.useEffect(() => {
     const handleUpdate = () => {
       const s = localStorage.getItem('user');
@@ -37,6 +40,35 @@ export default function Sidebar() {
     window.addEventListener('profileUpdated', handleUpdate);
     return () => window.removeEventListener('profileUpdated', handleUpdate);
   }, []);
+
+  React.useEffect(() => {
+    if (role === 'admin') return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const activeRole = role === 'employer' ? 'EMPLOYER' : 'FREELANCER';
+        const data = await chatService.getConversations(activeRole);
+        const conversations = data.conversations || [];
+        const count = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+        setUnreadCount(count);
+      } catch (err) {
+        console.error('Lỗi khi lấy số tin nhắn chưa đọc trong Sidebar:', err);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 8000);
+
+    const handleFocus = () => fetchUnreadCount();
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('chatReadUpdate', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('chatReadUpdate', handleFocus);
+    };
+  }, [role]);
 
   const user = localUser;
 
@@ -77,8 +109,6 @@ export default function Sidebar() {
   } else if (role === 'employer') {
     items = [
       { label: 'Bảng điều khiển', icon: 'dashboard', link: '/employer-dashboard' },
-      { label: 'Dự án của tôi', icon: 'work', link: '/employer-dashboard' },
-      { label: 'Tìm Freelancer', icon: 'group', link: '/browse-projects' },
       { label: 'Ví tiền', icon: 'payments', link: '/employer-wallet' },
       { label: 'Tin nhắn', icon: 'chat', link: '/messages-employer' },
       { label: 'Hồ sơ', icon: 'account_circle', link: '/profile' },
@@ -106,10 +136,9 @@ export default function Sidebar() {
     if (item.link === '#') return false;
     if (path === item.link) return true;
     if (item.label === 'Báo cáo' && path.startsWith('/admin-report')) return true;
-    if (item.label === 'Bảng điều khiển' && path.endsWith('-dashboard')) return true;
+    if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested' || path === '/project-details' || path === '/post-project')) return true;
     if (item.label === 'Ví tiền' && path.endsWith('-wallet')) return true;
     if (item.label === 'Hồ sơ' && path === '/profile') return true;
-    if (item.label === 'Dự án của tôi' && (path === '/review-submission' || path === '/revision-requested' || path === '/project-details')) return true;
     return false;
   };
 
@@ -138,17 +167,25 @@ export default function Sidebar() {
       <ul className="flex flex-col gap-1.5 flex-1 overflow-y-auto custom-scrollbar px-1">
         {items.map((item, idx) => {
           const isActive = isItemActive(item);
+          const isChat = item.label === 'Tin nhắn';
           return (
             <li key={idx}>
               <Link
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
                     ? 'bg-teal-50 text-[#0F766E] shadow-sm border border-teal-100/50'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                   }`}
                 to={item.link}
               >
-                <span className={`material-symbols-outlined text-[20px] transition-colors ${isActive ? 'text-[#0F766E]' : 'text-slate-400 group-hover:text-slate-600'}`}>{item.icon}</span>
-                {item.label}
+                <div className="flex items-center gap-3">
+                  <span className={`material-symbols-outlined text-[20px] transition-colors ${isActive ? 'text-[#0F766E]' : 'text-slate-400 group-hover:text-slate-600'}`}>{item.icon}</span>
+                  {item.label}
+                </div>
+                {isChat && unreadCount > 0 && (
+                  <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[10px] font-black text-white bg-gradient-to-r from-red-500 to-rose-600 rounded-full shadow-[0_2px_8px_rgba(244,63,94,0.4)] border border-rose-400/20 animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             </li>
           );

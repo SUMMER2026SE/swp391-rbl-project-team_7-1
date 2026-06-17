@@ -16,6 +16,7 @@ export default function PostProject({ editMode = false }) {
   const [budgetType, setBudgetType] = useState('fixed');
   const [budgetAmount, setBudgetAmount] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [requiredFreelancerCount, setRequiredFreelancerCount] = useState(1);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -48,6 +49,7 @@ export default function PostProject({ editMode = false }) {
             setSkills(p.skills || []);
             setBudgetType(p.budget_type?.toLowerCase() === 'hourly' ? 'hourly' : 'fixed');
             setBudgetAmount(p.budget_max ? Math.round(p.budget_max).toString() : '');
+            setRequiredFreelancerCount(p.required_freelancer_count || 1);
             if (p.deadline) {
               setDeadline(p.deadline.substring(0, 10));
             }
@@ -121,6 +123,7 @@ export default function PostProject({ editMode = false }) {
         budgetType: budgetType.toUpperCase(),
         budgetMin: amount,
         budgetMax: amount, // For simple projects, min = max
+        requiredFreelancerCount: parseInt(requiredFreelancerCount) || 1,
         deadline: deadline || null,
         skills
       };
@@ -311,6 +314,22 @@ export default function PostProject({ editMode = false }) {
                     min={new Date().toISOString().substring(0, 10)}
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/*  Số lượng tuyển  */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-slate-800" htmlFor="requiredFreelancerCount">Số lượng cần tuyển *</label>
+                <div className="relative">
+                  <input 
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all text-base text-slate-800 focus:outline-none" 
+                    id="requiredFreelancerCount" 
+                    type="number"
+                    min="1"
+                    required
+                    value={requiredFreelancerCount}
+                    onChange={(e) => setRequiredFreelancerCount(e.target.value)}
                   />
                 </div>
               </div>

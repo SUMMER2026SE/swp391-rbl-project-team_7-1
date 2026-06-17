@@ -291,35 +291,6 @@ export default function Register() {
               )}
             </div>
 
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Bạn là</label>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setRole('FREELANCER')}
-                  className={`flex-1 py-3 px-4 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
-                    role === 'FREELANCER'
-                      ? 'border-[#0F766E] bg-[#0F766E]/5 text-[#0F766E]'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  Freelancer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('EMPLOYER')}
-                  className={`flex-1 py-3 px-4 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
-                    role === 'EMPLOYER'
-                      ? 'border-[#0F766E] bg-[#0F766E]/5 text-[#0F766E]'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  Employer
-                </button>
-              </div>
-            </div>
-
             {/* Password Input */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="password">

@@ -271,9 +271,16 @@ export default function ManageProposals() {
                         </button>
                       </>
                     ) : (
-                      <div className="text-center py-4 bg-green-50 text-green-800 border border-green-100 rounded-xl">
-                        <span className="material-symbols-outlined text-3xl mb-1">done_all</span>
+                      <div className="text-center py-4 bg-green-50 text-green-800 border border-green-100 rounded-xl flex flex-col gap-2.5 items-center">
+                        <span className="material-symbols-outlined text-3xl mb-1 text-green-600">done_all</span>
                         <p className="text-sm font-bold">Đã ký hợp đồng</p>
+                        <button 
+                          onClick={() => navigate('/messages-employer', { state: { selectConvId: `direct-${projectId}-${proposal.freelancer_id}` } })}
+                          className="w-full py-2 bg-white text-slate-700 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">chat</span>
+                          Nhắn tin
+                        </button>
                       </div>
                     )}
                   </div>

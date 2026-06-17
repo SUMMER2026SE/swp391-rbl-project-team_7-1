@@ -116,15 +116,20 @@ export default function ProjectDetails() {
                   {project ? `${project.budget_min?.toLocaleString()} - ${project.budget_max?.toLocaleString()} VNĐ` : '$5,000 - $8,000'}
                 </p>
               </div>
-              <div className="flex items-center gap-6 mb-8 pb-8 border-b border-slate-100">
-                <div className="flex-1">
-                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Hạn chạy</p>
-                  <p className="text-xl font-bold text-slate-800">4 Tuần</p>
+              <div className="flex items-center gap-4 mb-8 pb-8 border-b border-slate-100">
+                <div className="flex-1 text-center">
+                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Hạn chạy</p>
+                  <p className="text-base font-bold text-slate-800">4 Tuần</p>
                 </div>
                 <div className="w-px h-12 bg-slate-200"></div>
-                <div className="flex-1">
-                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Đề xuất</p>
-                  <p className="text-xl font-bold text-slate-800">12</p>
+                <div className="flex-1 text-center">
+                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Cần tuyển</p>
+                  <p className="text-base font-bold text-slate-800">{project?.required_freelancer_count || 1} người</p>
+                </div>
+                <div className="w-px h-12 bg-slate-200"></div>
+                <div className="flex-1 text-center">
+                  <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Đề xuất</p>
+                  <p className="text-base font-bold text-slate-800">12</p>
                 </div>
               </div>
               <button 

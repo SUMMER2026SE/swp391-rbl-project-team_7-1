@@ -157,6 +157,15 @@ export default function Profile() {
   const [deleting, setDeleting]   = useState(false);
   const [alert, setAlert]     = useState({ type: '', msg: '' });
 
+  /* portfolios state */
+  const [portfolios, setPortfolios] = useState([]);
+  const [showPortModal, setShowPortModal] = useState(false);
+  const [editingPort, setEditingPort] = useState(null);
+  const [portTitle, setPortTitle] = useState('');
+  const [portDesc, setPortDesc] = useState('');
+  const [portUrl, setPortUrl] = useState('');
+  const [portImage, setPortImage] = useState('');
+
   /* edit - basic */
   const [eName, setEName]       = useState('');
   const [ePhone, setEPhone]     = useState('');
@@ -197,6 +206,7 @@ export default function Profile() {
   // We want to allow the user to manage both profiles regardless of their default role
   const isFL = true;
   const isEM = true;
+  const activeRole = profile?.role_default || JSON.parse(localStorage.getItem('user') || '{}')?.roleDefault || 'FREELANCER';
 
   /* ── fetch ── */
   const load = async () => {
@@ -223,6 +233,11 @@ export default function Profile() {
         setEWebsite(ex.website || '');
         setECompanyDesc(ex.companyDesc || '');
         setELocation(ex.location || '');
+      }
+      
+      const portRes = await userService.getPortfolios();
+      if (portRes.success) {
+        setPortfolios(portRes.portfolios);
       }
     } catch (err) { setAlert({ type:'error', msg:'Lỗi kết nối máy chủ.' }); }
     finally { setLoading(false); }
@@ -293,6 +308,71 @@ export default function Profile() {
     finally { setDeleting(false); }
   };
 
+  /* ── portfolios CRUD handlers ── */
+  const handleOpenPortModal = (port = null) => {
+    if (port) {
+      setEditingPort(port);
+      setPortTitle(port.title);
+      setPortDesc(port.description || '');
+      setPortUrl(port.project_url || '');
+      setPortImage(port.image_url || '');
+    } else {
+      setEditingPort(null);
+      setPortTitle('');
+      setPortDesc('');
+      setPortUrl('');
+      setPortImage('');
+    }
+    setShowPortModal(true);
+  };
+
+  const handleSavePortfolio = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setAlert({ type: '', msg: '' });
+    try {
+      const pData = { title: portTitle, description: portDesc, projectUrl: portUrl, imageUrl: portImage };
+      let res;
+      if (editingPort) {
+        res = await userService.updatePortfolio(editingPort.portfolio_id, pData);
+      } else {
+        res = await userService.addPortfolio(pData);
+      }
+      if (res.success) {
+        setAlert({ type: 'success', msg: editingPort ? 'Cập nhật dự án thành công!' : 'Thêm dự án portfolio thành công!' });
+        setShowPortModal(false);
+        const portRes = await userService.getPortfolios();
+        if (portRes.success) {
+          setPortfolios(portRes.portfolios);
+        }
+      }
+    } catch (err) {
+      setAlert({ type: 'error', msg: err.response?.data?.message || 'Lưu portfolio thất bại.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeletePortfolio = async (portId) => {
+    if (!window.confirm('Bạn có chắc muốn xóa dự án portfolio này?')) return;
+    setSaving(true);
+    setAlert({ type: '', msg: '' });
+    try {
+      const res = await userService.deletePortfolio(portId);
+      if (res.success) {
+        setAlert({ type: 'success', msg: 'Xóa dự án portfolio thành công!' });
+        const portRes = await userService.getPortfolios();
+        if (portRes.success) {
+          setPortfolios(portRes.portfolios);
+        }
+      }
+    } catch (err) {
+      setAlert({ type: 'error', msg: err.response?.data?.message || 'Xóa portfolio thất bại.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const goTab = t => { setTab(t); setAlert({ type:'', msg:'' }); };
   const avail = AVAIL.find(a => a.v === eAvail) || AVAIL[0];
   const pct = calcCompletion(profile, { ...extras, title:eTitle, hourlyRate:eRate, skills:eSkills, portfolio:ePortfolio, companyName:eCompanyName, industry:eIndustry, companySize:eCompanySize }, isFL);
@@ -354,7 +434,7 @@ export default function Profile() {
                         : <span className="w-full h-full flex items-center justify-center text-lg font-bold text-white">{initials(profile?.full_name)}</span>
                       }
                     </div>
-                    {isFL && <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${avail.dot}`} title={avail.label} />}
+                    {activeRole === 'FREELANCER' && <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${avail.dot}`} title={avail.label} />}
                   </div>
                   {profile?.is_email_verified && (
                     <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[11px] font-bold">
@@ -364,11 +444,11 @@ export default function Profile() {
                 </div>
 
                 <h2 className="font-bold text-[#334155] text-[15px] leading-tight">{profile?.full_name}</h2>
-                {isFL && eTitle && <p className="text-[13px] text-[#0F766E] font-semibold mt-0.5">{eTitle}</p>}
-                {isEM && eCompanyName && <p className="text-[13px] text-[#0F766E] font-semibold mt-0.5">{eCompanyName}</p>}
+                {activeRole === 'FREELANCER' && eTitle && <p className="text-[13px] text-[#0F766E] font-semibold mt-0.5">{eTitle}</p>}
+                {activeRole === 'EMPLOYER' && eCompanyName && <p className="text-[13px] text-[#0F766E] font-semibold mt-0.5">{eCompanyName}</p>}
                 <p className="text-xs text-[#94A3B8] mt-0.5">{profile?.email}</p>
 
-                {isFL && (
+                {activeRole === 'FREELANCER' && (
                   <div className="mt-3">
                     <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border ${avail.pill}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${avail.dot}`} />{avail.label}
@@ -376,14 +456,14 @@ export default function Profile() {
                   </div>
                 )}
 
-                {isFL && eRate && (
+                {activeRole === 'FREELANCER' && eRate && (
                   <div className="mt-3 flex items-center gap-2 text-[#334155]">
                     <span className="material-symbols-outlined text-[16px] text-[#0F766E]">payments</span>
                     <span className="text-sm font-bold">{parseInt(eRate).toLocaleString('vi-VN')}<span className="font-normal text-[#94A3B8] text-xs"> đ/giờ</span></span>
                   </div>
                 )}
 
-                {isEM && eLocation && (
+                {activeRole === 'EMPLOYER' && eLocation && (
                   <div className="mt-3 flex items-center gap-2 text-[#94A3B8] text-xs">
                     <span className="material-symbols-outlined text-[14px]">location_on</span>
                     <span>{eLocation}</span>
@@ -410,7 +490,7 @@ export default function Profile() {
             </div>
 
             {/* Stats card (Freelancer) */}
-            {isFL && (
+            {activeRole === 'FREELANCER' && (
               <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-5">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#475569] mb-3">Thống kê</p>
                 <div className="space-y-3">
@@ -433,7 +513,7 @@ export default function Profile() {
             )}
 
             {/* Company info (Employer) */}
-            {isEM && (eCompanyName || eIndustry) && (
+            {activeRole === 'EMPLOYER' && (eCompanyName || eIndustry) && (
               <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-5">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#475569] mb-3">Thông tin công ty</p>
                 <div className="space-y-2">
@@ -575,7 +655,7 @@ export default function Profile() {
                 </div>
 
                 {/* Freelancer professional info */}
-                {isFL && (
+                {activeRole === 'FREELANCER' && (
                   <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-[#334155]">Thông tin nghề nghiệp</h3>
@@ -617,7 +697,7 @@ export default function Profile() {
                 )}
 
                 {/* Employer company overview */}
-                {isEM && (
+                {activeRole === 'EMPLOYER' && (
                   <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-[#334155]">Thông tin công ty</h3>
@@ -665,7 +745,7 @@ export default function Profile() {
                 )}
 
                 {/* Skills overview */}
-                {isFL && (
+                {activeRole === 'FREELANCER' && (
                   <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-[#334155]">Kỹ năng <span className="text-[#94A3B8] font-normal text-sm">({eSkills.length}/15)</span></h3>
@@ -687,6 +767,54 @@ export default function Profile() {
                         <button onClick={() => goTab('professional')}
                           className="text-[13px] text-[#0F766E] font-semibold border border-[#0F766E]/30 px-4 py-1.5 rounded-lg hover:bg-teal-50">
                           + Thêm kỹ năng của bạn
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Portfolios overview */}
+                {activeRole === 'FREELANCER' && (
+                  <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-[#334155]">Dự án Portfolio <span className="text-[#94A3B8] font-normal text-sm">({portfolios.length})</span></h3>
+                      <button onClick={() => goTab('professional')}
+                        className="text-[12px] text-[#0F766E] font-semibold hover:underline flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">edit</span>Quản lý
+                      </button>
+                    </div>
+                    {portfolios.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {portfolios.map(p => (
+                          <div key={p.portfolio_id} className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex flex-col hover:shadow-sm transition-all">
+                            {p.image_url ? (
+                              <img src={p.image_url} alt={p.title} className="w-full h-32 object-cover" />
+                            ) : (
+                              <div className="w-full h-32 bg-slate-200 flex items-center justify-center text-slate-400">
+                                <span className="material-symbols-outlined text-4xl">image</span>
+                              </div>
+                            )}
+                            <div className="p-4 flex-1 flex flex-col justify-between">
+                              <div>
+                                <h4 className="font-bold text-slate-800 text-sm">{p.title}</h4>
+                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">{p.description}</p>
+                              </div>
+                              {p.project_url && (
+                                <a href={p.project_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#0F766E] mt-3 hover:underline inline-flex items-center gap-0.5">
+                                  Xem dự án <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center py-6 text-center">
+                        <span className="material-symbols-outlined text-[40px] text-[#CBD5E1] mb-2">folder_special</span>
+                        <p className="text-sm text-[#94A3B8] mb-3">Chưa có dự án portfolio nào.</p>
+                        <button onClick={() => goTab('professional')}
+                          className="text-[13px] text-[#0F766E] font-semibold border border-[#0F766E]/30 px-4 py-1.5 rounded-lg hover:bg-teal-50">
+                          + Thêm dự án portfolio
                         </button>
                       </div>
                     )}
@@ -882,6 +1010,61 @@ export default function Profile() {
                       <Input icon="code" type="url" value={eGitHub} onChange={e => setEGitHub(e.target.value)} placeholder="https://github.com/yourusername" />
                     </Field>
                   </div>
+                </div>
+
+                {/* Portfolios list in professional tab */}
+                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="font-bold text-[#334155] mb-1">Dự án Portfolio</h3>
+                      <p className="text-[13px] text-[#94A3B8]">Thêm các sản phẩm nổi bật của bạn để thu hút nhà tuyển dụng.</p>
+                    </div>
+                    <button type="button" onClick={() => handleOpenPortModal()} className="px-4 py-2 bg-[#0F766E] text-white text-xs font-bold rounded-xl hover:bg-[#0D5E58] transition-all border-none cursor-pointer">
+                      + Thêm dự án
+                    </button>
+                  </div>
+
+                  {portfolios.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {portfolios.map(p => (
+                        <div key={p.portfolio_id} className="rounded-xl border border-slate-200 overflow-hidden bg-white flex flex-col hover:shadow-sm transition-all relative">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.title} className="w-full h-32 object-cover" />
+                          ) : (
+                            <div className="w-full h-32 bg-slate-100 flex items-center justify-center text-slate-400">
+                              <span className="material-symbols-outlined text-3xl">image</span>
+                            </div>
+                          )}
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                              <h4 className="font-bold text-slate-800 text-sm">{p.title}</h4>
+                              <p className="text-xs text-slate-500 mt-1 line-clamp-2">{p.description}</p>
+                            </div>
+                            <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+                              {p.project_url ? (
+                                <a href={p.project_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#0F766E] hover:underline inline-flex items-center gap-0.5">
+                                  Liên kết <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                                </a>
+                              ) : <span />}
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => handleOpenPortModal(p)} className="p-1 text-slate-500 hover:text-[#0F766E] bg-transparent border-none cursor-pointer">
+                                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                                </button>
+                                <button type="button" onClick={() => handleDeletePortfolio(p.portfolio_id)} className="p-1 text-slate-400 hover:text-red-500 bg-transparent border-none cursor-pointer">
+                                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center py-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50">
+                      <span className="material-symbols-outlined text-[36px] text-slate-400 mb-2">folder</span>
+                      <p className="text-xs text-slate-500">Chưa có dự án portfolio nào được thêm.</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -1082,6 +1265,46 @@ export default function Profile() {
               {deleting ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Đang xóa…</> : <><span className="material-symbols-outlined text-[16px]">delete_forever</span>Xóa tài khoản</>}
             </button>
           </div>
+        </div>
+      </div>
+    )}
+
+    {/* ── Portfolio Add/Edit Modal ── */}
+    {showPortModal && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ animation:'fadeScale .2s ease' }}>
+          <div className="px-6 py-5 border-b border-[#F1F5F9] flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 text-lg">
+              {editingPort ? 'Chỉnh sửa dự án' : 'Thêm dự án Portfolio'}
+            </h3>
+            <button onClick={() => setShowPortModal(false)} className="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+          <form onSubmit={handleSavePortfolio}>
+            <div className="p-6 space-y-4">
+              <Field label="Tiêu đề dự án" required>
+                <Input icon="title" value={portTitle} onChange={e => setPortTitle(e.target.value)} placeholder="Ví dụ: Thiết kế App Tài chính" />
+              </Field>
+              <Field label="Mô tả dự án">
+                <textarea value={portDesc} onChange={e => setPortDesc(e.target.value)} rows="4" placeholder="Mô tả chi tiết về sản phẩm, công nghệ sử dụng, vai trò của bạn..." className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all resize-none" />
+              </Field>
+              <Field label="Đường dẫn dự án (Website, GitHub...)">
+                <Input icon="link" type="url" value={portUrl} onChange={e => setPortUrl(e.target.value)} placeholder="https://..." />
+              </Field>
+              <Field label="Đường dẫn ảnh mô tả (Hình ảnh sản phẩm)">
+                <Input icon="image" type="url" value={portImage} onChange={e => setPortImage(e.target.value)} placeholder="https://example.com/mockup.png" />
+              </Field>
+            </div>
+            <div className="px-6 pb-6 flex gap-3">
+              <button type="button" onClick={() => setShowPortModal(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer">
+                Hủy
+              </button>
+              <button type="submit" disabled={saving || !portTitle.trim()} className="flex-1 py-2.5 rounded-xl bg-[#0F766E] text-white text-sm font-bold hover:bg-[#0D5E58] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none">
+                {saving ? 'Đang lưu...' : 'Lưu dự án'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     )}

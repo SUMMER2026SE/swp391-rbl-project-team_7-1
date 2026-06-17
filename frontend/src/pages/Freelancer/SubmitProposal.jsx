@@ -22,7 +22,11 @@ export default function SubmitProposal() {
       try {
         if (projectId) {
           const data = await projectService.getProjectById(projectId);
-          setProject(data.project || data);
+          const proj = data.project || data;
+          setProject(proj);
+          if (proj && proj.budget_max) {
+            setBidAmount(proj.budget_max.toString());
+          }
         }
       } catch (err) {
         console.error("Failed to load project details", err);
@@ -62,7 +66,7 @@ export default function SubmitProposal() {
     }
   };
 
-  const platformFee = bidAmount ? (parseInt(bidAmount) * 0.1) : 0;
+  const platformFee = bidAmount ? (parseInt(bidAmount) * 0.05) : 0;
   const estimatedReceive = bidAmount ? (parseInt(bidAmount) - platformFee) : 0;
 
   const handleSubmit = async (e) => {
@@ -72,9 +76,12 @@ export default function SubmitProposal() {
 
     try {
       let days = 30;
-      if (duration === "1 đến 3 tháng") days = 90;
-      else if (duration === "3 đến 6 tháng") days = 180;
-      else if (duration === "Hơn 6 tháng") days = 365;
+      if (duration === "Dưới 3 ngày") days = 3;
+      else if (duration === "3 đến 7 ngày") days = 7;
+      else if (duration === "1 đến 2 tuần") days = 14;
+      else if (duration === "2 đến 4 tuần") days = 28;
+      else if (duration === "1 đến 3 tháng") days = 90;
+      else if (duration === "Hơn 3 tháng") days = 180;
 
       const formData = new FormData();
       formData.append('proposedPrice', bidAmount);
@@ -119,7 +126,7 @@ export default function SubmitProposal() {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Giá thầu (VNĐ)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Giá đề xuất (VNĐ)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 font-bold text-sm">VNĐ</span>
                     <input 
@@ -145,10 +152,12 @@ export default function SubmitProposal() {
                     required
                   >
                     <option disabled value="">Chọn thời gian...</option>
-                    <option value="Dưới 1 tháng">Dưới 1 tháng</option>
+                    <option value="Dưới 3 ngày">Dưới 3 ngày</option>
+                    <option value="3 đến 7 ngày">3 đến 7 ngày</option>
+                    <option value="1 đến 2 tuần">1 đến 2 tuần</option>
+                    <option value="2 đến 4 tuần">2 đến 4 tuần</option>
                     <option value="1 đến 3 tháng">1 đến 3 tháng</option>
-                    <option value="3 đến 6 tháng">3 đến 6 tháng</option>
-                    <option value="Hơn 6 tháng">Hơn 6 tháng</option>
+                    <option value="Hơn 3 tháng">Hơn 3 tháng</option>
                   </select>
                 </div>
               </div>
@@ -170,53 +179,7 @@ export default function SubmitProposal() {
               ></textarea>
             </div>
             
-            {/*  Milestones Bento Section  */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#0F766E]">flag</span> Giai đoạn (Milestones)
-                </h2>
-                <button type="button" onClick={handleAddMilestone} className="text-sm font-bold text-[#0F766E] bg-teal-50 px-3 py-1.5 rounded-lg hover:bg-teal-100 transition-colors">
-                  + Thêm Giai đoạn
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                {milestones.map((milestone, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <div className="col-span-7">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Tên giai đoạn</label>
-                      <input 
-                        className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all" 
-                        placeholder="Ví dụ: Thiết kế Wireframe" 
-                        type="text" 
-                        value={milestone.name}
-                        onChange={(e) => handleMilestoneChange(index, 'name', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="col-span-4">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Số tiền (VNĐ)</label>
-                      <input 
-                        className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all" 
-                        placeholder="0" 
-                        type="number" 
-                        value={milestone.amount}
-                        onChange={(e) => handleMilestoneChange(index, 'amount', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="col-span-1 flex justify-end mt-4">
-                      <button type="button" onClick={() => handleRemoveMilestone(index)} className="text-slate-400 hover:text-red-500 transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/*  Attachments & Portfolio  */}
+            {/* Attachments & Portfolio */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300">
               <h2 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#0F766E]">attach_file</span> Tài liệu đính kèm
@@ -271,11 +234,11 @@ export default function SubmitProposal() {
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-600 font-medium">Giá thầu của bạn</span>
+                    <span className="text-slate-600 font-medium">Giá đề xuất của bạn</span>
                     <span className="font-bold text-slate-800">{bidAmount ? parseInt(bidAmount).toLocaleString() : 0} đ</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-600 font-medium">Phí nền tảng (10%)</span>
+                    <span className="text-slate-600 font-medium">Phí nền tảng (5%)</span>
                     <span className="font-bold text-slate-800">- {platformFee.toLocaleString()} đ</span>
                   </div>
                   <div className="h-px bg-slate-200 my-2"></div>

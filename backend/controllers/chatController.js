@@ -17,7 +17,8 @@ export const getConversations = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy thông tin người dùng.' });
     }
 
-    const role = userResult.recordset[0].role_default;
+    // Support role query parameter or fallback to database default
+    const role = (req.query.role || userResult.recordset[0].role_default).toUpperCase();
     const conversations = [];
 
     if (role === 'EMPLOYER') {
@@ -60,6 +61,21 @@ export const getConversations = async (req, res) => {
 
           const lastMsg = lastMsgResult.recordset[0] || null;
 
+          // Find unread count
+          const unreadResult = await pool.request()
+            .input('projectId', sql.Int, projectId)
+            .input('freelancerId', sql.Int, candidate.freelancer_id)
+            .input('employerId', sql.Int, userId)
+            .query(`
+              SELECT COUNT(1) as unread_count
+              FROM messages
+              WHERE project_id = @projectId
+                AND sender_id = @freelancerId
+                AND recipient_id = @employerId
+                AND is_read = 0
+            `);
+          const unreadCount = unreadResult.recordset[0]?.unread_count || 0;
+
           conversations.push({
             id: `direct-${projectId}-${candidate.freelancer_id}`,
             projectId,
@@ -72,7 +88,8 @@ export const getConversations = async (req, res) => {
             contractId: candidate.contract_id,
             lastMessage: lastMsg ? lastMsg.message_content : 'Chưa có tin nhắn nào',
             lastMessageTime: lastMsg ? lastMsg.sent_at : null,
-            lastMessageSender: lastMsg ? lastMsg.sender_id : null
+            lastMessageSender: lastMsg ? lastMsg.sender_id : null,
+            unreadCount
           });
         }
 
@@ -103,7 +120,8 @@ export const getConversations = async (req, res) => {
             avatarUrl: null,
             lastMessage: lastGroupMsg ? lastGroupMsg.message_content : 'Chưa có tin nhắn nhóm nào',
             lastMessageTime: lastGroupMsg ? lastGroupMsg.sent_at : null,
-            lastMessageSender: lastGroupMsg ? lastGroupMsg.sender_id : null
+            lastMessageSender: lastGroupMsg ? lastGroupMsg.sender_id : null,
+            unreadCount: 0
           });
         }
       }
@@ -113,7 +131,7 @@ export const getConversations = async (req, res) => {
       const freelancerProposals = await pool.request()
         .input('freelancerId', sql.Int, userId)
         .query(`
-          SELECT p.project_id, pr.title as project_title, pr.employer_id, u.full_name as employer_name, u.avatar_url, c.contract_id
+          SELECT p.project_id, p.status as proposal_status, pr.title as project_title, pr.employer_id, u.full_name as employer_name, u.avatar_url, c.contract_id
           FROM proposals p
           JOIN projects pr ON p.project_id = pr.project_id
           JOIN users u ON pr.employer_id = u.user_id
@@ -146,6 +164,27 @@ export const getConversations = async (req, res) => {
 
         const lastMsg = lastMsgResult.recordset[0] || null;
 
+        // Option B: Only display to freelancer if Employer has messaged first OR proposal is accepted/shortlisted
+        const isHiredOrShortlisted = proposal.proposal_status === 'ACCEPTED' || proposal.proposal_status === 'SHORTLISTED';
+        if (!lastMsg && !isHiredOrShortlisted) {
+          continue; // Skip this conversation
+        }
+
+        // Find unread count
+        const unreadResult = await pool.request()
+          .input('projectId', sql.Int, projectId)
+          .input('freelancerId', sql.Int, userId)
+          .input('employerId', sql.Int, employerId)
+          .query(`
+            SELECT COUNT(1) as unread_count
+            FROM messages
+            WHERE project_id = @projectId
+              AND sender_id = @employerId
+              AND recipient_id = @freelancerId
+              AND is_read = 0
+          `);
+        const unreadCount = unreadResult.recordset[0]?.unread_count || 0;
+
         conversations.push({
           id: `direct-${projectId}-${userId}`,
           projectId,
@@ -157,7 +196,8 @@ export const getConversations = async (req, res) => {
           contractId: proposal.contract_id,
           lastMessage: lastMsg ? lastMsg.message_content : 'Chưa có tin nhắn nào',
           lastMessageTime: lastMsg ? lastMsg.sent_at : null,
-          lastMessageSender: lastMsg ? lastMsg.sender_id : null
+          lastMessageSender: lastMsg ? lastMsg.sender_id : null,
+          unreadCount
         });
 
         // Group Chat if hired (active contract)
@@ -188,7 +228,8 @@ export const getConversations = async (req, res) => {
             avatarUrl: null,
             lastMessage: lastGroupMsg ? lastGroupMsg.message_content : 'Chưa có tin nhắn nhóm nào',
             lastMessageTime: lastGroupMsg ? lastGroupMsg.sent_at : null,
-            lastMessageSender: lastGroupMsg ? lastGroupMsg.sender_id : null
+            lastMessageSender: lastGroupMsg ? lastGroupMsg.sender_id : null,
+            unreadCount: 0
           });
         }
       }
@@ -288,6 +329,56 @@ export const sendMessage = async (req, res) => {
   } catch (error) {
     console.error('Error sending message:', error);
     res.status(500).json({ message: 'Lỗi server khi gửi tin nhắn.' });
+  }
+};
+
+/**
+ * Mark messages in a conversation as read
+ */
+export const markMessagesAsRead = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { partnerId } = req.body;
+    const userId = req.user.id;
+
+    if (!projectId) {
+      return res.status(400).json({ message: 'Thiếu projectId.' });
+    }
+
+    const pool = await poolPromise;
+    
+    if (partnerId) {
+      // Direct message: mark messages from partner to user as read
+      await pool.request()
+        .input('projectId', sql.Int, projectId)
+        .input('partnerId', sql.Int, partnerId)
+        .input('userId', sql.Int, userId)
+        .query(`
+          UPDATE messages
+          SET is_read = 1
+          WHERE project_id = @projectId
+            AND sender_id = @partnerId
+            AND recipient_id = @userId
+            AND is_read = 0
+        `);
+    } else {
+      // Group or general project messages
+      await pool.request()
+        .input('projectId', sql.Int, projectId)
+        .input('userId', sql.Int, userId)
+        .query(`
+          UPDATE messages
+          SET is_read = 1
+          WHERE project_id = @projectId
+            AND recipient_id = @userId
+            AND is_read = 0
+        `);
+    }
+
+    res.json({ success: true, message: 'Đã đánh dấu tin nhắn là đã đọc.' });
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({ message: 'Lỗi server khi đánh dấu tin nhắn đã đọc.' });
   }
 };
 

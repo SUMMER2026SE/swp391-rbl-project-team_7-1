@@ -13,6 +13,7 @@ import vnpayRoutes from './modules/payment/vnpay.routes.js';
 import transactionRoutes from './modules/transaction/transaction.routes.js';
 import escrowRoutes from './modules/escrow/escrow.routes.js';
 import withdrawalRoutes from './modules/withdrawal/withdrawal.routes.js';
+import contractRoutes from './routes/contractRoutes.js';
 import { sql, poolPromise } from './config/db.js';
 import { initDb } from './utils/initDb.js';
 
@@ -25,7 +26,7 @@ const server = http.createServer(app);
 // Setup Socket.io
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'],
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -55,6 +56,7 @@ app.use('/api/payment/vnpay', vnpayRoutes);
 app.use('/api/wallet/transactions', transactionRoutes);
 app.use('/api/escrow', escrowRoutes);
 app.use('/api/withdrawal', withdrawalRoutes);
+app.use('/api/contracts', contractRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -65,9 +67,49 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Track active online users: Map of userId -> { socketId, lastSeen }
+const activeUsers = new Map();
+
 // Socket.io Real-time Event Handlers
 io.on('connection', (socket) => {
   console.log(`🔌 User connected: ${socket.id}`);
+
+  // Register user with socket session
+  socket.on('register_user', (userId) => {
+    if (!userId) return;
+    socket.userId = Number(userId);
+    activeUsers.set(socket.userId, {
+      socketId: socket.id,
+      lastSeen: new Date()
+    });
+    console.log(`👤 User registered: ${socket.userId} with socket ${socket.id}`);
+    
+    // Broadcast status change to everyone
+    io.emit('user_status_change', {
+      userId: socket.userId,
+      status: 'ONLINE',
+      lastSeen: new Date().toISOString()
+    });
+  });
+
+  // Check online status of specific partner IDs
+  socket.on('check_online_status', (partnerIds) => {
+    if (!partnerIds || !Array.isArray(partnerIds)) return;
+    const statuses = {};
+    partnerIds.forEach(id => {
+      const partnerIdNum = Number(id);
+      const userSession = activeUsers.get(partnerIdNum);
+      if (userSession && userSession.socketId) {
+        statuses[partnerIdNum] = { status: 'ONLINE' };
+      } else {
+        statuses[partnerIdNum] = { 
+          status: 'OFFLINE', 
+          lastSeen: userSession ? userSession.lastSeen.toISOString() : new Date(Date.now() - 300000).toISOString() // default 5m ago
+        };
+      }
+    });
+    socket.emit('online_status_response', statuses);
+  });
 
   socket.on('join_room', (room) => {
     socket.join(room);
@@ -85,7 +127,7 @@ io.on('connection', (socket) => {
         if (parts.length >= 3) {
           const freelancerId = parseInt(parts[2]);
           if (freelancerId) {
-            if (senderId === freelancerId) {
+            if (Number(senderId) === Number(freelancerId)) {
               // Recipient must be the employer of this project
               const pool = await poolPromise;
               const projectRes = await pool.request()
@@ -133,6 +175,19 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log(`🔌 User disconnected: ${socket.id}`);
+    if (socket.userId) {
+      const offlineTime = new Date();
+      activeUsers.set(socket.userId, {
+        socketId: null,
+        lastSeen: offlineTime
+      });
+      
+      io.emit('user_status_change', {
+        userId: socket.userId,
+        status: 'OFFLINE',
+        lastSeen: offlineTime.toISOString()
+      });
+    }
   });
 });
 
