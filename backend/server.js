@@ -17,6 +17,7 @@ import transactionRoutes from './modules/transaction/transaction.routes.js';
 import escrowRoutes from './modules/escrow/escrow.routes.js';
 import withdrawalRoutes from './modules/withdrawal/withdrawal.routes.js';
 import contractRoutes from './routes/contractRoutes.js';
+import proposalRoutes from './routes/proposalRoutes.js';
 
 import { sql, poolPromise } from './config/db.js';
 import { initDb } from './utils/initDb.js';
@@ -65,6 +66,7 @@ app.use('/api/wallet/transactions', transactionRoutes);
 app.use('/api/escrow', escrowRoutes);
 app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/contracts', contractRoutes);
+app.use('/api/proposals', proposalRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -27,5 +27,20 @@ export const proposalService = {
   updateProposalStatus: async (proposalId, status) => {
     const response = await api.put(`/projects/proposals/${proposalId}/status`, { status });
     return response.data;
+  },
+
+  getAdminProposals: async (params) => {
+    const response = await api.get('/proposals', { params });
+    return response.data;
+  },
+
+  updateProposalModerationStatus: async (proposalId, status) => {
+    const response = await api.patch(`/proposals/${proposalId}/status`, { status });
+    return response.data;
+  },
+
+  acceptProposal: async (proposalId) => {
+    const response = await api.post(`/proposals/${proposalId}/accept`);
+    return response.data;
   }
 };
