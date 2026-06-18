@@ -502,3 +502,139 @@ export const unbanUser = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi mở cấm người dùng.' });
   }
 };
+
+// --- PORTFOLIO CRUD CONTROLLERS ---
+
+export const getMyPortfolios = async (req, res) => {
+  try {
+    const freelancerId = req.user.id;
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('freelancerId', sql.Int, freelancerId)
+      .query('SELECT portfolio_id, title, description, project_url, image_url, created_at, updated_at FROM portfolios WHERE freelancer_id = @freelancerId ORDER BY created_at DESC');
+    res.json({ success: true, portfolios: result.recordset });
+  } catch (error) {
+    console.error('Error in getMyPortfolios:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách portfolio.' });
+  }
+};
+
+export const getFreelancerPortfolios = async (req, res) => {
+  try {
+    const { freelancerId } = req.params;
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('freelancerId', sql.Int, freelancerId)
+      .query('SELECT portfolio_id, title, description, project_url, image_url, created_at, updated_at FROM portfolios WHERE freelancer_id = @freelancerId ORDER BY created_at DESC');
+    res.json({ success: true, portfolios: result.recordset });
+  } catch (error) {
+    console.error('Error in getFreelancerPortfolios:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách portfolio công khai.' });
+  }
+};
+
+export const addPortfolio = async (req, res) => {
+  try {
+    const freelancerId = req.user.id;
+    const { title, description, projectUrl, imageUrl } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ message: 'Tiêu đề dự án không được để trống.' });
+    }
+
+    const pool = await poolPromise;
+    await pool.request()
+      .input('freelancerId', sql.Int, freelancerId)
+      .input('title', sql.NVarChar, title)
+      .input('description', sql.NVarChar, description || null)
+      .input('projectUrl', sql.NVarChar, projectUrl || null)
+      .input('imageUrl', sql.NVarChar, imageUrl || null)
+      .query(`
+        INSERT INTO portfolios (freelancer_id, title, description, project_url, image_url, created_at)
+        VALUES (@freelancerId, @title, @description, @projectUrl, @imageUrl, SYSUTCDATETIME())
+      `);
+
+    res.status(201).json({ success: true, message: 'Thêm dự án portfolio thành công!' });
+  } catch (error) {
+    console.error('Error in addPortfolio:', error);
+    res.status(500).json({ message: 'Lỗi server khi thêm portfolio.' });
+  }
+};
+
+export const updatePortfolio = async (req, res) => {
+  try {
+    const freelancerId = req.user.id;
+    const { portfolioId } = req.params;
+    const { title, description, projectUrl, imageUrl } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ message: 'Tiêu đề dự án không được để trống.' });
+    }
+
+    const pool = await poolPromise;
+
+    // Verify ownership
+    const checkResult = await pool.request()
+      .input('portfolioId', sql.Int, portfolioId)
+      .query('SELECT freelancer_id FROM portfolios WHERE portfolio_id = @portfolioId');
+
+    if (checkResult.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy dự án portfolio.' });
+    }
+
+    if (checkResult.recordset[0].freelancer_id !== freelancerId) {
+      return res.status(403).json({ message: 'Bạn không có quyền chỉnh sửa dự án này.' });
+    }
+
+    await pool.request()
+      .input('portfolioId', sql.Int, portfolioId)
+      .input('title', sql.NVarChar, title)
+      .input('description', sql.NVarChar, description || null)
+      .input('projectUrl', sql.NVarChar, projectUrl || null)
+      .input('imageUrl', sql.NVarChar, imageUrl || null)
+      .query(`
+        UPDATE portfolios 
+        SET title = @title, 
+            description = @description, 
+            project_url = @projectUrl, 
+            image_url = @imageUrl, 
+            updated_at = SYSUTCDATETIME()
+        WHERE portfolio_id = @portfolioId
+      `);
+
+    res.json({ success: true, message: 'Cập nhật portfolio thành công!' });
+  } catch (error) {
+    console.error('Error in updatePortfolio:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật portfolio.' });
+  }
+};
+
+export const deletePortfolio = async (req, res) => {
+  try {
+    const freelancerId = req.user.id;
+    const { portfolioId } = req.params;
+    const pool = await poolPromise;
+
+    // Verify ownership
+    const checkResult = await pool.request()
+      .input('portfolioId', sql.Int, portfolioId)
+      .query('SELECT freelancer_id FROM portfolios WHERE portfolio_id = @portfolioId');
+
+    if (checkResult.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy dự án portfolio.' });
+    }
+
+    if (checkResult.recordset[0].freelancer_id !== freelancerId) {
+      return res.status(403).json({ message: 'Bạn không có quyền xóa dự án này.' });
+    }
+
+    await pool.request()
+      .input('portfolioId', sql.Int, portfolioId)
+      .query('DELETE FROM portfolios WHERE portfolio_id = @portfolioId');
+
+    res.json({ success: true, message: 'Xóa dự án portfolio thành công!' });
+  } catch (error) {
+    console.error('Error in deletePortfolio:', error);
+    res.status(500).json({ message: 'Lỗi server khi xóa portfolio.' });
+  }
+};
