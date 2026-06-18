@@ -11,9 +11,11 @@ import AdminDashboard from './pages/Admin/Dashboard';
 import AdminDisputes from './pages/Admin/Disputes';
 import AdminGenerateReport from './pages/Admin/GenerateReport';
 import AdminReportHistory from './pages/Admin/ReportHistory';
+import AdminReportManagement from './pages/Admin/ReportManagement';
 import AdminReportSuccess from './pages/Admin/ReportSuccess';
 import AdminSettings from './pages/Admin/Settings';
 import AdminUsers from './pages/Admin/Users';
+import ProposalModeration from './pages/Admin/ProposalModeration';
 import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 
 // Pages - Wallet & Payment (Iteration 2)
@@ -124,9 +126,11 @@ export default function App() {
         {/* Admin Dashboard Paths */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-users" element={<AdminUsers />} />
+        <Route path="/admin-project-moderation" element={<ProposalModeration />} />
         <Route path="/admin-disputes" element={<AdminDisputes />} />
         <Route path="/admin-generate-report" element={<AdminGenerateReport />} />
         <Route path="/admin-report-history" element={<AdminReportHistory />} />
+        <Route path="/admin-report-management" element={<AdminReportManagement />} />
         <Route path="/admin-report-success" element={<AdminReportSuccess />} />
         <Route path="/admin-analytics" element={<AdminAnalytics />} />
         <Route path="/admin-settings" element={<AdminSettings />} />

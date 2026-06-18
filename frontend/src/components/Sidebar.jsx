@@ -122,8 +122,10 @@ export default function Sidebar() {
     items = [
       { label: 'Bảng điều khiển', icon: 'dashboard', link: '/admin-dashboard' },
       { label: 'Quản lý người dùng', icon: 'group', link: '/admin-users' },
+      { label: 'Duyệt đề xuất', icon: 'fact_check', link: '/admin-project-moderation' },
       { label: 'Tranh chấp', icon: 'gavel', link: '/admin-disputes' },
       { label: 'Báo cáo', icon: 'summarize', link: '/admin-generate-report' },
+      { label: 'Quản lý báo cáo', icon: 'report', link: '/admin-report-management' },
       { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' },
       { label: 'Cài đặt', icon: 'settings', link: '/admin-settings' }
     ];

@@ -12,7 +12,7 @@ export const listProposals = async (filters) => {
   return fetchProposals(filters);
 };
 
-export const moderateProposalStatus = async (proposalId, status, userId) => {
+export const moderateProposalStatus = async (proposalId, status, userId, role, roles = []) => {
   const normalizedId = normalizeProposalId(proposalId);
   if (!normalizedId) {
     return { status: 400, error: 'Invalid proposal id.' };
@@ -32,7 +32,8 @@ export const moderateProposalStatus = async (proposalId, status, userId) => {
     return { status: 404, error: 'Proposal not found.' };
   }
 
-  if (proposal.employer_id !== userId) {
+  const isAdmin = role === 'ADMIN' || (Array.isArray(roles) && roles.includes('ADMIN'));
+  if (!isAdmin && proposal.employer_id !== userId) {
     return { status: 403, error: 'Unauthorized to update this proposal.' };
   }
 
@@ -40,7 +41,7 @@ export const moderateProposalStatus = async (proposalId, status, userId) => {
   return { status: 200, data: { proposalId: normalizedId, status: normalizedStatus } };
 };
 
-export const acceptProposalAndCreateContract = async (proposalId, userId) => {
+export const acceptProposalAndCreateContract = async (proposalId, userId, role, roles = []) => {
   const normalizedId = normalizeProposalId(proposalId);
   if (!normalizedId) {
     return { status: 400, error: 'Invalid proposal id.' };
@@ -51,7 +52,8 @@ export const acceptProposalAndCreateContract = async (proposalId, userId) => {
     return { status: 404, error: 'Proposal not found.' };
   }
 
-  if (proposal.employer_id !== userId) {
+  const isAdmin = role === 'ADMIN' || (Array.isArray(roles) && roles.includes('ADMIN'));
+  if (!isAdmin && proposal.employer_id !== userId) {
     return { status: 403, error: 'Unauthorized to accept this proposal.' };
   }
 

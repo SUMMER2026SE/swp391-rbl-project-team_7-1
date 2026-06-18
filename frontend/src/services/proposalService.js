@@ -30,17 +30,17 @@ export const proposalService = {
   },
 
   getAdminProposals: async (params) => {
-    const response = await api.get('/proposals', { params });
+    const response = await api.get('/admin/proposals', { params });
     return response.data;
   },
 
   updateProposalModerationStatus: async (proposalId, status) => {
-    const response = await api.patch(`/proposals/${proposalId}/status`, { status });
+    const response = await api.patch(`/admin/proposals/${proposalId}/status`, { status });
     return response.data;
   },
 
   acceptProposal: async (proposalId) => {
-    const response = await api.post(`/proposals/${proposalId}/accept`);
+    const response = await api.post(`/admin/proposals/${proposalId}/accept`);
     return response.data;
   }
 };

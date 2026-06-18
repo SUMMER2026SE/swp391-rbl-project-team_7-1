@@ -30,6 +30,7 @@ export const patchProposalStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const userId = req.user.id;
+    const { role, roles } = req.user;
 
     if (!isValidIntegerId(id)) {
       return res.status(400).json({ message: 'Invalid proposal id.' });
@@ -39,7 +40,7 @@ export const patchProposalStatus = async (req, res) => {
       return res.status(400).json({ message: 'Status is required.' });
     }
 
-    const result = await moderateProposalStatus(id, status, userId);
+    const result = await moderateProposalStatus(id, status, userId, role, roles);
     if (result.error) {
       return res.status(result.status).json({ message: result.error });
     }
@@ -55,12 +56,13 @@ export const postAcceptProposal = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    const { role, roles } = req.user;
 
     if (!isValidIntegerId(id)) {
       return res.status(400).json({ message: 'Invalid proposal id.' });
     }
 
-    const result = await acceptProposalAndCreateContract(id, userId);
+    const result = await acceptProposalAndCreateContract(id, userId, role, roles);
     if (result.error) {
       return res.status(result.status).json({ message: result.error });
     }
