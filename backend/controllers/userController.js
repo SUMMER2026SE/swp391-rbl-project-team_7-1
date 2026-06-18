@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { sql, poolPromise } from '../config/db.js';
-import { getUserById, fetchAllUsers, updateUserStatusById } from '../services/userService.js';
+import { getUserById, fetchAllUsers, updateUserStatusById, approveContractById, getDashboardStats, fetchUsersWithFilters } from '../services/userService.js';
 
 export const getProfile = async (req, res) => {
   try {
@@ -350,6 +350,83 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const getAdminDashboard = async (req, res) => {
+  try {
+    const stats = await getDashboardStats();
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi server khi lấy dữ liệu dashboard.'
+    });
+  }
+};
+
+export const getAdminUsers = async (req, res) => {
+  try {
+    const { search, role, status, page = 1, limit = 25 } = req.query;
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const lim = Math.max(parseInt(limit, 10) || 25, 1);
+    const offset = (pageNum - 1) * lim;
+
+    const result = await fetchUsersWithFilters({ search, role, status, limit: lim, offset });
+    const totalPages = Math.max(Math.ceil(result.total / lim), 1);
+
+    res.json({
+      success: true,
+      data: {
+        users: result.users,
+        total: result.total,
+        page: pageNum,
+        limit: lim,
+        totalPages
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách người dùng.' });
+  }
+};
+
+export const updateAdminUserStatus = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    const { status } = req.body;
+
+    if (Number.isNaN(userId)) {
+      return res.status(400).json({ message: 'Id người dùng không hợp lệ.' });
+    }
+
+    const allowedStatuses = ['ACTIVE', 'SUSPENDED', 'BANNED'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Trạng thái không hợp lệ.' });
+    }
+
+    if (req.user.id === userId) {
+      return res.status(403).json({ message: 'Không thể thay đổi trạng thái của chính bạn.' });
+    }
+
+    const user = await getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+    }
+
+    if (user.role_default === 'ADMIN') {
+      return res.status(403).json({ message: 'Không thể thay đổi trạng thái của tài khoản Admin.' });
+    }
+
+    await updateUserStatusById(userId, status);
+    res.json({ message: 'Cập nhật trạng thái người dùng thành công.' });
+  } catch (error) {
+    console.error('Error updating admin user status:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật trạng thái người dùng.' });
+  }
+};
+
 export const banUser = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId, 10);
@@ -375,6 +452,30 @@ export const banUser = async (req, res) => {
   } catch (error) {
     console.error('Error banning user:', error);
     res.status(500).json({ message: 'Lỗi server khi cấm người dùng.' });
+  }
+};
+
+export const approveContract = async (req, res) => {
+  try {
+    const contractId = parseInt(req.params.id, 10);
+    if (Number.isNaN(contractId)) {
+      return res.status(400).json({ message: 'Contract id không hợp lệ.' });
+    }
+
+    const userRole = req.user.role || req.user.roleDefault;
+    if (userRole !== 'EMPLOYER' && userRole !== 'ADMIN') {
+      return res.status(403).json({ message: 'Chỉ Employer hoặc Admin mới có quyền phê duyệt hợp đồng.' });
+    }
+
+    const contract = await approveContractById(contractId);
+    if (!contract) {
+      return res.status(404).json({ message: 'Không tìm thấy hợp đồng hợp lệ để phê duyệt.' });
+    }
+
+    return res.json({ success: true, message: 'Hợp đồng đã được phê duyệt.', contract });
+  } catch (error) {
+    console.error('Error approving contract:', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi khi phê duyệt hợp đồng.' });
   }
 };
 

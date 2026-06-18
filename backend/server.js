@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import { verifyToken } from './middleware/authMiddleware.js';
+import { approveContract } from './controllers/userController.js';
 import { poolPromise } from './config/db.js';
 
 dotenv.config();
@@ -23,6 +25,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Main Authentication routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.post('/api/contracts/:id/approve', verifyToken, approveContract);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
