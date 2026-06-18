@@ -9,6 +9,7 @@ import PublicLayout from './layouts/PublicLayout';
 import AdminAnalytics from './pages/Admin/Analytics';
 import AdminDashboard from './pages/Admin/Dashboard';
 import AdminDisputes from './pages/Admin/Disputes';
+import DisputeManagement from './pages/Admin/DisputeManagement';
 import AdminGenerateReport from './pages/Admin/GenerateReport';
 import AdminReportHistory from './pages/Admin/ReportHistory';
 import AdminReportManagement from './pages/Admin/ReportManagement';
@@ -127,6 +128,7 @@ export default function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-users" element={<AdminUsers />} />
         <Route path="/admin-project-moderation" element={<ProposalModeration />} />
+        <Route path="/admin-dispute-management" element={<DisputeManagement />} />
         <Route path="/admin-disputes" element={<AdminDisputes />} />
         <Route path="/admin-generate-report" element={<AdminGenerateReport />} />
         <Route path="/admin-report-history" element={<AdminReportHistory />} />

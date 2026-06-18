@@ -19,6 +19,7 @@ import withdrawalRoutes from './modules/withdrawal/withdrawal.routes.js';
 import contractRoutes from './routes/contractRoutes.js';
 import proposalRoutes from './routes/proposalRoutes.js';
 import adminProposalRoutes from './routes/adminProposalRoutes.js';
+import disputeRoutes from './routes/disputeRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 
 import { sql, poolPromise } from './config/db.js';
@@ -70,6 +71,7 @@ app.use('/api/withdrawal', withdrawalRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/admin', adminProposalRoutes);
+app.use('/api/disputes', disputeRoutes);
 app.use('/api/reports', reportRoutes);
 
 // Health check endpoint
