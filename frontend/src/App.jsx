@@ -18,6 +18,7 @@ import AdminSettings from './pages/Admin/Settings';
 import AdminUsers from './pages/Admin/Users';
 import ProposalModeration from './pages/Admin/ProposalModeration';
 import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
+import ViolationHandling from './pages/Admin/ViolationHandling';
 
 // Pages - Wallet & Payment (Iteration 2)
 import TransactionHistoryPage from './pages/Wallet/TransactionHistoryPage';
@@ -137,6 +138,7 @@ export default function App() {
         <Route path="/admin-analytics" element={<AdminAnalytics />} />
         <Route path="/admin-settings" element={<AdminSettings />} />
         <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
+        <Route path="/admin-violations" element={<ViolationHandling />} />
       </Route>
 
       {/* --- Standalone Pages (No Shared Layout) --- */}

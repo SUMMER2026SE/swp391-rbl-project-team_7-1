@@ -127,6 +127,7 @@ export default function Sidebar() {
       { label: 'Tranh chấp', icon: 'gavel', link: '/admin-disputes' },
       { label: 'Báo cáo', icon: 'summarize', link: '/admin-generate-report' },
       { label: 'Quản lý báo cáo', icon: 'report', link: '/admin-report-management' },
+      { label: 'Xử lý vi phạm', icon: 'gavel', link: '/admin-violations' },
       { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' },
       { label: 'Cài đặt', icon: 'settings', link: '/admin-settings' }
     ];
