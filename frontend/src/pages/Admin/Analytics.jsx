@@ -1,47 +1,368 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from 'recharts';
+
+const API = 'http://localhost:5000/api';
+
+const STATUS_COLORS = {
+  OPEN: '#0f766e',
+  ACTIVE: '#0284c7',
+  CLOSED: '#64748b',
+  COMPLETED: '#16a34a',
+  PENDING_APPROVAL: '#f59e0b',
+  APPROVED: '#0f766e',
+  PENDING: '#f59e0b',
+  RESOLVED: '#16a34a',
+  DISMISSED: '#94a3b8',
+  CANCELLED: '#ef4444',
+  REJECTED: '#ef4444',
+  SUBMITTED: '#6366f1',
+  WITHDRAWN: '#94a3b8'
+};
+
+const DEFAULT_COLORS = ['#0f766e', '#0284c7', '#16a34a', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'];
+
+function StatCard({ title, value, subtitle, icon }) {
+  return (
+    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div>
+          <p className="text-[13px] font-semibold text-[#475569] uppercase tracking-[0.15em]">{title}</p>
+        </div>
+        <div className="w-11 h-11 rounded-2xl bg-[#ecfdf5] text-[#0f766e] grid place-items-center">
+          <span className="material-symbols-outlined text-[22px]">{icon}</span>
+        </div>
+      </div>
+      <p className="text-[32px] font-semibold text-[#0f172a] leading-none">{value}</p>
+      <p className="mt-3 text-sm text-[#64748b]">{subtitle}</p>
+    </div>
+  );
+}
+
+function SectionHeader({ title, subtitle }) {
+  return (
+    <div className="flex flex-col gap-1 mb-6">
+      <h2 className="font-headline-2xl text-headline-2xl text-[#334155]">{title}</h2>
+      <p className="text-body-base text-body-base text-[#475569]">{subtitle}</p>
+    </div>
+  );
+}
+
+function ChartCard({ title, subtitle, period, children }) {
+  return (
+    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div>
+          <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">{title}</p>
+          <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">{subtitle}</h3>
+        </div>
+        {period && <span className="text-sm text-[#64748b]">{period}</span>}
+      </div>
+      <div className="h-[300px]">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminAnalytics() {
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const token = (() => {
+    const raw = localStorage.getItem('token');
+    return raw && raw !== 'null' && raw !== 'undefined' ? raw : null;
+  })();
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      setError(null);
+
+      if (!token) {
+        setError('Vui lòng đăng nhập để truy cập trang này.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/admin/analytics`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const responseData = await res.json();
+
+        if (!res.ok) {
+          setError(responseData.message || 'Không thể tải dữ liệu thống kê.');
+          return;
+        }
+
+        if (responseData.success && responseData.data) {
+          setAnalyticsData(responseData.data);
+        } else {
+          setError('Định dạng dữ liệu không hợp lệ.');
+        }
+      } catch (err) {
+        setError('Lỗi kết nối máy chủ. Vui lòng thử lại sau.');
+        console.error('Analytics fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [token]);
+
+  const formatRevenue = (value) => {
+    return (value || 0).toLocaleString('vi-VN') + ' đ';
+  };
+
+  const getStatusColor = (status) => {
+    return STATUS_COLORS[status] || '#94a3b8';
+  };
+
+  if (loading) {
+    return (
+      <main className="flex-1 overflow-y-auto p-margin-desktop">
+        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+          <SectionHeader
+            title="Admin Analytics"
+            subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+          />
+          <div className="text-center text-[#64748b]">Đang tải dữ liệu...</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex-1 overflow-y-auto p-margin-desktop">
+        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+          <SectionHeader
+            title="Admin Analytics"
+            subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+          />
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-red-700">{error}</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!analyticsData) {
+    return (
+      <main className="flex-1 overflow-y-auto p-margin-desktop">
+        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+          <SectionHeader
+            title="Admin Analytics"
+            subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+          />
+          <div className="text-center text-[#64748b]">Không có dữ liệu thống kê.</div>
+        </div>
+      </main>
+    );
+  }
+
+  const { overview, monthlyRevenue, monthlyProjects, monthlyUsers, projectStatusDistribution, contractStatusDistribution } = analyticsData;
+
+  const KPI_CARDS = [
+    { title: 'Total Users', value: (overview.totalUsers || 0).toLocaleString('vi-VN'), subtitle: 'All platform users', icon: 'person' },
+    { title: 'Freelancers', value: (overview.totalFreelancers || 0).toLocaleString('vi-VN'), subtitle: 'Freelance members', icon: 'workspace_premium' },
+    { title: 'Employers', value: (overview.totalEmployers || 0).toLocaleString('vi-VN'), subtitle: 'Project owners', icon: 'business_center' },
+    { title: 'Total Projects', value: (overview.totalProjects || 0).toLocaleString('vi-VN'), subtitle: 'Projects created', icon: 'work_outline' },
+    { title: 'Active Projects', value: (overview.activeProjects || 0).toLocaleString('vi-VN'), subtitle: 'Currently in progress', icon: 'trending_up' },
+    { title: 'Completed Projects', value: (overview.completedProjects || 0).toLocaleString('vi-VN'), subtitle: 'Successfully closed', icon: 'task_alt' },
+    { title: 'Active Contracts', value: (overview.activeContracts || 0).toLocaleString('vi-VN'), subtitle: 'Active agreements', icon: 'description' },
+    { title: 'Completed Contracts', value: (overview.completedContracts || 0).toLocaleString('vi-VN'), subtitle: 'Fully delivered', icon: 'verified' },
+    { title: 'Pending Disputes', value: (overview.pendingDisputes || 0).toLocaleString('vi-VN'), subtitle: 'Open disputes', icon: 'gavel' },
+    { title: 'Pending Reports', value: (overview.pendingReports || 0).toLocaleString('vi-VN'), subtitle: 'Awaiting review', icon: 'report' },
+    { title: 'Total Revenue', value: formatRevenue(overview.totalRevenue), subtitle: 'Gross platform revenue', icon: 'payments' },
+  ];
+
+  const LineTooltip = ({ active, payload, label, formatter }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white border border-[#E2E8F0] rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-semibold text-[#334155] mb-1">{label}</p>
+          {payload.map((entry, idx) => (
+            <p key={idx} className="text-sm text-[#475569]">
+              {entry.name}: {formatter ? formatter(entry.value) : entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const BarTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white border border-[#E2E8F0] rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-semibold text-[#334155] mb-1">{label}</p>
+          {payload.map((entry, idx) => (
+            <p key={idx} className="text-sm text-[#475569]">
+              {entry.name}: {entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const PieTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white border border-[#E2E8F0] rounded-lg p-3 shadow-lg">
+          <p className="text-sm text-[#475569]">
+            {payload[0].name}: {payload[0].value}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <main className="flex-1 overflow-y-auto bg-background p-margin-desktop">
-<div className="max-w-[1280px] mx-auto flex flex-col gap-8 pb-12">
-{/*  Financial Overview & Key Metrics  */}
-<section className="bento-grid">
-{/*  Main Line Chart  */}
-<div className="col-span-12 lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6 transition-all duration-300">
-<div className="flex justify-between items-start mb-6">
-<div>
-<h3 className="font-headline-xl text-headline-xl text-on-surface text-[#334155]">Financial Overview</h3>
-<p className="font-body-sm text-body-sm text-on-surface-variant mt-1 text-[#475569]">Platform Revenue vs Escrow Volume</p>
-</div>
-<div className="flex gap-2"><span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-50 rounded-full font-label-caps text-label-caps text-[#0F766E]"><span className="w-2 h-2 rounded-full bg-[#0F766E]"></span> Revenue</span><span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-50 rounded-full font-label-caps text-label-caps text-[#475569]"><span className="w-2 h-2 rounded-full bg-[#475569]"></span> Escrow</span></div>
-</div>
-<div className="h-72 chart-placeholder rounded-lg flex items-center justify-center border border-dashed border-outline-variant">
-<span className="font-body-sm text-on-surface-variant italic text-[#475569]">Interactive Line Chart Canvas</span>
-</div>
-</div>
-{/*  KPI Stack  */}
-<div className="col-span-12 lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6 transition-all duration-300">
-<div className="bg-surface-container-lowest border border-outline-variant rounded-xl premium-shadow p-6 flex-1 flex flex-col justify-center premium-hover-shadow transition-all duration-300">
-<h4 className="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider text-[#334155] text-[#475569]">Avg Transaction Value</h4>
-<div className="mt-2 flex items-baseline gap-3">
-<span className="font-display-hero-mobile text-display-hero-mobile text-on-surface">$1,450</span>
-<span className="font-label-caps text-label-caps text-[#0F766E] bg-emerald-50 px-2 py-1 rounded flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">trending_up</span> +12%</span>
-</div>
-</div>
-<div className="bg-surface-container-lowest border border-outline-variant rounded-xl premium-shadow p-6 flex-1 flex flex-col justify-center premium-hover-shadow transition-all duration-300 relative overflow-hidden">
-<div className="absolute top-0 right-0 w-24 h-24 bg-primary-container opacity-5 rounded-bl-full"></div>
-<h4 className="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-wider text-[#334155] text-[#475569]">Effective Take Rate</h4>
-<div className="mt-2 flex items-baseline gap-3">
-<span className="font-display-hero-mobile text-display-hero-mobile text-[#0F766E]">10.2%</span>
-<span className="font-body-sm text-body-sm text-on-surface-variant text-[#475569]">Avg across tiers</span>
-</div>
-<div className="w-full bg-surface-container-low h-2 rounded-full mt-4">
-<div className="bg-[#0F766E] h-2 rounded-full" style={{ "width": "75%" }}></div>
-</div>
-</div>
-</div>
-</section>
-</div>
-</main>
+    <main className="flex-1 overflow-y-auto p-margin-desktop">
+      <div className="max-w-container-max mx-auto space-y-10 pb-12">
+        <SectionHeader
+          title="Admin Analytics"
+          subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+        />
+
+        {/* Top KPI Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {KPI_CARDS.slice(0, 4).map(item => (
+            <StatCard key={item.title} {...item} />
+          ))}
+        </div>
+
+        {/* Second KPI Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {KPI_CARDS.slice(4, 8).map(item => (
+            <StatCard key={item.title} {...item} />
+          ))}
+        </div>
+
+        {/* Third KPI Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {KPI_CARDS.slice(8).map(item => (
+            <StatCard key={item.title} {...item} />
+          ))}
+        </div>
+
+        {/* Monthly Charts Section */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <ChartCard title="Revenue" subtitle="By month" period="Last 12 months">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyRevenue} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+                <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <YAxis tickLine={false} axisLine={false} tickFormatter={value => `${(value / 1000000).toFixed(1)}M`} />
+                <Tooltip content={<LineTooltip formatter={val => `${val.toLocaleString('vi-VN')} đ`} />} />
+                <Legend />
+                <Line type="monotone" dataKey="revenue" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} name="Revenue" />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Projects" subtitle="By month" period="Last 12 months">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyProjects} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
+                <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <YAxis tickLine={false} axisLine={false} />
+                <Tooltip content={<BarTooltip />} />
+                <Bar dataKey="count" fill="#0f766e" radius={[8, 8, 0, 0]} name="Projects" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* Users Chart */}
+        <div className="grid grid-cols-1 gap-6">
+          <ChartCard title="User Registrations" subtitle="By month" period="Last 12 months">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyUsers} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+                <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <YAxis tickLine={false} axisLine={false} />
+                <Tooltip content={<LineTooltip />} />
+                <Legend />
+                <Line type="monotone" dataKey="count" stroke="#0284c7" strokeWidth={3} dot={{ r: 5 }} name="Users" />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* Distribution Charts */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <ChartCard title="Projects" subtitle="Status distribution">
+            {projectStatusDistribution.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-[#64748b]">No project data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={projectStatusDistribution}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  >
+                    {projectStatusDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getStatusColor(entry.name) || DEFAULT_COLORS[index % DEFAULT_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<PieTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+
+          <ChartCard title="Contracts" subtitle="Status distribution">
+            {contractStatusDistribution.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-[#64748b]">No contract data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={contractStatusDistribution}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  >
+                    {contractStatusDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getStatusColor(entry.name) || DEFAULT_COLORS[index % DEFAULT_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<PieTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </ChartCard>
+        </div>
+      </div>
+    </main>
   );
 }

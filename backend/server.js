@@ -22,6 +22,7 @@ import adminProposalRoutes from './routes/adminProposalRoutes.js';
 import disputeRoutes from './routes/disputeRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import violationRoutes from './routes/violationRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 import { sql, poolPromise } from './config/db.js';
 import { initDb } from './utils/initDb.js';
@@ -75,6 +76,7 @@ app.use('/api/admin', adminProposalRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin/violations', violationRoutes);
+app.use('/api/admin/analytics', analyticsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
