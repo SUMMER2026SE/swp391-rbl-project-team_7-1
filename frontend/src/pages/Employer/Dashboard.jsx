@@ -6,6 +6,8 @@ export default function EmployerDashboard() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [toastMsg, setToastMsg] = useState('');
+  const [recommendations, setRecommendations] = useState({});
+  const [loadingRecs, setLoadingRecs] = useState({});
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
@@ -38,6 +40,24 @@ export default function EmployerDashboard() {
     }
     fetchMyProjects();
   }, [token]);
+
+  const fetchRecommendations = async (projectId) => {
+    if (recommendations[projectId] || loadingRecs[projectId]) return;
+    setLoadingRecs(prev => ({ ...prev, [projectId]: true }));
+    try {
+      const response = await fetch(`http://localhost:5000/api/recommendations/projects/${projectId}/recommendations`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setRecommendations(prev => ({ ...prev, [projectId]: data.data || [] }));
+      }
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+    } finally {
+      setLoadingRecs(prev => ({ ...prev, [projectId]: false }));
+    }
+  };
 
   const handleCloseProject = async (projectId) => {
     if (!window.confirm('Bạn có chắc chắn muốn đóng dự án này? Sau khi đóng, freelancer sẽ không thể gửi đề xuất mới.')) {
@@ -148,6 +168,67 @@ export default function EmployerDashboard() {
             <p className="text-xs text-slate-400 mt-2">Từ các freelancer gửi đến</p>
           </div>
         </div>
+
+        {/* Recommended Freelancers Section */}
+        {projects.filter(p => p.status === 'OPEN').length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-lg font-bold text-slate-800 mb-6">Gợi ý Freelancer</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {projects.filter(p => p.status === 'OPEN').slice(0, 2).map(project => (
+                <div key={project.project_id} className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-[#0F766E] truncate max-w-[200px]">{project.title}</h3>
+                    <button
+                      onClick={() => fetchRecommendations(project.project_id)}
+                      disabled={loadingRecs[project.project_id]}
+                      className="text-xs font-semibold text-[#0F766E] hover:bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-100 transition-all disabled:opacity-50"
+                    >
+                      {loadingRecs[project.project_id] ? 'Loading...' : 'Xem gợi ý'}
+                    </button>
+                  </div>
+
+                  {loadingRecs[project.project_id] && (
+                    <div className="text-center py-6 text-sm text-slate-500">Đang phân tích dữ liệu...</div>
+                  )}
+
+                  {!loadingRecs[project.project_id] && recommendations[project.project_id] && recommendations[project.project_id].length > 0 && (
+                    <div className="space-y-3">
+                      {recommendations[project.project_id].slice(0, 3).map(freelancer => (
+                        <div key={freelancer.userId} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                          <div className="w-9 h-9 rounded-full bg-teal-50 flex items-center justify-center text-[#0F766E] text-sm font-bold shrink-0">
+                            {freelancer.fullName ? freelancer.fullName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'FL'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-bold text-slate-800 truncate">{freelancer.fullName}</p>
+                              <span className="text-xs font-bold text-[#0F766E] shrink-0">{freelancer.recommendationScore}%</span>
+                            </div>
+                            {freelancer.headline && (
+                              <p className="text-xs text-slate-500 truncate">{freelancer.headline}</p>
+                            )}
+                            {freelancer.recommendationReasons && freelancer.recommendationReasons.length > 0 && (
+                              <div className="mt-1.5 flex flex-wrap gap-1">
+                                {freelancer.recommendationReasons.slice(0, 2).map((reason, i) => (
+                                  <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100">
+                                    {reason}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!loadingRecs[project.project_id] && recommendations[project.project_id] && recommendations[project.project_id].length === 0 && (
+                    <div className="text-center py-4 text-sm text-slate-400">No recommendations available</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Project List Section */}
         <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-6 mb-12">

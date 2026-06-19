@@ -24,6 +24,7 @@ import reportRoutes from './routes/reportRoutes.js';
 import violationRoutes from './routes/violationRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import aiChatRoutes from './routes/aiChatRoutes.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
 
 import { sql, poolPromise } from './config/db.js';
 import { initDb } from './utils/initDb.js';
@@ -79,6 +80,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/admin/violations', violationRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
 app.use('/api/ai', aiChatRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
