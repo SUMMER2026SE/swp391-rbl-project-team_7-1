@@ -99,6 +99,7 @@ export default function Sidebar() {
       { label: 'Khám phá dự án', icon: 'work', link: '/browse-projects' },
       { label: 'Ví tiền', icon: 'payments', link: '/freelancer-wallet' },
       { label: 'Tin nhắn', icon: 'chat', link: '/messages-freelancer' },
+      { label: 'Trợ lý AI', icon: 'smart_toy', link: '/ai-chat' },
       { label: 'Hồ sơ', icon: 'account_circle', link: '/profile' },
     ];
     user_name = user ? user.fullName : 'Alexander';
@@ -111,6 +112,7 @@ export default function Sidebar() {
       { label: 'Bảng điều khiển', icon: 'dashboard', link: '/employer-dashboard' },
       { label: 'Ví tiền', icon: 'payments', link: '/employer-wallet' },
       { label: 'Tin nhắn', icon: 'chat', link: '/messages-employer' },
+      { label: 'Trợ lý AI', icon: 'smart_toy', link: '/ai-chat' },
       { label: 'Hồ sơ', icon: 'account_circle', link: '/profile' },
     ];
     user_name = user ? user.fullName : 'TechCorp Inc.';
@@ -129,6 +131,7 @@ export default function Sidebar() {
       { label: 'Quản lý báo cáo', icon: 'report', link: '/admin-report-management' },
       { label: 'Xử lý vi phạm', icon: 'gavel', link: '/admin-violations' },
       { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' },
+      { label: 'Trợ lý AI', icon: 'smart_toy', link: '/ai-chat' },
       { label: 'Cài đặt', icon: 'settings', link: '/admin-settings' }
     ];
     user_name = user ? user.fullName : 'Admin Panel';

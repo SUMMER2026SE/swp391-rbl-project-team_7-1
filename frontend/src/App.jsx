@@ -19,6 +19,7 @@ import AdminUsers from './pages/Admin/Users';
 import ProposalModeration from './pages/Admin/ProposalModeration';
 import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 import ViolationHandling from './pages/Admin/ViolationHandling';
+import AIChatPage from './pages/AI/AIChatPage';
 
 // Pages - Wallet & Payment (Iteration 2)
 import TransactionHistoryPage from './pages/Wallet/TransactionHistoryPage';
@@ -139,6 +140,7 @@ export default function App() {
         <Route path="/admin-settings" element={<AdminSettings />} />
         <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
         <Route path="/admin-violations" element={<ViolationHandling />} />
+        <Route path="/ai-chat" element={<AIChatPage />} />
       </Route>
 
       {/* --- Standalone Pages (No Shared Layout) --- */}

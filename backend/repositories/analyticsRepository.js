@@ -38,14 +38,13 @@ export const getMonthlyRevenue = async () => {
   const pool = await poolPromise;
   const result = await pool.request().query(`
     SELECT 
-      YEAR(created_at) as year,
-      MONTH(created_at) as month,
-      ISNULL(SUM(amount), 0) as revenue
+      FORMAT(created_at, 'yyyy-MM') as month,
+      ISNULL(SUM(amount), 0) as amount
     FROM transactions
     WHERE status = 'COMPLETED'
       AND created_at >= DATEADD(MONTH, -12, GETDATE())
-    GROUP BY YEAR(created_at), MONTH(created_at)
-    ORDER BY year ASC, month ASC
+    GROUP BY FORMAT(created_at, 'yyyy-MM')
+    ORDER BY month ASC
   `);
   return result.recordset;
 };
@@ -54,13 +53,12 @@ export const getMonthlyProjects = async () => {
   const pool = await poolPromise;
   const result = await pool.request().query(`
     SELECT 
-      YEAR(created_at) as year,
-      MONTH(created_at) as month,
+      FORMAT(created_at, 'yyyy-MM') as month,
       COUNT(*) as count
     FROM projects
     WHERE created_at >= DATEADD(MONTH, -12, GETDATE())
-    GROUP BY YEAR(created_at), MONTH(created_at)
-    ORDER BY year ASC, month ASC
+    GROUP BY FORMAT(created_at, 'yyyy-MM')
+    ORDER BY month ASC
   `);
   return result.recordset;
 };
@@ -69,13 +67,12 @@ export const getMonthlyUsers = async () => {
   const pool = await poolPromise;
   const result = await pool.request().query(`
     SELECT 
-      YEAR(created_at) as year,
-      MONTH(created_at) as month,
+      FORMAT(created_at, 'yyyy-MM') as month,
       COUNT(*) as count
     FROM users
     WHERE created_at >= DATEADD(MONTH, -12, GETDATE())
-    GROUP BY YEAR(created_at), MONTH(created_at)
-    ORDER BY year ASC, month ASC
+    GROUP BY FORMAT(created_at, 'yyyy-MM')
+    ORDER BY month ASC
   `);
   return result.recordset;
 };
@@ -97,6 +94,34 @@ export const getContractStatusDistribution = async () => {
     SELECT status, COUNT(*) as count
     FROM contracts
     GROUP BY status
+    ORDER BY count DESC
+  `);
+  return result.recordset;
+};
+
+export const getTopCategories = async () => {
+  const pool = await poolPromise;
+  const result = await pool.request().query(`
+    SELECT TOP 5
+      pc.category_name as category,
+      COUNT(p.project_id) as count
+    FROM projects p
+    LEFT JOIN project_categories pc ON p.category_id = pc.category_id
+    GROUP BY pc.category_name
+    ORDER BY count DESC
+  `);
+  return result.recordset;
+};
+
+export const getTopSkills = async () => {
+  const pool = await poolPromise;
+  const result = await pool.request().query(`
+    SELECT TOP 10
+      s.skill_name as skill,
+      COUNT(ps.project_id) as count
+    FROM project_skills ps
+    JOIN skills s ON ps.skill_id = s.skill_id
+    GROUP BY s.skill_name
     ORDER BY count DESC
   `);
   return result.recordset;

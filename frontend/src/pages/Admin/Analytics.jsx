@@ -5,9 +5,6 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   CartesianGrid,
   XAxis,
   YAxis,
@@ -16,24 +13,6 @@ import {
 } from 'recharts';
 
 const API = 'http://localhost:5000/api';
-
-const STATUS_COLORS = {
-  OPEN: '#0f766e',
-  ACTIVE: '#0284c7',
-  CLOSED: '#64748b',
-  COMPLETED: '#16a34a',
-  PENDING_APPROVAL: '#f59e0b',
-  APPROVED: '#0f766e',
-  PENDING: '#f59e0b',
-  RESOLVED: '#16a34a',
-  DISMISSED: '#94a3b8',
-  CANCELLED: '#ef4444',
-  REJECTED: '#ef4444',
-  SUBMITTED: '#6366f1',
-  WITHDRAWN: '#94a3b8'
-};
-
-const DEFAULT_COLORS = ['#0f766e', '#0284c7', '#16a34a', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'];
 
 function StatCard({ title, value, subtitle, icon }) {
   return (
@@ -74,6 +53,18 @@ function ChartCard({ title, subtitle, period, children }) {
       <div className="h-[300px]">
         {children}
       </div>
+    </div>
+  );
+}
+
+function StatusBadge({ label, count, color }) {
+  return (
+    <div className="flex items-center justify-between px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl">
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
+        <span className="text-sm font-medium text-[#334155]">{label}</span>
+      </div>
+      <span className="text-sm font-semibold text-[#0f172a]">{count}</span>
     </div>
   );
 }
@@ -131,7 +122,31 @@ export default function AdminAnalytics() {
   };
 
   const getStatusColor = (status) => {
-    return STATUS_COLORS[status] || '#94a3b8';
+    const colors = {
+      OPEN: '#0f766e',
+      ACTIVE: '#0284c7',
+      CLOSED: '#64748b',
+      COMPLETED: '#16a34a',
+      PENDING_APPROVAL: '#f59e0b',
+      APPROVED: '#0f766e',
+      PENDING: '#f59e0b',
+      RESOLVED: '#16a34a',
+      DISMISSED: '#94a3b8',
+      CANCELLED: '#ef4444',
+      REJECTED: '#ef4444',
+      SUBMITTED: '#6366f1',
+      WITHDRAWN: '#94a3b8'
+    };
+    return colors[status] || '#94a3b8';
+  };
+
+  const abbreviateMonth = (monthStr) => {
+    if (!monthStr) return '';
+    const parts = monthStr.split('-');
+    if (parts.length !== 2) return monthStr;
+    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const m = parseInt(parts[1], 10);
+    return months[m] || monthStr;
   };
 
   if (loading) {
@@ -176,66 +191,31 @@ export default function AdminAnalytics() {
     );
   }
 
-  const { overview, monthlyRevenue, monthlyProjects, monthlyUsers, projectStatusDistribution, contractStatusDistribution } = analyticsData;
+  const { overview, monthlyRevenue, monthlyProjects, monthlyUsers, projectStatusDistribution, contractStatusDistribution, topCategories, topSkills } = analyticsData;
 
   const KPI_CARDS = [
     { title: 'Total Users', value: (overview.totalUsers || 0).toLocaleString('vi-VN'), subtitle: 'All platform users', icon: 'person' },
     { title: 'Freelancers', value: (overview.totalFreelancers || 0).toLocaleString('vi-VN'), subtitle: 'Freelance members', icon: 'workspace_premium' },
     { title: 'Employers', value: (overview.totalEmployers || 0).toLocaleString('vi-VN'), subtitle: 'Project owners', icon: 'business_center' },
     { title: 'Total Projects', value: (overview.totalProjects || 0).toLocaleString('vi-VN'), subtitle: 'Projects created', icon: 'work_outline' },
-    { title: 'Active Projects', value: (overview.activeProjects || 0).toLocaleString('vi-VN'), subtitle: 'Currently in progress', icon: 'trending_up' },
-    { title: 'Completed Projects', value: (overview.completedProjects || 0).toLocaleString('vi-VN'), subtitle: 'Successfully closed', icon: 'task_alt' },
     { title: 'Active Contracts', value: (overview.activeContracts || 0).toLocaleString('vi-VN'), subtitle: 'Active agreements', icon: 'description' },
-    { title: 'Completed Contracts', value: (overview.completedContracts || 0).toLocaleString('vi-VN'), subtitle: 'Fully delivered', icon: 'verified' },
-    { title: 'Pending Disputes', value: (overview.pendingDisputes || 0).toLocaleString('vi-VN'), subtitle: 'Open disputes', icon: 'gavel' },
-    { title: 'Pending Reports', value: (overview.pendingReports || 0).toLocaleString('vi-VN'), subtitle: 'Awaiting review', icon: 'report' },
     { title: 'Total Revenue', value: formatRevenue(overview.totalRevenue), subtitle: 'Gross platform revenue', icon: 'payments' },
   ];
 
-  const LineTooltip = ({ active, payload, label, formatter }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border border-[#E2E8F0] rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-semibold text-[#334155] mb-1">{label}</p>
-          {payload.map((entry, idx) => (
-            <p key={idx} className="text-sm text-[#475569]">
-              {entry.name}: {formatter ? formatter(entry.value) : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  const chartRevenueData = (monthlyRevenue || []).map(item => ({
+    ...item,
+    monthLabel: abbreviateMonth(item.month)
+  }));
 
-  const BarTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border border-[#E2E8F0] rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-semibold text-[#334155] mb-1">{label}</p>
-          {payload.map((entry, idx) => (
-            <p key={idx} className="text-sm text-[#475569]">
-              {entry.name}: {entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  const chartProjectsData = (monthlyProjects || []).map(item => ({
+    ...item,
+    monthLabel: abbreviateMonth(item.month)
+  }));
 
-  const PieTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border border-[#E2E8F0] rounded-lg p-3 shadow-lg">
-          <p className="text-sm text-[#475569]">
-            {payload[0].name}: {payload[0].value}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const chartUsersData = (monthlyUsers || []).map(item => ({
+    ...item,
+    monthLabel: abbreviateMonth(item.month)
+  }));
 
   return (
     <main className="flex-1 overflow-y-auto p-margin-desktop">
@@ -245,64 +225,64 @@ export default function AdminAnalytics() {
           subtitle="Real-time platform analytics, KPIs, and trend visualizations."
         />
 
-        {/* Top KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {KPI_CARDS.slice(0, 4).map(item => (
-            <StatCard key={item.title} {...item} />
-          ))}
-        </div>
-
-        {/* Second KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {KPI_CARDS.slice(4, 8).map(item => (
-            <StatCard key={item.title} {...item} />
-          ))}
-        </div>
-
-        {/* Third KPI Row */}
+        {/* Section 1: Overview KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {KPI_CARDS.slice(8).map(item => (
+          {KPI_CARDS.map(item => (
             <StatCard key={item.title} {...item} />
           ))}
         </div>
 
-        {/* Monthly Charts Section */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <ChartCard title="Revenue" subtitle="By month" period="Last 12 months">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyRevenue} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} tickFormatter={value => `${(value / 1000000).toFixed(1)}M`} />
-                <Tooltip content={<LineTooltip formatter={val => `${val.toLocaleString('vi-VN')} đ`} />} />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} name="Revenue" />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
+        {/* Section 2: Revenue Trend */}
+        <ChartCard title="Revenue Trend" subtitle="Monthly platform revenue" period="Last 12 months">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartRevenueData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+              <XAxis dataKey="monthLabel" tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} tickFormatter={value => `${(value / 1000000).toFixed(1)}M`} />
+              <Tooltip
+                formatter={value => `${Number(value).toLocaleString('vi-VN')} đ`}
+                labelFormatter={label => {
+                  const item = chartRevenueData.find(d => d.monthLabel === label);
+                  return item ? item.month : label;
+                }}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="amount" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} name="Revenue" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-          <ChartCard title="Projects" subtitle="By month" period="Last 12 months">
+        {/* Section 3: Projects & Users side by side */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <ChartCard title="Projects Trend" subtitle="Monthly projects created" period="Last 12 months">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyProjects} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
+              <BarChart data={chartProjectsData} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
                 <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <XAxis dataKey="monthLabel" tickLine={false} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} />
-                <Tooltip content={<BarTooltip />} />
+                <Tooltip
+                  labelFormatter={label => {
+                    const item = chartProjectsData.find(d => d.monthLabel === label);
+                    return item ? item.month : label;
+                  }}
+                />
                 <Bar dataKey="count" fill="#0f766e" radius={[8, 8, 0, 0]} name="Projects" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
-        </div>
 
-        {/* Users Chart */}
-        <div className="grid grid-cols-1 gap-6">
-          <ChartCard title="User Registrations" subtitle="By month" period="Last 12 months">
+          <ChartCard title="User Growth" subtitle="Monthly user registrations" period="Last 12 months">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyUsers} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+              <LineChart data={chartUsersData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                <XAxis dataKey="monthLabel" tickLine={false} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} />
-                <Tooltip content={<LineTooltip />} />
+                <Tooltip
+                  labelFormatter={label => {
+                    const item = chartUsersData.find(d => d.monthLabel === label);
+                    return item ? item.month : label;
+                  }}
+                />
                 <Legend />
                 <Line type="monotone" dataKey="count" stroke="#0284c7" strokeWidth={3} dot={{ r: 5 }} name="Users" />
               </LineChart>
@@ -310,57 +290,100 @@ export default function AdminAnalytics() {
           </ChartCard>
         </div>
 
-        {/* Distribution Charts */}
+        {/* Section 5 & 6: Status Distributions */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <ChartCard title="Projects" subtitle="Status distribution">
-            {projectStatusDistribution.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-[#64748b]">No project data</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={projectStatusDistribution}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  >
-                    {projectStatusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getStatusColor(entry.name) || DEFAULT_COLORS[index % DEFAULT_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </ChartCard>
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+            <div className="mb-6">
+              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Project Status</p>
+              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Distribution</h3>
+            </div>
+            <div className="space-y-3">
+              {(projectStatusDistribution || []).length === 0 ? (
+                <p className="text-sm text-[#64748b] text-center py-8">No project data</p>
+              ) : (
+                (projectStatusDistribution || []).map((item, idx) => (
+                  <StatusBadge
+                    key={idx}
+                    label={item.status}
+                    count={item.count}
+                    color={getStatusColor(item.status)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
 
-          <ChartCard title="Contracts" subtitle="Status distribution">
-            {contractStatusDistribution.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-[#64748b]">No contract data</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={contractStatusDistribution}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    nameKey="name"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  >
-                    {contractStatusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getStatusColor(entry.name) || DEFAULT_COLORS[index % DEFAULT_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </ChartCard>
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+            <div className="mb-6">
+              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Contract Status</p>
+              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Distribution</h3>
+            </div>
+            <div className="space-y-3">
+              {(contractStatusDistribution || []).length === 0 ? (
+                <p className="text-sm text-[#64748b] text-center py-8">No contract data</p>
+              ) : (
+                (contractStatusDistribution || []).map((item, idx) => (
+                  <StatusBadge
+                    key={idx}
+                    label={item.status}
+                    count={item.count}
+                    color={getStatusColor(item.status)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Section 7 & 8: Top Categories & Skills */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+            <div className="mb-6">
+              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Top Categories</p>
+              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Most popular project categories</h3>
+            </div>
+            <div className="space-y-3">
+              {(topCategories || []).length === 0 ? (
+                <p className="text-sm text-[#64748b] text-center py-8">No category data</p>
+              ) : (
+                (topCategories || []).map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-[#ecfdf5] text-[#0f766e] text-xs font-bold grid place-items-center">
+                        {idx + 1}
+                      </span>
+                      <span className="text-sm font-medium text-[#334155]">{item.category || 'Uncategorized'}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-[#0f172a]">{item.count}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+            <div className="mb-6">
+              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Top Skills</p>
+              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Most requested skills</h3>
+            </div>
+            <div className="space-y-3">
+              {(topSkills || []).length === 0 ? (
+                <p className="text-sm text-[#64748b] text-center py-8">No skill data</p>
+              ) : (
+                (topSkills || []).map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-[#ecfdf5] text-[#0f766e] text-xs font-bold grid place-items-center">
+                        {idx + 1}
+                      </span>
+                      <span className="text-sm font-medium text-[#334155]">{item.skill}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-[#0f172a]">{item.count}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </main>
