@@ -85,6 +85,32 @@ export default function EmployerDashboard() {
     }
   };
 
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setToastMsg('Đã xóa dự án thành công!');
+        fetchMyProjects(); // Reload list
+        setTimeout(() => setToastMsg(''), 3000);
+      } else {
+        alert(data.message || 'Lỗi khi xóa dự án.');
+      }
+    } catch (err) {
+      console.error('Error deleting project:', err);
+      alert('Lỗi mạng khi thực hiện xóa dự án.');
+    }
+  };
+
   // Metrics
   const totalProjects = projects.length;
   const openProjects = projects.filter(p => p.status === 'OPEN').length;
@@ -310,6 +336,13 @@ export default function EmployerDashboard() {
                               </button>
                             </>
                           )}
+                          <button 
+                            onClick={() => handleDeleteProject(project.project_id)}
+                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer border-none bg-transparent"
+                            title="Xóa dự án"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
                         </div>
                       </td>
                     </tr>

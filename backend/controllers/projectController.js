@@ -611,3 +611,70 @@ export const updateProposalStatus = async (req, res) => {
     res.status(500).json({ message: 'Lỗi hệ thống khi cập nhật trạng thái đề xuất.' });
   }
 };
+
+/**
+ * Delete a project (Employer only)
+ */
+export const deleteProject = async (req, res) => {
+  try {
+    const employerId = req.user.id;
+    const { id } = req.params;
+    const pool = await poolPromise;
+
+    // 1. Verify project existence and ownership
+    const ownerCheck = await pool.request()
+      .input('projectId', sql.Int, id)
+      .query(`SELECT employer_id, status FROM projects WHERE project_id = @projectId`);
+
+    if (ownerCheck.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy dự án.' });
+    }
+
+    if (ownerCheck.recordset[0].employer_id !== employerId) {
+      return res.status(403).json({ message: 'Bạn không có quyền xóa dự án này.' });
+    }
+
+    // 2. Prevent deletion of projects with active contracts
+    const contractCheck = await pool.request()
+      .input('projectId', sql.Int, id)
+      .query(`SELECT COUNT(*) as count FROM contracts WHERE project_id = @projectId`);
+    
+    if (contractCheck.recordset[0].count > 0) {
+      return res.status(400).json({ message: 'Không thể xóa dự án đã có hợp đồng (đã thuê freelancer).' });
+    }
+
+    // 3. Cascading delete inside database transaction
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    try {
+      // Delete project skills
+      await transaction.request()
+        .input('projectId', sql.Int, id)
+        .query(`DELETE FROM project_skills WHERE project_id = @projectId`);
+
+      // Delete proposals
+      await transaction.request()
+        .input('projectId', sql.Int, id)
+        .query(`DELETE FROM proposals WHERE project_id = @projectId`);
+
+      // Delete messages
+      await transaction.request()
+        .input('projectId', sql.Int, id)
+        .query(`DELETE FROM messages WHERE project_id = @projectId`);
+
+      // Delete project
+      await transaction.request()
+        .input('projectId', sql.Int, id)
+        .query(`DELETE FROM projects WHERE project_id = @projectId`);
+
+      await transaction.commit();
+      res.json({ success: true, message: 'Dự án đã được xóa thành công!' });
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    res.status(500).json({ message: 'Lỗi hệ thống khi xóa dự án.' });
+  }
+};

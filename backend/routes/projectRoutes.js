@@ -6,6 +6,7 @@ import {
   createProject, 
   updateProject, 
   closeProject, 
+  deleteProject,
   getProjects, 
   getProjectById, 
   getEmployerProjects,
@@ -70,6 +71,7 @@ router.post('/', createProject);
 router.get('/my/employer-projects', getEmployerProjects);
 router.put('/:id', updateProject);
 router.put('/:id/close', closeProject);
+router.delete('/:id', deleteProject);
 
 // API nộp đề xuất ứng tuyển của Freelancer kèm file đính kèm (Từ develop)
 router.post('/:projectId/proposals', upload.single('attachment'), submitProposal);
