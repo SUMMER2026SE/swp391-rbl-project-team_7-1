@@ -158,12 +158,12 @@ export default function FreelancerDashboard() {
         }
       `}} />
 
-      {/* Light Header with Premium Blended Gradient (Loang màu nhạt thuần xanh siêu xịn) */}
-      <div className="pt-8 pb-10 px-6 md:px-12 bg-gradient-to-br from-teal-50/40 via-[#F8FAFC] to-sky-50/40 border-b border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.02)] relative overflow-hidden">
-        {/* Soft Blended Pastel Blobs (Animated & Vivid - Green/Teal/Sky Theme) */}
-        <div className="absolute top-[-40%] right-[-10%] w-[450px] h-[450px] bg-gradient-to-br from-emerald-300/40 to-teal-200/40 rounded-full blur-[100px] pointer-events-none animate-blob-1"></div>
-        <div className="absolute bottom-[-30%] left-[10%] w-[400px] h-[400px] bg-gradient-to-tr from-teal-200/40 to-sky-200/40 rounded-full blur-[90px] pointer-events-none animate-blob-2"></div>
-        <div className="absolute top-[10%] left-[45%] w-[320px] h-[320px] bg-gradient-to-r from-sky-300/35 to-emerald-100/40 rounded-full blur-[85px] pointer-events-none animate-blob-3"></div>
+      {/* Light Header with Premium Blended Gradient */}
+      <div className="pt-8 pb-10 px-6 md:px-12 bg-gradient-to-br from-teal-50 via-emerald-50 to-sky-50 border-b border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.02)] relative overflow-hidden">
+        {/* Soft Blended Pastel Blobs (Teal/Emerald/Sky Theme) */}
+        <div className="absolute top-[-40%] right-[-10%] w-[450px] h-[450px] bg-teal-200/30 rounded-full blur-[100px] pointer-events-none animate-blob-1"></div>
+        <div className="absolute bottom-[-30%] left-[10%] w-[400px] h-[400px] bg-emerald-200/30 rounded-full blur-[90px] pointer-events-none animate-blob-2"></div>
+        <div className="absolute top-[10%] left-[45%] w-[320px] h-[320px] bg-sky-200/30 rounded-full blur-[85px] pointer-events-none animate-blob-3"></div>
         
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 animate-greeting">
           <div>
