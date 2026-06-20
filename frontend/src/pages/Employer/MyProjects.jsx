@@ -118,25 +118,66 @@ export default function MyProjects() {
         </div>
       )}
 
-      {/* Compact Header Area */}
-      <div className="py-5 px-6 md:px-12 bg-white border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-[#0F766E]">
-              <span className="material-symbols-outlined font-semibold">work</span>
+      {/* Styled inline keyframes for text slide-up fade in and floating blobs */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(15px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes floatBlob1 {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -40px) scale(1.15); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes floatBlob2 {
+          0% { transform: translate(0px, 0px) scale(1.1); }
+          50% { transform: translate(-30px, 30px) scale(0.85); }
+          100% { transform: translate(0px, 0px) scale(1.1); }
+        }
+        @keyframes floatBlob3 {
+          0% { transform: translate(0px, 0px) scale(0.95); }
+          50% { transform: translate(25px, 25px) scale(1.1); }
+          100% { transform: translate(0px, 0px) scale(0.95); }
+        }
+        .animate-greeting {
+          animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-blob-1 {
+          animation: floatBlob1 16s infinite ease-in-out;
+        }
+        .animate-blob-2 {
+          animation: floatBlob2 20s infinite ease-in-out;
+        }
+        .animate-blob-3 {
+          animation: floatBlob3 14s infinite ease-in-out;
+        }
+      `}} />
+
+      {/* Light Header with Premium Blended Gradient & Subtle Dot Grid Pattern (Trend 2026 SaaS UI) */}
+      <div className="pt-12 pb-14 px-6 md:px-12 bg-gradient-to-br from-[#F0F9F8] via-[#F3F8FC] to-[#F5FCF8] border-b border-slate-100/60 shadow-sm relative overflow-hidden">
+        {/* Modern Dot Grid Background Pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-25 pointer-events-none"></div>
+
+        {/* Soft Blended Pastel Aurora Blobs (Extremely subtle, sleek mesh style) */}
+        <div className="absolute top-[-50%] right-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-teal-200/10 to-emerald-200/10 rounded-full blur-[110px] pointer-events-none animate-blob-1"></div>
+        <div className="absolute bottom-[-40%] left-[5%] w-[450px] h-[450px] bg-gradient-to-tr from-sky-200/10 to-cyan-200/10 rounded-full blur-[110px] pointer-events-none animate-blob-2"></div>
+        <div className="absolute top-[0%] left-[40%] w-[380px] h-[380px] bg-gradient-to-r from-emerald-200/8 to-teal-200/8 rounded-full blur-[90px] pointer-events-none animate-blob-3"></div>
+
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 animate-greeting">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-sm text-[#0F766E] border border-slate-200/60 shadow-sm mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E] animate-pulse"></span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider">Quản lý dự án đăng</span>
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight">Dự án của tôi</h1>
-              <p className="text-xs text-slate-400 font-semibold hidden sm:block">Quản lý và cập nhật các dự án đã đăng tuyển</p>
-            </div>
+            
+            <h1 className="text-4xl md:text-5.5xl font-black tracking-tight mb-3 leading-none pb-1 bg-gradient-to-r from-slate-900 via-[#0F766E] to-slate-800 bg-clip-text text-transparent">
+              Dự án của tôi
+            </h1>
+            <p className="text-slate-500 font-semibold text-sm md:text-base max-w-2xl leading-relaxed">
+              Theo dõi tình trạng tuyển dụng, chỉnh sửa nội dung dự án, và duyệt hồ sơ đề xuất từ các Freelancer.
+            </p>
           </div>
-          
-          <Link 
-            to="/post-project" 
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0F766E] text-white rounded-xl text-sm font-extrabold hover:bg-[#0D5E58] hover:shadow-md transition-all active:scale-[0.98] cursor-pointer border-none"
-          >
-            <span className="material-symbols-outlined text-[18px] font-bold">add</span> Đăng dự án mới
-          </Link>
         </div>
       </div>
 

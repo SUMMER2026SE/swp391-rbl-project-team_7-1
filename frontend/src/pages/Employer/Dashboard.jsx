@@ -141,20 +141,23 @@ export default function EmployerDashboard() {
         }
       `}} />
 
-      {/* Light Header with Premium Blended Gradient (Loang màu nhạt thuần xanh siêu xịn) */}
-      <div className="pt-8 pb-10 px-6 md:px-12 bg-gradient-to-br from-teal-50/40 via-[#F8FAFC] to-sky-50/40 border-b border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.02)] relative overflow-hidden">
-        {/* Soft Blended Pastel Blobs (Animated & Vivid - Green/Teal/Sky Theme) */}
-        <div className="absolute top-[-40%] right-[-10%] w-[450px] h-[450px] bg-gradient-to-br from-emerald-300/40 to-teal-200/40 rounded-full blur-[100px] pointer-events-none animate-blob-1"></div>
-        <div className="absolute bottom-[-30%] left-[10%] w-[400px] h-[400px] bg-gradient-to-tr from-teal-200/40 to-sky-200/40 rounded-full blur-[90px] pointer-events-none animate-blob-2"></div>
-        <div className="absolute top-[10%] left-[45%] w-[320px] h-[320px] bg-gradient-to-r from-sky-300/35 to-emerald-100/40 rounded-full blur-[85px] pointer-events-none animate-blob-3"></div>
+      {/* Light Header with Premium Blended Gradient & Subtle Dot Grid Pattern (Trend 2026 SaaS UI) */}
+      <div className="pt-12 pb-14 px-6 md:px-12 bg-gradient-to-br from-[#F0F9F8] via-[#F3F8FC] to-[#F5FCF8] border-b border-slate-100/60 shadow-sm relative overflow-hidden">
+        {/* Modern Dot Grid Background Pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-25 pointer-events-none"></div>
+
+        {/* Soft Blended Pastel Aurora Blobs (Extremely subtle, sleek mesh style) */}
+        <div className="absolute top-[-50%] right-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-teal-200/10 to-emerald-200/10 rounded-full blur-[110px] pointer-events-none animate-blob-1"></div>
+        <div className="absolute bottom-[-40%] left-[5%] w-[450px] h-[450px] bg-gradient-to-tr from-sky-200/10 to-cyan-200/10 rounded-full blur-[110px] pointer-events-none animate-blob-2"></div>
+        <div className="absolute top-[0%] left-[40%] w-[380px] h-[380px] bg-gradient-to-r from-emerald-200/8 to-teal-200/8 rounded-full blur-[90px] pointer-events-none animate-blob-3"></div>
 
         <div className="max-w-7xl mx-auto relative z-10 animate-greeting">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-[#0F766E] border border-teal-100 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E]"></span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-sm text-[#0F766E] border border-slate-200/60 shadow-sm mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E] animate-pulse"></span>
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Không gian tuyển dụng</span>
           </div>
 
-          <h1 className="text-3xl md:text-4.5xl font-black tracking-tight text-slate-800 mb-2">
+          <h1 className="text-4xl md:text-5.5xl font-black tracking-tight mb-3 leading-none pb-1 bg-gradient-to-r from-slate-900 via-[#0F766E] to-slate-800 bg-clip-text text-transparent">
             Chào mừng trở lại, {user?.fullName || 'Doanh nghiệp'}
           </h1>
           <p className="text-slate-500 font-semibold text-sm md:text-base max-w-2xl leading-relaxed">
