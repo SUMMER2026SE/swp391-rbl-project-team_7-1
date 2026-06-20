@@ -118,24 +118,69 @@ export default function MyProjects() {
         </div>
       )}
 
-      {/* Compact Header Area */}
-      <div className="py-5 px-6 md:px-12 bg-white border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-[#0F766E]">
-              <span className="material-symbols-outlined font-semibold">work</span>
+      {/* Styled inline keyframes for text slide-up fade in and floating blobs */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(15px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes floatBlob1 {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -40px) scale(1.15); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes floatBlob2 {
+          0% { transform: translate(0px, 0px) scale(1.1); }
+          50% { transform: translate(-30px, 30px) scale(0.85); }
+          100% { transform: translate(0px, 0px) scale(1.1); }
+        }
+        @keyframes floatBlob3 {
+          0% { transform: translate(0px, 0px) scale(0.95); }
+          50% { transform: translate(25px, 25px) scale(1.1); }
+          100% { transform: translate(0px, 0px) scale(0.95); }
+        }
+        .animate-greeting {
+          animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-blob-1 {
+          animation: floatBlob1 16s infinite ease-in-out;
+        }
+        .animate-blob-2 {
+          animation: floatBlob2 20s infinite ease-in-out;
+        }
+        .animate-blob-3 {
+          animation: floatBlob3 14s infinite ease-in-out;
+        }
+      `}} />
+
+      {/* Light Header with Premium Blended Gradient (Loang màu nhạt thuần xanh siêu xịn) */}
+      <div className="pt-8 pb-10 px-6 md:px-12 bg-gradient-to-br from-teal-50/40 via-[#F8FAFC] to-sky-50/40 border-b border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.02)] relative overflow-hidden">
+        {/* Soft Blended Pastel Blobs (Animated & Vivid - Green/Teal/Sky Theme) */}
+        <div className="absolute top-[-40%] right-[-10%] w-[450px] h-[450px] bg-gradient-to-br from-emerald-300/40 to-teal-200/40 rounded-full blur-[100px] pointer-events-none animate-blob-1"></div>
+        <div className="absolute bottom-[-30%] left-[10%] w-[400px] h-[400px] bg-gradient-to-tr from-teal-200/40 to-sky-200/40 rounded-full blur-[90px] pointer-events-none animate-blob-2"></div>
+        <div className="absolute top-[10%] left-[45%] w-[320px] h-[320px] bg-gradient-to-r from-sky-300/35 to-emerald-100/40 rounded-full blur-[85px] pointer-events-none animate-blob-3"></div>
+
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 animate-greeting">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-[#0F766E] border border-teal-100 mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E]"></span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider">Quản lý dự án đăng</span>
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight">Dự án của tôi</h1>
-              <p className="text-xs text-slate-400 font-semibold hidden sm:block">Quản lý và cập nhật các dự án đã đăng tuyển</p>
-            </div>
+            
+            <h1 className="text-3xl md:text-4.5xl font-black tracking-tight text-slate-800 mb-2">
+              Dự án của tôi
+            </h1>
+            <p className="text-slate-500 font-semibold text-sm md:text-base max-w-2xl leading-relaxed">
+              Theo dõi tình trạng tuyển dụng, chỉnh sửa nội dung dự án, và duyệt hồ sơ đề xuất từ các Freelancer.
+            </p>
           </div>
           
           <Link 
             to="/post-project" 
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0F766E] text-white rounded-xl text-sm font-extrabold hover:bg-[#0D5E58] hover:shadow-md transition-all active:scale-[0.98] cursor-pointer border-none"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0F766E] text-white rounded-2xl text-sm font-black hover:bg-[#0D5E58] shadow-[0_10px_25px_rgba(15,118,110,0.25)] hover:shadow-[0_15px_30px_rgba(15,118,110,0.35)] transition-all active:scale-[0.98] cursor-pointer border-none shrink-0"
           >
-            <span className="material-symbols-outlined text-[18px] font-bold">add</span> Đăng dự án mới
+            <span className="material-symbols-outlined font-black text-[18px]">add</span> Đăng dự án mới
           </Link>
         </div>
       </div>
@@ -151,219 +196,201 @@ export default function MyProjects() {
         )}
 
         {/* Project Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between group hover:shadow-[0_15px_35px_rgba(15,23,42,0.04)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng số dự án</span>
-              <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50">
-                <span className="material-symbols-outlined text-[20px]">work</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50">
+                <span className="material-symbols-outlined text-[22px]">work</span>
               </div>
             </div>
-            <p className="text-3xl font-black text-slate-800 tracking-tight mt-3">{totalProjects}</p>
+            <p className="text-4xl font-black text-slate-800 tracking-tight mt-4">{totalProjects}</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between">
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between group hover:shadow-[0_15px_35px_rgba(15,23,42,0.04)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đang nhận đề xuất</span>
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50">
-                <span className="material-symbols-outlined text-[20px]">bolt</span>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50">
+                <span className="material-symbols-outlined text-[22px]">bolt</span>
               </div>
             </div>
-            <p className="text-3xl font-black text-slate-800 tracking-tight mt-3">{openProjects}</p>
+            <p className="text-4xl font-black text-slate-800 tracking-tight mt-4 text-emerald-600">{openProjects}</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between">
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between group hover:shadow-[0_15px_35px_rgba(15,23,42,0.04)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dự án đã đóng</span>
-              <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100/50">
-                <span className="material-symbols-outlined text-[20px]">lock</span>
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-150">
+                <span className="material-symbols-outlined text-[22px]">lock</span>
               </div>
             </div>
-            <p className="text-3xl font-black text-slate-800 tracking-tight mt-3">{closedProjects}</p>
+            <p className="text-4xl font-black text-slate-800 tracking-tight mt-4 text-slate-500">{closedProjects}</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between">
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between group hover:shadow-[0_15px_35px_rgba(15,23,42,0.04)] transition-all duration-300">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đề xuất chờ duyệt</span>
-              <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50">
-                <span className="material-symbols-outlined text-[20px]">forum</span>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50">
+                <span className="material-symbols-outlined text-[22px]">forum</span>
               </div>
             </div>
-            <p className="text-3xl font-black text-slate-800 tracking-tight mt-3">{pendingProposalsCount}</p>
+            <p className="text-4xl font-black text-slate-800 tracking-tight mt-4 text-indigo-600">{pendingProposalsCount}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.04)] overflow-hidden">
-          
-          {/* Filters Area */}
-          <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-800">Tất cả dự án tuyển dụng</h2>
-              <p className="text-slate-400 text-xs mt-1 font-medium">Lọc theo từ khóa hoặc trạng thái đóng/mở nhận hồ sơ.</p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <div className="relative w-full sm:w-64">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                <input 
-                  type="text" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm kiếm dự án..." 
-                  className="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:bg-white focus:ring-4 focus:ring-teal-50 focus:border-teal-300 transition-all text-slate-800 placeholder:text-slate-400"
-                />
-              </div>
-
-              <div className="flex items-center bg-slate-50 p-1 rounded-xl border border-slate-100 w-full sm:w-auto">
-                <button 
-                  onClick={() => setStatusFilter('ALL')}
-                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'ALL' ? 'bg-white text-[#0F766E] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                >
-                  Tất cả
-                </button>
-                <button 
-                  onClick={() => setStatusFilter('OPEN')}
-                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'OPEN' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                >
-                  Đang mở
-                </button>
-                <button 
-                  onClick={() => setStatusFilter('CLOSED')}
-                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'CLOSED' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                >
-                  Đã đóng
-                </button>
-              </div>
-            </div>
+        {/* Toolbar Filter & Search */}
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.02)] p-6 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div>
+            <h2 className="text-lg font-bold text-slate-800">Dự án tuyển dụng của bạn</h2>
+            <p className="text-slate-400 text-xs mt-0.5 font-semibold">Tìm kiếm nhanh và lọc danh sách dự án.</p>
           </div>
 
-          {/* Table Area */}
-          {loading ? (
-            <div className="text-center py-24 text-slate-500 font-bold flex flex-col items-center justify-center gap-3">
-              <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">Đang tải danh sách...</span>
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="relative w-full sm:w-72">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+              <input 
+                type="text" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm kiếm dự án..." 
+                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:bg-white focus:ring-4 focus:ring-teal-50 focus:border-teal-300 transition-all text-slate-800 placeholder:text-slate-400 font-medium"
+              />
             </div>
-          ) : filteredProjects.length === 0 ? (
-            <div className="text-center py-20 text-slate-400 flex flex-col items-center justify-center px-6">
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
-                <span className="material-symbols-outlined text-[36px]">find_in_page</span>
-              </div>
-              <h3 className="text-lg font-bold text-slate-800 mb-1">Không tìm thấy dự án</h3>
-              <p className="text-sm text-slate-400 max-w-sm mb-6">Không tìm thấy dự án nào khớp với điều kiện lọc.</p>
+
+            <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-100 w-full sm:w-auto shrink-0">
+              <button 
+                onClick={() => setStatusFilter('ALL')}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black transition-all ${statusFilter === 'ALL' ? 'bg-white text-[#0F766E] shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Tất cả
+              </button>
+              <button 
+                onClick={() => setStatusFilter('OPEN')}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black transition-all ${statusFilter === 'OPEN' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Đang mở
+              </button>
+              <button 
+                onClick={() => setStatusFilter('CLOSED')}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black transition-all ${statusFilter === 'CLOSED' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Đã đóng
+              </button>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 text-[11px] uppercase font-bold tracking-wider bg-slate-50/50">
-                    <th className="py-4 px-6 font-bold">Tên dự án</th>
-                    <th className="py-4 px-6 font-bold">Danh mục</th>
-                    <th className="py-4 px-6 font-bold">Ngân sách</th>
-                    <th className="py-4 px-6 font-bold text-center">Trạng thái</th>
-                    <th className="py-4 px-6 font-bold text-center">Số đề xuất</th>
-                    <th className="py-4 px-6 font-bold text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredProjects.map((project) => (
-                    <tr key={project.project_id} className="hover:bg-slate-50/70 transition-all duration-200 group">
-                      <td className="py-5 px-6 max-w-xs md:max-w-sm">
-                        <div className="flex flex-col min-w-0">
-                          <Link 
-                            to={`/project-details/${project.project_id}`} 
-                            className="font-bold text-slate-800 hover:text-[#0F766E] transition-colors truncate text-sm md:text-base"
-                          >
-                            {project.title}
-                          </Link>
-                          <span className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-[12px]">calendar_today</span>
-                            Hạn chót: {project.deadline ? new Date(project.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}
-                          </span>
-                        </div>
-                      </td>
+          </div>
+        </div>
 
-                      <td className="py-5 px-6">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
-                          {project.category_name || 'Lập trình Web'}
-                        </span>
-                      </td>
+        {/* Card Grid Area */}
+        {loading ? (
+          <div className="text-center py-28 text-slate-500 font-bold flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm">Đang tải danh sách dự án...</span>
+          </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-100 py-20 text-slate-400 flex flex-col items-center justify-center px-6 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
+              <span className="material-symbols-outlined text-[36px]">find_in_page</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">Không tìm thấy dự án</h3>
+            <p className="text-sm text-slate-400 max-w-sm mb-6 text-center">Bạn chưa đăng dự án nào phù hợp với bộ lọc tìm kiếm hiện tại.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredProjects.map((project) => (
+              <div 
+                key={project.project_id} 
+                className="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] hover:shadow-[0_20px_45px_rgba(15,118,110,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between relative group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase bg-teal-50 text-[#0F766E] border border-teal-100/50">
+                      {project.category_name || 'Lập trình Web'}
+                    </span>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                      project.status === 'OPEN' 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}>
+                      <span className={`w-1 h-1 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-ping' : 'bg-slate-450'}`}></span>
+                      {project.status === 'OPEN' ? 'Đang mở' : 'Đã đóng'}
+                    </span>
+                  </div>
 
-                      <td className="py-5 px-6">
-                        <div className="flex flex-col">
-                          <span className="font-extrabold text-sm text-[#0F766E]">
-                            {project.budget_max ? `${Math.round(project.budget_max).toLocaleString('vi-VN')} đ` : 'Thương lượng'}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                            {project.budget_type === 'HOURLY' ? 'Theo giờ' : 'Gói cố định'}
-                          </span>
-                        </div>
-                      </td>
+                  <Link 
+                    to={`/project-details/${project.project_id}`} 
+                    className="font-black text-slate-800 hover:text-[#0F766E] transition-colors text-base md:text-lg line-clamp-2 leading-snug mb-3 block"
+                  >
+                    {project.title}
+                  </Link>
 
-                      <td className="py-5 px-6 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide border ${
-                          project.status === 'OPEN' 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                            : 'bg-slate-100 text-slate-500 border-slate-200'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
-                          {project.status === 'OPEN' ? 'Đang mở' : 'Đã đóng'}
-                        </span>
-                      </td>
+                  <div className="flex items-center gap-4 text-[11px] text-slate-400 font-bold mb-4 uppercase tracking-wider">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                      Hạn: {project.deadline ? new Date(project.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}
+                    </span>
+                  </div>
 
-                      <td className="py-5 px-6 text-center">
+                  {/* Budget card section */}
+                  <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 my-4 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Ngân sách</span>
+                      <p className="text-base font-black text-[#0F766E] mt-0.5">
+                        {project.budget_max ? `${Math.round(project.budget_max).toLocaleString('vi-VN')} đ` : 'Thương lượng'}
+                      </p>
+                    </div>
+                    <span className="text-[9px] font-extrabold px-2.5 py-1 bg-white border border-slate-150 text-slate-500 rounded-lg uppercase tracking-wider shadow-sm">
+                      {project.budget_type === 'HOURLY' ? 'Theo giờ' : 'Gói cố định'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
+                  <Link 
+                    to={`/manage-proposals/${project.project_id}`} 
+                    className="flex items-center gap-2 group/prop"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-100/50 flex items-center justify-center font-black text-[#0F766E] text-xs shadow-inner group-hover/prop:bg-[#0F766E] group-hover/prop:text-white transition-all">
+                      {project.proposalsCount || 0}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-slate-400 group-hover/prop:text-[#0F766E] transition-colors uppercase tracking-wider">Đề xuất</span>
+                      <span className="text-[9px] font-bold text-slate-300">Xem danh sách</span>
+                    </div>
+                  </Link>
+
+                  <div className="flex items-center gap-1.5">
+                    {project.status === 'OPEN' && (
+                      <>
                         <Link 
-                          to={`/manage-proposals/${project.project_id}`}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 hover:bg-teal-50 hover:text-[#0F766E] text-slate-800 text-xs font-black shadow-inner transition-colors"
+                          to={`/edit-project/${project.project_id}`} 
+                          className="w-8.5 h-8.5 rounded-xl border border-slate-100 hover:border-teal-200 text-slate-400 hover:text-[#0F766E] hover:bg-teal-50/30 transition-all flex items-center justify-center"
+                          title="Chỉnh sửa dự án"
                         >
-                          {project.proposalsCount || 0}
+                          <span className="material-symbols-outlined text-[18px]">edit</span>
                         </Link>
-                      </td>
+                        <button 
+                          onClick={() => handleCloseProject(project.project_id)}
+                          className="w-8.5 h-8.5 rounded-xl border border-slate-100 hover:border-amber-200 text-slate-400 hover:text-amber-600 hover:bg-amber-50/50 transition-all flex items-center justify-center cursor-pointer bg-transparent"
+                          title="Đóng dự án"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">cancel</span>
+                        </button>
+                      </>
+                    )}
 
-                      <td className="py-5 px-6 text-right">
-                        <div className="flex justify-end items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                          <Link 
-                            to={`/manage-proposals/${project.project_id}`} 
-                            className="px-3.5 py-2 bg-teal-50 text-[#0F766E] font-bold text-xs rounded-xl hover:bg-[#0F766E] hover:text-white transition-all shadow-sm flex items-center gap-1 border border-teal-100/50"
-                          >
-                            <span className="material-symbols-outlined text-[14px]">group</span>
-                            Hồ sơ ứng tuyển
-                          </Link>
-
-                          {project.status === 'OPEN' && (
-                            <>
-                              <Link 
-                                to={`/edit-project/${project.project_id}`} 
-                                className="p-2 text-slate-400 hover:text-[#0F766E] hover:bg-slate-100 rounded-xl transition-all flex items-center justify-center"
-                                title="Chỉnh sửa dự án"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">edit</span>
-                              </Link>
-                              <button 
-                                onClick={() => handleCloseProject(project.project_id)}
-                                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all flex items-center justify-center cursor-pointer border-none bg-transparent"
-                                title="Đóng dự án"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">cancel</span>
-                              </button>
-                            </>
-                          )}
-
-                          <button 
-                            onClick={() => handleDeleteProject(project.project_id)}
-                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all flex items-center justify-center cursor-pointer border-none bg-transparent"
-                            title="Xóa dự án"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                    <button 
+                      onClick={() => handleDeleteProject(project.project_id)}
+                      className="w-8.5 h-8.5 rounded-xl border border-slate-100 hover:border-rose-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50/50 transition-all flex items-center justify-center cursor-pointer bg-transparent"
+                      title="Xóa dự án"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );
