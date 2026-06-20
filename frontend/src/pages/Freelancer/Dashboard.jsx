@@ -449,9 +449,9 @@ export default function FreelancerDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
                 )
               )}
-            </div>
           </div>
 
           {/* Recent Messages / Inbox (Right Column) */}

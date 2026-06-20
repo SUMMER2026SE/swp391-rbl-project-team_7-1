@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
-=======
-import { projectService } from '../../services/projectService';
->>>>>>> e45152252214d3f3eafc10c72970fd1bfb26ce29
 
 export default function EmployerDashboard() {
   const { user } = useAuth();
@@ -21,32 +17,12 @@ export default function EmployerDashboard() {
 
   const token = localStorage.getItem('token');
 
-<<<<<<< HEAD
-=======
-  const fetchMyProjects = async () => {
-    try {
-      const data = await projectService.getEmployerProjects();
-      if (data && data.success) {
-        setProjects(data.projects || []);
-      } else {
-        setErrorMsg(data.message || 'Không thể tải danh sách dự án.');
-      }
-    } catch (err) {
-      console.error('Error fetching employer projects:', err);
-      setErrorMsg('Lỗi kết nối server.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
->>>>>>> e45152252214d3f3eafc10c72970fd1bfb26ce29
   useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
     }
 
-<<<<<<< HEAD
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
@@ -91,41 +67,6 @@ export default function EmployerDashboard() {
         setErrorMsg('Không thể tải một số dữ liệu bảng điều khiển.');
       } finally {
         setLoading(false);
-=======
-  const handleCloseProject = async (projectId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn đóng dự án này? Sau khi đóng, freelancer sẽ không thể gửi đề xuất mới.')) {
-      return;
-    }
-
-    try {
-      const data = await projectService.closeProject(projectId);
-      if (data && data.success) {
-        setToastMsg('Đã đóng dự án thành công!');
-        fetchMyProjects(); // Reload list
-        setTimeout(() => setToastMsg(''), 3000);
-      } else {
-        alert(data.message || 'Lỗi khi đóng dự án.');
-      }
-    } catch (err) {
-      console.error('Error closing project:', err);
-      alert('Lỗi mạng khi thực hiện đóng dự án.');
-    }
-  };
-
-  const handleDeleteProject = async (projectId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác.')) {
-      return;
-    }
-
-    try {
-      const data = await projectService.deleteProject(projectId);
-      if (data && data.success) {
-        setToastMsg('Đã xóa dự án thành công!');
-        fetchMyProjects(); // Reload list
-        setTimeout(() => setToastMsg(''), 3000);
-      } else {
-        alert(data.message || 'Lỗi khi xóa dự án.');
->>>>>>> e45152252214d3f3eafc10c72970fd1bfb26ce29
       }
     };
 
@@ -164,7 +105,8 @@ export default function EmployerDashboard() {
       )}
 
       {/* Styled inline keyframes for text slide-up fade in and floating blobs */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes slideUpFade {
           0% { opacity: 0; transform: translateY(15px); }
           100% { opacity: 1; transform: translateY(0); }
@@ -205,13 +147,13 @@ export default function EmployerDashboard() {
         <div className="absolute top-[-40%] right-[-10%] w-[450px] h-[450px] bg-gradient-to-br from-emerald-300/40 to-teal-200/40 rounded-full blur-[100px] pointer-events-none animate-blob-1"></div>
         <div className="absolute bottom-[-30%] left-[10%] w-[400px] h-[400px] bg-gradient-to-tr from-teal-200/40 to-sky-200/40 rounded-full blur-[90px] pointer-events-none animate-blob-2"></div>
         <div className="absolute top-[10%] left-[45%] w-[320px] h-[320px] bg-gradient-to-r from-sky-300/35 to-emerald-100/40 rounded-full blur-[85px] pointer-events-none animate-blob-3"></div>
-        
+
         <div className="max-w-7xl mx-auto relative z-10 animate-greeting">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-[#0F766E] border border-teal-100 mb-3">
             <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E]"></span>
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Không gian tuyển dụng</span>
           </div>
-          
+
           <h1 className="text-3xl md:text-4.5xl font-black tracking-tight text-slate-800 mb-2">
             Chào mừng trở lại, {user?.fullName || 'Doanh nghiệp'}
           </h1>
@@ -223,7 +165,7 @@ export default function EmployerDashboard() {
 
       {/* Main Workspace */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 pt-10 relative z-20">
-        
+
         {errorMsg && (
           <div className="mb-8 p-4 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl text-sm flex items-center gap-2 font-medium">
             <span className="material-symbols-outlined text-[20px]">error</span>
@@ -233,7 +175,7 @@ export default function EmployerDashboard() {
 
         {/* Key Metrics Bento Grid (All clickable) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          
+
           {/* Card 1: Click to My Projects */}
           <Link to="/my-projects" className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
             <div>
@@ -307,7 +249,7 @@ export default function EmployerDashboard() {
 
         {/* Dashboard split content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          
+
           {/* Active Hirings List (Left Column) */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.03)] overflow-hidden">
@@ -335,22 +277,21 @@ export default function EmployerDashboard() {
                     <div key={contract.contract_id} className="p-6 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                            contract.status === 'COMPLETED' 
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${contract.status === 'COMPLETED'
                               ? 'bg-slate-100 text-slate-500 border-slate-200'
                               : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                          }`}>
+                            }`}>
                             {contract.status === 'COMPLETED' ? 'Đã nghiệm thu' : 'Đang thực hiện'}
                           </span>
                           <span className="text-slate-400 text-xs font-semibold">
                             Mã HĐ: #{contract.contract_id}
                           </span>
                         </div>
-                        
+
                         <h3 className="font-extrabold text-slate-800 text-base mb-1 truncate">
                           {contract.contract_title || contract.project_title}
                         </h3>
-                        
+
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400 font-semibold">
                           <span className="flex items-center gap-1 text-[#0F766E] font-bold">
                             <span className="material-symbols-outlined text-[16px]">payments</span>
@@ -363,7 +304,7 @@ export default function EmployerDashboard() {
 
                       <div className="shrink-0 flex items-center gap-2">
                         {contract.status !== 'COMPLETED' ? (
-                          <Link 
+                          <Link
                             to={`/review-submission/${contract.contract_id}`}
                             className="px-4 py-2 bg-teal-50 text-[#0F766E] border border-teal-100 rounded-xl text-xs font-bold hover:bg-[#0F766E] hover:text-white transition-all flex items-center gap-1"
                           >
@@ -410,8 +351,8 @@ export default function EmployerDashboard() {
               ) : (
                 <div className="divide-y divide-slate-50">
                   {conversations.slice(0, 4).map((conv) => (
-                    <div 
-                      key={conv.conversationId} 
+                    <div
+                      key={conv.conversationId}
                       onClick={() => navigate('/messages-employer')}
                       className="p-4 hover:bg-slate-50/70 cursor-pointer transition-all duration-200 flex items-center gap-3.5 relative group border-l-2 border-transparent hover:border-[#0F766E]"
                     >
@@ -423,12 +364,12 @@ export default function EmployerDashboard() {
                           <div className="w-3.5 h-3.5 bg-rose-500 border-2 border-white rounded-full absolute -top-1 -right-1 animate-pulse z-10"></div>
                         )}
                       </div>
-                      
+
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-black text-slate-800 group-hover:text-[#0F766E] transition-colors truncate">{conv.partnerName}</h4>
                           <span className="text-[9px] text-slate-400 font-bold shrink-0 ml-2">
-                            {conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : ''}
+                            {conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}
                           </span>
                         </div>
                         <p className={`text-xs truncate mt-0.5 ${conv.unreadCount > 0 ? 'text-slate-800 font-bold' : 'text-slate-400 font-medium'}`}>
