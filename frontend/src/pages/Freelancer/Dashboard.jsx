@@ -204,30 +204,28 @@ export default function FreelancerDashboard() {
         )}
 
         {/* Key Metrics Bento Grid (All clickable) */}
-            {/* Metric 1: Click to active contracts */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          
+          {/* Metric 1: Click to active contracts */}
           <div 
             onClick={() => {
               setActiveTab('contracts');
               document.getElementById('dashboard-lists-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className={`rounded-2xl p-6 border transition-all duration-300 flex flex-col justify-between cursor-pointer ${
-              activeTab === 'contracts'
-                ? 'bg-teal-50/30 border-teal-200 shadow-[0_12px_30px_rgba(15,118,110,0.08)] -translate-y-1'
-                : 'bg-white border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.05)] hover:-translate-y-1'
-            }`}
+            className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
           >
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hợp đồng hoạt động</span>
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Hợp đồng hoạt động</span>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50 group-hover:bg-blue-100/50 transition-colors">
                   <span className="material-symbols-outlined text-[22px]">work_history</span>
                 </div>
               </div>
               <p className="text-4xl font-black text-slate-800 tracking-tight">{activeContractsCount}</p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-medium">
-              <span>Đang trong tiến trình</span>
-              <span className="text-blue-600 font-bold">Active</span>
+            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-bold group-hover:text-blue-600 transition-colors">
+              <span>Xem danh sách</span>
+              <span className="material-symbols-outlined text-[16px]">east</span>
             </div>
           </div>
 
@@ -237,22 +235,18 @@ export default function FreelancerDashboard() {
               setActiveTab('proposals');
               document.getElementById('dashboard-lists-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className={`rounded-2xl p-6 border transition-all duration-300 flex flex-col justify-between cursor-pointer ${
-              activeTab === 'proposals'
-                ? 'bg-teal-50/30 border-teal-200 shadow-[0_12px_30px_rgba(15,118,110,0.08)] -translate-y-1'
-                : 'bg-white border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.05)] hover:-translate-y-1'
-            }`}
+            className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
           >
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đề xuất đã nộp</span>
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Đề xuất đã nộp</span>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50 group-hover:bg-emerald-100/50 transition-colors">
                   <span className="material-symbols-outlined text-[22px]">description</span>
                 </div>
               </div>
               <p className="text-4xl font-black text-slate-800 tracking-tight">{submittedProposalsCount}</p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-bold">
+            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-bold group-hover:text-emerald-600 transition-colors">
               <span>Xem danh sách đề xuất</span>
               <span className="material-symbols-outlined text-[16px]">east</span>
             </div>
@@ -276,17 +270,23 @@ export default function FreelancerDashboard() {
           </Link>
 
           {/* Metric 4: Click to contracts (Completed contracts) */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.05)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+          <div 
+            onClick={() => {
+              setActiveTab('contracts');
+              document.getElementById('dashboard-lists-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer group"
+          >
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dự án hoàn thành</span>
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Dự án hoàn thành</span>
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50 group-hover:bg-indigo-100/50 transition-colors">
                   <span className="material-symbols-outlined text-[22px]">check_circle</span>
                 </div>
               </div>
               <p className="text-4xl font-black text-slate-800 tracking-tight">{completedContractsCount}</p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-medium">
+            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-bold group-hover:text-indigo-600 transition-colors">
               <span>Đã hoàn tất thanh toán</span>
               <span className="text-indigo-600 font-bold">Done</span>
             </div>
@@ -300,33 +300,29 @@ export default function FreelancerDashboard() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.03)] overflow-hidden">
               <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-6 border-b border-slate-100 sm:border-none pb-3 sm:pb-0">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Hợp đồng &amp; Đề xuất của tôi</h2>
+                  <p className="text-slate-400 text-xs mt-0.5 font-medium">Theo dõi các hợp đồng đang thực hiện và các đề xuất ứng tuyển.</p>
+                </div>
+                
+                <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-100 shrink-0 self-start sm:self-auto">
                   <button 
                     onClick={() => setActiveTab('contracts')}
-                    className={`pb-1 text-base md:text-lg font-bold transition-all relative ${
-                      activeTab === 'contracts' ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                      activeTab === 'contracts' ? 'bg-white text-[#0F766E] shadow-sm' : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Hợp đồng hiện tại ({contracts.length})
-                    {activeTab === 'contracts' && (
-                      <span className="absolute bottom-[-10px] left-0 right-0 h-0.5 bg-[#0F766E] rounded-full"></span>
-                    )}
+                    Hợp đồng ({contracts.length})
                   </button>
                   <button 
                     onClick={() => setActiveTab('proposals')}
-                    className={`pb-1 text-base md:text-lg font-bold transition-all relative ${
-                      activeTab === 'proposals' ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                      activeTab === 'proposals' ? 'bg-white text-[#0F766E] shadow-sm' : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
                     Đề xuất đã nộp ({submittedProposalsCount})
-                    {activeTab === 'proposals' && (
-                      <span className="absolute bottom-[-10px] left-0 right-0 h-0.5 bg-[#0F766E] rounded-full"></span>
-                    )}
                   </button>
                 </div>
-                <Link to="/browse-projects" className="text-xs font-bold text-[#0F766E] hover:underline flex items-center gap-1 self-start sm:self-auto">
-                  Khám phá dự án mới <span className="material-symbols-outlined text-[14px]">east</span>
-                </Link>
               </div>
 
               {loading ? (
@@ -340,7 +336,7 @@ export default function FreelancerDashboard() {
                     <span className="material-symbols-outlined text-[48px] text-slate-300 mb-3">work_off</span>
                     <p className="text-sm font-semibold text-slate-500">Bạn chưa có hợp đồng nào đang chạy.</p>
                     <p className="text-xs text-slate-400 mt-1 max-w-sm mb-4">Hãy gửi đề xuất nộp bài trên các dự án có sẵn để bắt đầu nhận việc.</p>
-                    <Link to="/browse-projects" className="px-4 py-2 bg-[#0F766E] text-white rounded-xl text-xs font-bold hover:bg-[#0D5E58] transition-all">
+                    <Link to="/browse-projects" className="px-4 py-2 bg-teal-50 text-[#0F766E] border border-teal-100 rounded-xl text-xs font-bold hover:bg-[#0F766E] hover:text-white transition-all">
                       Tìm kiếm việc làm
                     </Link>
                   </div>
@@ -380,7 +376,7 @@ export default function FreelancerDashboard() {
                           {contract.status !== 'COMPLETED' ? (
                             <Link 
                               to={`/submit-work/${contract.contract_id}`}
-                              className="px-4 py-2 bg-[#0F766E] text-white rounded-xl text-xs font-bold hover:bg-[#0D5E58] hover:shadow-md transition-all flex items-center gap-1"
+                              className="px-4 py-2 bg-teal-50 text-[#0F766E] border border-teal-100 rounded-xl text-xs font-bold hover:bg-[#0F766E] hover:text-white transition-all flex items-center gap-1"
                             >
                               <span className="material-symbols-outlined text-[14px]">send</span>
                               Nộp sản phẩm
@@ -401,7 +397,7 @@ export default function FreelancerDashboard() {
                     <span className="material-symbols-outlined text-[48px] text-slate-300 mb-3">description</span>
                     <p className="text-sm font-semibold text-slate-500">Bạn chưa gửi đề xuất nào.</p>
                     <p className="text-xs text-slate-400 mt-1 max-w-sm mb-4">Gửi đề xuất ứng tuyển trên các dự án mở để nhận công việc mong muốn.</p>
-                    <Link to="/browse-projects" className="px-4 py-2 bg-[#0F766E] text-white rounded-xl text-xs font-bold hover:bg-[#0D5E58] transition-all">
+                    <Link to="/browse-projects" className="px-4 py-2 bg-teal-50 text-[#0F766E] border border-teal-100 rounded-xl text-xs font-bold hover:bg-[#0F766E] hover:text-white transition-all">
                       Khám phá dự án
                     </Link>
                   </div>
@@ -452,6 +448,7 @@ export default function FreelancerDashboard() {
                   </div>
                 )
               )}
+            </div>
           </div>
 
           {/* Recent Messages / Inbox (Right Column) */}
