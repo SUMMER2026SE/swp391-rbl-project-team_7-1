@@ -83,7 +83,13 @@ export default function ProjectDetails() {
         {/* Breadcrumbs & Back */}
         <div className="mb-6 flex items-center justify-between w-full">
           <button 
-            onClick={() => navigate('/browse-projects')} 
+            onClick={() => {
+              if (currentUser?.role === 'EMPLOYER') {
+                navigate('/my-projects');
+              } else {
+                navigate('/browse-projects');
+              }
+            }} 
             className="flex items-center gap-2 text-slate-500 hover:text-teal-700 transition-colors text-sm font-semibold cursor-pointer bg-transparent border-none"
           >
             <span className="material-symbols-outlined text-[20px]">arrow_back</span> Quay lại danh sách dự án
