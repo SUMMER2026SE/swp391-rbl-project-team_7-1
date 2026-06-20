@@ -63,7 +63,7 @@ export default function PostProject({ editMode = false }) {
             setCategoryId(p.category_id ? p.category_id.toString() : '');
             setDescription(p.description);
             setSkills(p.skills || []);
-            setBudgetType(p.budget_type?.toLowerCase() === 'hourly' ? 'hourly' : 'fixed');
+            setBudgetType('fixed');
             setBudgetAmount(p.budget_max ? Math.round(p.budget_max).toString() : '');
             setRequiredFreelancerCount(p.required_freelancer_count || 1);
             if (p.deadline) {
@@ -393,35 +393,21 @@ export default function PostProject({ editMode = false }) {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/*  Budget Type & Amount  */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-slate-800">Ngân sách *</label>
-                <div className="flex gap-2 mb-2">
-                  <button 
-                    type="button"
-                    onClick={() => setBudgetType('fixed')}
-                    className={`flex-1 flex items-center justify-center px-4 py-2 border rounded-2xl font-semibold transition-colors cursor-pointer ${budgetType === 'fixed' ? 'border-[#0F766E] bg-[#0F766E]/5 text-[#0F766E] font-bold' : 'border-slate-200 text-slate-600 bg-white hover:bg-slate-50'}`}
-                  >
-                    Giá cố định
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setBudgetType('hourly')}
-                    className={`flex-1 flex items-center justify-center px-4 py-2 border rounded-2xl font-semibold transition-colors cursor-pointer ${budgetType === 'hourly' ? 'border-[#0F766E] bg-[#0F766E]/5 text-[#0F766E] font-bold' : 'border-slate-200 text-slate-600 bg-white hover:bg-slate-50'}`}
-                  >
-                    Theo giờ
-                  </button>
-                </div>
+                <label className="block text-sm font-semibold text-slate-800" htmlFor="budgetAmount">Ngân sách trọn gói *</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0F766E] font-bold text-sm">VNĐ</span>
                   <input 
                     className="w-full pl-14 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all text-base text-[#0F766E] focus:outline-none font-bold" 
-                    placeholder="Ví dụ: 10000000" 
-                    type="number"
-                    min="1"
+                    id="budgetAmount"
+                    placeholder="Ví dụ: 10.000.000" 
+                    type="text"
                     required
-                    value={budgetAmount}
-                    onChange={(e) => setBudgetAmount(e.target.value)}
+                    value={budgetAmount ? budgetAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
+                    onChange={(e) => {
+                      const rawVal = e.target.value.replace(/\./g, '').replace(/\D/g, '');
+                      setBudgetAmount(rawVal);
+                    }}
                   />
                 </div>
               </div>

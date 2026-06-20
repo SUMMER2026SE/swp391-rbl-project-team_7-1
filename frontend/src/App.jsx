@@ -59,6 +59,7 @@ import ProjectDetails from './pages/Public/ProjectDetails';
 import ReviewSubmission from './pages/Employer/ReviewSubmission';
 import RevisionRequested from './pages/Employer/RevisionRequested';
 import SubmitProposal from './pages/Freelancer/SubmitProposal';
+import EditProposal from './pages/Freelancer/EditProposal';
 import SubmitWork from './pages/Freelancer/SubmitWork';
 import Projects from './pages/Public/Projects'; // Original projects list
 import Profile from './pages/Public/Profile'; // Public profile page
@@ -120,6 +121,7 @@ export default function App() {
         <Route path="/messages-freelancer" element={<MessagesFreelancer />} />
         <Route path="/submit-work/:contractId" element={<SubmitWork />} />
         <Route path="/submit-proposal/:projectId" element={<SubmitProposal />} />
+        <Route path="/edit-proposal/:proposalId" element={<EditProposal />} />
         {/* Profile is always accessible when logged in (DashboardLayout handles auth) */}
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:id" element={<Profile />} />

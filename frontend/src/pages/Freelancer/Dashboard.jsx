@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
+import { proposalService } from '../../services/proposalService';
 
 export default function FreelancerDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [contracts, setContracts] = useState([]);
   const [proposals, setProposals] = useState([]);
@@ -15,88 +17,117 @@ export default function FreelancerDashboard() {
   const [activeTab, setActiveTab] = useState('contracts');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
 
   const token = localStorage.getItem('token');
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // 1. Fetch active contracts
+      const contractRes = await fetch('http://localhost:5000/api/contracts', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const contractData = await contractRes.json();
+      if (contractRes.ok && contractData.success) {
+        setContracts(contractData.contracts || []);
+      }
+
+      // 2. Fetch proposals
+      const freelancerId = user?.userId || user?.user_id || user?.id;
+      if (freelancerId) {
+        const proposalRes = await fetch(`http://localhost:5000/api/proposals?freelancerId=${freelancerId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const proposalData = await proposalRes.json();
+        if (proposalRes.ok && proposalData.success) {
+          setProposals(proposalData.proposals || []);
+        }
+      }
+
+      // 3. Fetch Wallet balance
+      const walletRes = await fetch('http://localhost:5000/api/wallet/balance', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const walletData = await walletRes.json();
+      if (walletRes.ok) {
+        setBalance(walletData.balance || 0);
+      }
+
+      // 4. Fetch recent messages
+      try {
+        const chatData = await chatService.getConversations('FREELANCER');
+        setConversations(chatData.conversations || []);
+      } catch (chatErr) {
+        console.error('Error fetching chat conversations in dashboard:', chatErr);
+      }
+
+      // 5. Fetch Profile completion dynamically
+      try {
+        const profileRes = await fetch('http://localhost:5000/api/user/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const profileData = await profileRes.json();
+        if (profileRes.ok && profileData.user) {
+          const u = profileData.user;
+          let ex = {};
+          try { ex = u.bio_extras ? JSON.parse(u.bio_extras) : {}; } catch {}
+          const fields = [
+            !!u.full_name, !!u.email, !!u.phone, !!u.bio, !!u.avatar_url,
+            !!ex.title, !!ex.hourlyRate, ex.skills?.length > 0,
+            !!ex.portfolio
+          ];
+          const pct = Math.round(fields.filter(Boolean).length / fields.length * 100);
+          setProfileCompletion(pct || 0);
+        }
+      } catch (profileErr) {
+        console.error('Error fetching profile completion score:', profileErr);
+      }
+
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setErrorMsg('Không thể tải một số dữ liệu bảng điều khiển.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
     }
-
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        // 1. Fetch active contracts
-        const contractRes = await fetch('http://localhost:5000/api/contracts', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const contractData = await contractRes.json();
-        if (contractRes.ok && contractData.success) {
-          setContracts(contractData.contracts || []);
-        }
-
-        // 2. Fetch proposals
-        if (user?.id) {
-          const proposalRes = await fetch(`http://localhost:5000/api/proposals?freelancerId=${user.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const proposalData = await proposalRes.json();
-          if (proposalRes.ok && proposalData.success) {
-            setProposals(proposalData.proposals || []);
-          }
-        }
-
-        // 3. Fetch Wallet balance
-        const walletRes = await fetch('http://localhost:5000/api/wallet/balance', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const walletData = await walletRes.json();
-        if (walletRes.ok) {
-          setBalance(walletData.balance || 0);
-        }
-
-        // 4. Fetch recent messages
-        try {
-          const chatData = await chatService.getConversations('FREELANCER');
-          setConversations(chatData.conversations || []);
-        } catch (chatErr) {
-          console.error('Error fetching chat conversations in dashboard:', chatErr);
-        }
-
-        // 5. Fetch Profile completion dynamically
-        try {
-          const profileRes = await fetch('http://localhost:5000/api/user/profile', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const profileData = await profileRes.json();
-          if (profileRes.ok && profileData.user) {
-            const u = profileData.user;
-            let ex = {};
-            try { ex = u.bio_extras ? JSON.parse(u.bio_extras) : {}; } catch {}
-            const fields = [
-              !!u.full_name, !!u.email, !!u.phone, !!u.bio, !!u.avatar_url,
-              !!ex.title, !!ex.hourlyRate, ex.skills?.length > 0,
-              !!ex.portfolio
-            ];
-            const pct = Math.round(fields.filter(Boolean).length / fields.length * 100);
-            setProfileCompletion(pct || 0);
-          }
-        } catch (profileErr) {
-          console.error('Error fetching profile completion score:', profileErr);
-        }
-
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setErrorMsg('Không thể tải một số dữ liệu bảng điều khiển.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
-  }, [token, user?.id, navigate]);
+
+    // Load message from redirect state if available
+    if (location.state?.message) {
+      setToastMsg(location.state.message);
+      // Clear navigation state so it doesn't trigger again
+      navigate(location.pathname, { replace: true });
+      setTimeout(() => setToastMsg(''), 4000);
+    }
+  }, [token, user?.userId, user?.user_id, user?.id, navigate]);
+
+  const handleWithdrawProposal = async (proposalId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn rút đề xuất này? Thao tác này không thể hoàn tác.')) {
+      return;
+    }
+
+    try {
+      const data = await proposalService.deleteProposal(proposalId);
+      if (data.success) {
+        setToastMsg('Đã rút đề xuất thành công!');
+        fetchDashboardData();
+        setTimeout(() => setToastMsg(''), 4000);
+      } else {
+        alert(data.message || 'Lỗi khi rút đề xuất.');
+      }
+    } catch (err) {
+      console.error('Error withdrawing proposal:', err);
+      alert('Lỗi mạng khi thực hiện rút đề xuất.');
+    }
+  };
 
   const getPastelColor = (name) => {
     if (!name) return 'bg-teal-50 text-teal-700 border-teal-100';
@@ -113,6 +144,19 @@ export default function FreelancerDashboard() {
     return colors[charCode % colors.length];
   };
 
+  const parseProposalCoverLetter = (text) => {
+    if (!text) return { coverLetter: '', attachmentUrl: null };
+    const marker = '[Tệp đính kèm]:';
+    const index = text.indexOf(marker);
+    if (index !== -1) {
+      let coverLetter = text.substring(0, index);
+      coverLetter = coverLetter.replace(/-{10,}\s*$/, '').trim();
+      const attachmentUrl = text.substring(index + marker.length).trim();
+      return { coverLetter, attachmentUrl };
+    }
+    return { coverLetter: text, attachmentUrl: null };
+  };
+
   // Metrics
   const activeContractsCount = contracts.filter(c => c.status === 'ACTIVE').length;
   const completedContractsCount = contracts.filter(c => c.status === 'COMPLETED').length;
@@ -121,6 +165,12 @@ export default function FreelancerDashboard() {
 
   return (
     <main className="flex-1 min-h-screen pb-20 md:pb-10 bg-[#F8FAFC]">
+      {toastMsg && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white/95 backdrop-blur-md text-slate-800 px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(15,118,110,0.15)] border border-teal-100 max-w-sm animate-[bounce_1s_infinite]">
+          <span className="material-symbols-outlined text-[24px] text-teal-600 font-bold">check_circle</span>
+          <span className="font-bold text-sm text-slate-700">{toastMsg}</span>
+        </div>
+      )}
       
       {/* Styled inline keyframes for text slide-up fade in and floating blobs */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -406,48 +456,100 @@ export default function FreelancerDashboard() {
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
-                    {proposals.map((prop) => (
-                      <div key={prop.proposal_id} className="p-6 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                              prop.status === 'APPROVED' 
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                                : prop.status === 'REJECTED'
-                                ? 'bg-rose-50 text-rose-700 border-rose-100'
-                                : 'bg-amber-50 text-amber-700 border-amber-100'
-                            }`}>
-                              {prop.status === 'APPROVED' ? 'Chấp nhận' : prop.status === 'REJECTED' ? 'Từ chối' : 'Chờ duyệt'}
-                            </span>
-                            <span className="text-slate-400 text-xs font-semibold">
-                              Mã đề xuất: #{prop.proposal_id}
-                            </span>
-                          </div>
-                          
-                          <h3 className="font-extrabold text-slate-800 text-base mb-1 truncate">
-                            {prop.project_title}
-                          </h3>
-                          
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400 font-semibold">
-                            <span className="flex items-center gap-1 text-[#0F766E] font-bold">
-                              <span className="material-symbols-outlined text-[16px]">payments</span>
-                              Chào giá: {Math.round(prop.bid_amount).toLocaleString('vi-VN')} đ
-                            </span>
-                            <span>•</span>
-                            <span>Gửi ngày: {new Date(prop.created_at).toLocaleDateString('vi-VN')}</span>
-                          </div>
-                        </div>
+                    {proposals.map((prop) => {
+                      const { coverLetter, attachmentUrl } = parseProposalCoverLetter(prop.cover_letter);
+                      const price = prop.proposed_price || prop.proposedPrice || prop.bid_amount || prop.bidAmount || 0;
 
-                        <div className="shrink-0 flex items-center gap-2">
-                          <Link 
-                            to={`/project-details/${prop.project_id || prop.projectId}`}
-                            className="px-4 py-2 bg-teal-50 text-[#0F766E] border border-teal-100 rounded-xl text-xs font-bold hover:bg-[#0F766E] hover:text-white transition-all"
-                          >
-                            Chi tiết dự án
-                          </Link>
+                      return (
+                        <div key={prop.proposal_id} className="p-6 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                                prop.status === 'ACCEPTED' || prop.status === 'APPROVED'
+                                  ? prop.contract_id
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : prop.status === 'REJECTED'
+                                  ? 'bg-rose-50 text-rose-700 border-rose-100'
+                                  : 'bg-amber-50 text-amber-700 border-amber-100'
+                              }`}>
+                                {prop.status === 'ACCEPTED' || prop.status === 'APPROVED'
+                                  ? prop.contract_id
+                                    ? 'Đã thuê'
+                                    : 'Chờ ký quỹ'
+                                  : prop.status === 'REJECTED'
+                                  ? 'Từ chối'
+                                  : 'Chờ duyệt'}
+                              </span>
+                              <span className="text-slate-400 text-xs font-semibold">
+                                Mã đề xuất: #{prop.proposal_id}
+                              </span>
+                            </div>
+                            
+                            <h3 className="font-extrabold text-slate-800 text-base mb-1 truncate">
+                              {prop.project_title}
+                            </h3>
+
+                            {coverLetter && (
+                              <p className="text-slate-500 text-xs mt-1 max-w-xl leading-relaxed">
+                                <strong className="text-slate-700">Thư giới thiệu:</strong> {coverLetter.length > 120 ? `${coverLetter.substring(0, 120)}...` : coverLetter}
+                              </p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2.5 text-xs text-slate-400 font-semibold">
+                              <span className="flex items-center gap-1 text-[#0F766E] font-bold">
+                                <span className="material-symbols-outlined text-[16px]">payments</span>
+                                Chi phí đề xuất: {Math.round(price).toLocaleString('vi-VN')} đ
+                              </span>
+                              <span>•</span>
+                              <span>Gửi ngày: {new Date(prop.created_at).toLocaleDateString('vi-VN')}</span>
+                              {attachmentUrl && (
+                                <>
+                                  <span>•</span>
+                                  <a 
+                                    href={attachmentUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-0.5 text-teal-600 hover:text-teal-800 hover:underline font-bold"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">description</span>
+                                    Tệp đính kèm
+                                  </a>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="shrink-0 flex items-center gap-2">
+                            <Link 
+                              to={`/project-details/${prop.project_id || prop.projectId}`}
+                              className="px-4 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-100 hover:text-slate-900 transition-all"
+                            >
+                              Chi tiết dự án
+                            </Link>
+
+                            {prop.status !== 'APPROVED' && prop.status !== 'REJECTED' && (
+                              <>
+                                <Link 
+                                  to={`/edit-proposal/${prop.proposal_id}`}
+                                  className="px-4 py-2 bg-teal-50 text-[#0F766E] border border-teal-100 rounded-xl text-xs font-bold hover:bg-[#0F766E] hover:text-white transition-all flex items-center gap-1"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">edit</span>
+                                  Chỉnh sửa
+                                </Link>
+                                <button 
+                                  onClick={() => handleWithdrawProposal(prop.proposal_id)}
+                                  className="px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-bold hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1 cursor-pointer border-none"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">delete</span>
+                                  Rút đề xuất
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )
               )}

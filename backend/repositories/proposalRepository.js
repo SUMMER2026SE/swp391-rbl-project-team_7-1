@@ -79,11 +79,13 @@ export const fetchProposals = async ({ status, projectId, employerId, freelancer
       u.avatar_url as freelancer_avatar,
       pr.title as project_title,
       pr.employer_id,
-      emp.full_name as employer_name
+      emp.full_name as employer_name,
+      c.contract_id
     FROM proposals p
     JOIN users u ON p.freelancer_id = u.user_id
     JOIN projects pr ON p.project_id = pr.project_id
     JOIN users emp ON pr.employer_id = emp.user_id
+    LEFT JOIN contracts c ON p.project_id = c.project_id AND p.freelancer_id = c.freelancer_id
     ${whereSql}
     ORDER BY p.created_at DESC
     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
