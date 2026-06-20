@@ -10,11 +10,13 @@ export const getContractById = async (req, res) => {
       .input('contractId', sql.Int, contractId)
       .query(`
         SELECT c.*, p.title as project_title, p.description as project_description,
-               u_emp.full_name as employer_name, u_free.full_name as freelancer_name
+               u_emp.full_name as employer_name, u_free.full_name as freelancer_name,
+               r.rating as review_rating, r.comment as review_comment
         FROM contracts c
         JOIN projects p ON c.project_id = p.project_id
         JOIN users u_emp ON c.employer_id = u_emp.user_id
         JOIN users u_free ON c.freelancer_id = u_free.user_id
+        LEFT JOIN reviews r ON c.contract_id = r.contract_id
         WHERE c.contract_id = @contractId
       `);
 
@@ -319,3 +321,103 @@ export const requestRevision = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi yêu cầu chỉnh sửa.' });
   }
 };
+
+export const createContractReview = async (req, res) => {
+  try {
+    const { contractId } = req.params;
+    const employerId = req.user.id;
+    const { rating, comment } = req.body;
+
+    const ratingVal = parseInt(rating);
+    if (isNaN(ratingVal) || ratingVal < 1 || ratingVal > 5) {
+      return res.status(400).json({ message: 'Điểm đánh giá phải từ 1 đến 5 sao.' });
+    }
+
+    const pool = await poolPromise;
+
+    // 1. Verify contract status & owner
+    const contractRes = await pool.request()
+      .input('contractId', sql.Int, contractId)
+      .query('SELECT employer_id, freelancer_id, status FROM contracts WHERE contract_id = @contractId');
+
+    if (contractRes.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy hợp đồng.' });
+    }
+
+    const contract = contractRes.recordset[0];
+    if (contract.employer_id !== employerId) {
+      return res.status(403).json({ message: 'Bạn không có quyền đánh giá hợp đồng này.' });
+    }
+
+    if (contract.status !== 'COMPLETED') {
+      return res.status(400).json({ message: 'Chỉ có thể đánh giá sau khi hợp đồng đã hoàn thành.' });
+    }
+
+    // 2. Check if already reviewed
+    const reviewCheck = await pool.request()
+      .input('contractId', sql.Int, contractId)
+      .query('SELECT review_id FROM reviews WHERE contract_id = @contractId');
+
+    if (reviewCheck.recordset.length > 0) {
+      return res.status(400).json({ message: 'Bạn đã đánh giá hợp đồng này rồi.' });
+    }
+
+    // 3. Insert review & update freelancer aggregate rating
+    const tx = new sql.Transaction(pool);
+    await tx.begin();
+
+    try {
+      const request = tx.request();
+      
+      // Insert review
+      await request
+        .input('contractId', sql.Int, contractId)
+        .input('reviewerId', sql.Int, employerId)
+        .input('revieweeId', sql.Int, contract.freelancer_id)
+        .input('rating', sql.Int, ratingVal)
+        .input('comment', sql.NVarChar, comment || null)
+        .query(`
+          INSERT INTO reviews (contract_id, reviewer_id, reviewee_id, rating, comment, created_at)
+          VALUES (@contractId, @reviewerId, @revieweeId, @rating, @comment, SYSUTCDATETIME())
+        `);
+
+      // Calculate new ratings aggregation for freelancer
+      const ratingsRes = await request
+        .input('freelancerId', sql.Int, contract.freelancer_id)
+        .query('SELECT rating FROM reviews WHERE reviewee_id = @freelancerId');
+
+      const reviewsList = ratingsRes.recordset;
+      const totalReviews = reviewsList.length;
+      const totalSum = reviewsList.reduce((acc, curr) => acc + curr.rating, 0);
+      const ratingAverage = totalReviews > 0 ? (totalSum / totalReviews) : 0;
+
+      // Update freelancer_profiles safely using IF EXISTS
+      await request
+        .input('ratingAverage', sql.Decimal(3, 2), ratingAverage)
+        .input('totalReviews', sql.Int, totalReviews)
+        .query(`
+          IF EXISTS (SELECT 1 FROM freelancer_profiles WHERE freelancer_id = @freelancerId)
+          BEGIN
+            UPDATE freelancer_profiles
+            SET rating_average = @ratingAverage, total_reviews = @totalReviews, updated_at = SYSUTCDATETIME()
+            WHERE freelancer_id = @freelancerId
+          END
+          ELSE
+          BEGIN
+            INSERT INTO freelancer_profiles (freelancer_id, rating_average, total_reviews, availability_status, created_at)
+            VALUES (@freelancerId, @ratingAverage, @totalReviews, 'AVAILABLE', SYSUTCDATETIME())
+          END
+        `);
+
+      await tx.commit();
+      res.status(201).json({ success: true, message: 'Gửi đánh giá thành công!' });
+    } catch (txError) {
+      await tx.rollback();
+      throw txError;
+    }
+  } catch (error) {
+    console.error('Error in createContractReview:', error);
+    res.status(500).json({ message: 'Lỗi server khi gửi đánh giá.' });
+  }
+};
+

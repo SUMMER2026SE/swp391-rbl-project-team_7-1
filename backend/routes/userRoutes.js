@@ -22,7 +22,8 @@ import {
 
   // Public Profiles
   getPublicProfile,
-  getAllFreelancers
+  getAllFreelancers,
+  getFreelancerReviews
 } from '../controllers/userController.js';
 
 import { verifyToken, verifyAdmin } from '../middleware/authMiddleware.js';
@@ -49,6 +50,7 @@ router.delete('/profile/portfolios/:portfolioId', deletePortfolio);
 
 // Public route to get a freelancer's portfolios (unprotected by token or verified separately)
 router.get('/:freelancerId/portfolios', getFreelancerPortfolios);
+router.get('/:freelancerId/reviews', getFreelancerReviews);
 
 // Admin-only user management routes
 router.get('/admin/dashboard', verifyAdmin, getAdminDashboard);

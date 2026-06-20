@@ -33,5 +33,10 @@ export const contractService = {
   requestRevision: async (submissionId, note) => {
     const response = await api.post(`/contracts/submissions/${submissionId}/revision`, { note });
     return response.data;
+  },
+
+  submitReview: async (contractId, rating, comment) => {
+    const response = await api.post(`/contracts/${contractId}/review`, { rating, comment });
+    return response.data;
   }
 };
