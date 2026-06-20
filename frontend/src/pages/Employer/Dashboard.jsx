@@ -223,6 +223,13 @@ export default function EmployerDashboard() {
                           >
                             Đề xuất
                           </Link>
+                          <Link 
+                            to={`/project-details/${project.project_id}`} 
+                            className="p-1.5 text-slate-500 hover:text-[#0F766E] hover:bg-slate-100 rounded-lg transition-all flex items-center justify-center"
+                            title="Xem chi tiết dự án"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">visibility</span>
+                          </Link>
                           {project.status === 'OPEN' && (
                             <>
                               <Link 
