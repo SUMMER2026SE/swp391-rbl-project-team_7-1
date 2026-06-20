@@ -265,94 +265,103 @@ export default function MyProjects() {
             <p className="text-xs text-slate-400 max-w-sm mb-6 text-center">Bạn chưa đăng dự án nào phù hợp với bộ lọc tìm kiếm hiện tại.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {filteredProjects.map((project) => (
               <div 
                 key={project.project_id} 
-                className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-5 group"
+                className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(15,23,42,0.01)] hover:shadow-[0_12px_30px_rgba(15,23,42,0.04)] transition-all duration-300 p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
               >
-                {/* Left Section: Info & Status */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <span className="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-teal-50 text-[#0F766E] border border-teal-100/50">
+                {/* Left/Middle Content Block */}
+                <div className="min-w-0 flex-1 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase bg-teal-50 text-[#0F766E] border border-teal-100/50 tracking-wider">
                       {project.category_name || 'Lập trình Web'}
                     </span>
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-extrabold border ${
                       project.status === 'OPEN' 
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
                         : 'bg-slate-100 text-slate-500 border-slate-200'
                     }`}>
-                      <span className={`w-1 h-1 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'}`}></span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
                       {project.status === 'OPEN' ? 'Đang mở tuyển' : 'Đã đóng'}
                     </span>
                     <span className="text-slate-400 text-xs font-semibold">
-                      Mã: #{project.project_id}
+                      Mã dự án: #{project.project_id}
                     </span>
                   </div>
 
-                  <Link 
-                    to={`/project-details/${project.project_id}`} 
-                    className="font-black text-slate-800 hover:text-[#0F766E] transition-colors text-base md:text-lg mb-1.5 block truncate max-w-xl"
-                  >
-                    {project.title}
-                  </Link>
+                  <div>
+                    <Link 
+                      to={`/project-details/${project.project_id}`} 
+                      className="font-extrabold text-slate-800 hover:text-[#0F766E] transition-colors text-lg md:text-xl line-clamp-1 mb-1.5 block"
+                    >
+                      {project.title}
+                    </Link>
+                    {project.description && (
+                      <p className="text-slate-400 text-sm line-clamp-2 leading-relaxed max-w-3xl">
+                        {project.description}
+                      </p>
+                    )}
+                  </div>
 
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 font-semibold">
-                    <span className="flex items-center gap-1 text-[#0F766E] font-bold">
-                      <span className="material-symbols-outlined text-[16px]">payments</span>
-                      {project.budget_max ? `${Math.round(project.budget_max).toLocaleString('vi-VN')} đ` : 'Thương lượng'}
-                      <span className="text-[10px] font-medium text-slate-450 ml-1">
-                        ({project.budget_type === 'HOURLY' ? 'Theo giờ' : 'Gói cố định'})
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1.5 text-sm text-slate-500 font-semibold border-t border-slate-50/50">
+                    <span className="flex items-center gap-1.5 text-[#0F766E] font-extrabold">
+                      <span className="material-symbols-outlined text-[18px]">payments</span>
+                      <span>{project.budget_max ? `${Math.round(project.budget_max).toLocaleString('vi-VN')} đ` : 'Thương lượng'}</span>
+                      <span className="text-[10px] font-normal text-slate-450 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                        {project.budget_type === 'HOURLY' ? 'Theo giờ' : 'Gói cố định'}
                       </span>
                     </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                      Hạn chót: {project.deadline ? new Date(project.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}
+                    <span className="text-slate-200 hidden sm:inline">|</span>
+                    <span className="flex items-center gap-1.5 text-slate-400 font-semibold">
+                      <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                      <span>Hạn nhận đề xuất: {project.deadline ? new Date(project.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}</span>
                     </span>
                   </div>
                 </div>
 
-                {/* Right Section: Action Controls */}
-                <div className="shrink-0 flex items-center justify-between md:justify-end gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-slate-50">
-                  {/* Proposals Counter Link */}
+                {/* Right Action Block */}
+                <div className="flex flex-row sm:items-center justify-between lg:justify-end gap-4 lg:gap-6 border-t lg:border-t-0 pt-4 lg:pt-0 border-slate-100 shrink-0">
+                  {/* Proposals Quick View Link */}
                   <Link 
                     to={`/manage-proposals/${project.project_id}`} 
-                    className="flex items-center gap-2 group/prop mr-2"
+                    className="flex items-center gap-3 bg-teal-50/60 hover:bg-[#0F766E] border border-teal-100/50 hover:border-transparent px-4 py-3 rounded-xl transition-all duration-200 group/prop"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100/50 flex items-center justify-center font-black text-[#0F766E] text-xs shadow-inner group-hover/prop:bg-[#0F766E] group-hover/prop:text-white transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-[#0F766E] text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover/prop:bg-white group-hover/prop:text-[#0F766E] transition-colors">
                       {project.proposalsCount || 0}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-slate-400 group-hover/prop:text-[#0F766E] transition-colors uppercase tracking-wider">Đề xuất</span>
-                      <span className="text-[9px] font-bold text-slate-300">Xem chi tiết</span>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs font-black text-slate-700 group-hover/prop:text-white transition-colors uppercase tracking-wider">Đề xuất</span>
+                      <span className="text-[10px] font-bold text-slate-400 group-hover/prop:text-teal-100 transition-colors">Xem chi tiết</span>
                     </div>
                   </Link>
 
-                  {/* Operational Buttons */}
-                  <div className="flex items-center gap-1.5">
+                  {/* Actions (Edit, Close, Delete) */}
+                  <div className="flex items-center gap-2">
                     {project.status === 'OPEN' && (
                       <>
                         <Link 
                           to={`/edit-project/${project.project_id}`} 
-                          className="w-9 h-9 rounded-xl border border-slate-100 hover:border-teal-200 text-slate-400 hover:text-[#0F766E] hover:bg-teal-50/30 transition-all flex items-center justify-center"
+                          className="px-3.5 py-2 bg-slate-50 hover:bg-teal-50 border border-slate-200 hover:border-teal-300 text-slate-650 hover:text-[#0F766E] rounded-xl text-xs font-bold transition-all flex items-center gap-1"
                           title="Chỉnh sửa dự án"
                         >
-                          <span className="material-symbols-outlined text-[18px]">edit</span>
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                          <span>Sửa</span>
                         </Link>
                         <button 
                           onClick={() => handleCloseProject(project.project_id)}
-                          className="w-9 h-9 rounded-xl border border-slate-100 hover:border-amber-200 text-slate-400 hover:text-amber-600 hover:bg-amber-50/50 transition-all flex items-center justify-center cursor-pointer bg-transparent"
-                          title="Đóng dự án"
+                          className="px-3.5 py-2 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 text-slate-650 hover:text-amber-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          title="Đóng nhận hồ sơ"
                         >
-                          <span className="material-symbols-outlined text-[18px]">cancel</span>
+                          <span className="material-symbols-outlined text-[16px]">cancel</span>
+                          <span>Đóng</span>
                         </button>
                       </>
                     )}
 
                     <button 
                       onClick={() => handleDeleteProject(project.project_id)}
-                      className="w-9 h-9 rounded-xl border border-slate-100 hover:border-rose-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50/50 transition-all flex items-center justify-center cursor-pointer bg-transparent"
+                      className="p-2 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-650 hover:text-rose-600 rounded-xl transition-all flex items-center justify-center cursor-pointer"
                       title="Xóa dự án"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
