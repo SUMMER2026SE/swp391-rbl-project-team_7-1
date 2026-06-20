@@ -44,5 +44,15 @@ export const userService = {
   getFreelancerPortfolios: async (freelancerId) => {
     const response = await api.get(`/user/${freelancerId}/portfolios`);
     return response.data;
+  },
+
+  getPublicProfile: async (id) => {
+    const response = await api.get(`/user/profile/${id}`);
+    return response.data;
+  },
+
+  getAllFreelancers: async () => {
+    const response = await api.get('/user/freelancers');
+    return response.data;
   }
 };

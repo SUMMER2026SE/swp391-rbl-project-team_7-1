@@ -153,13 +153,17 @@ export default function ManageProposals() {
                   {/*  Left: Freelancer Info  */}
                   <div className="flex-shrink-0 w-full md:w-64 flex flex-col gap-4">
                     <div className="flex items-start gap-4">
-                      <img 
-                        alt="Freelancer Avatar" 
-                        className="w-16 h-16 rounded-full border border-slate-200 object-cover" 
-                        src={proposal.freelancer_avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCioT3d29HAboKCh5FtH6yfJpreH6DQUNNdw8JVFoWTx6CMJJV0VXmJh5I4syj9A0nIm_Gn_kL4WN6hfVI3NVC1kL3X5kfRJVJyhppVo7GXsDb968rw3xdoxDmwSwigUm0d5Kj5VgB_1-w1p2eLFKTMOkAjmBe5lwKPjINix_mvuV2Cs99sGXjriNMQP2UhQRV6Xn1lM9CDkekRwQrNn2cP4aNr1sPsokHcK5zgQ6pdDtwQYOddnNJI8opkRkmtbH-OjupriQb1o5g"}
-                      />
+                      <Link to={`/profile/${proposal.freelancer_id}`}>
+                        <img 
+                          alt="Freelancer Avatar" 
+                          className="w-16 h-16 rounded-full border border-slate-200 object-cover cursor-pointer hover:opacity-80 transition-all duration-200" 
+                          src={proposal.freelancer_avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCioT3d29HAboKCh5FtH6yfJpreH6DQUNNdw8JVFoWTx6CMJJV0VXmJh5I4syj9A0nIm_Gn_kL4WN6hfVI3NVC1kL3X5kfRJVJyhppVo7GXsDb968rw3xdoxDmwSwigUm0d5Kj5VgB_1-w1p2eLFKTMOkAjmBe5lwKPjINix_mvuV2Cs99sGXjriNMQP2UhQRV6Xn1lM9CDkekRwQrNn2cP4aNr1sPsokHcK5zgQ6pdDtwQYOddnNJI8opkRkmtbH-OjupriQb1o5g"}
+                        />
+                      </Link>
                       <div>
-                        <h3 className="text-lg font-bold text-slate-800">{proposal.freelancer_name}</h3>
+                        <Link to={`/profile/${proposal.freelancer_id}`} className="hover:text-[#0F766E] transition-colors">
+                          <h3 className="text-lg font-bold text-slate-800">{proposal.freelancer_name}</h3>
+                        </Link>
                         <p className="text-sm font-medium text-slate-500">Freelancer</p>
                         <div className="flex items-center gap-1 mt-1">
                           <span className="material-symbols-outlined text-yellow-500 text-[16px] font-variation-settings-'FILL'-1">star</span>

@@ -61,6 +61,7 @@ import SubmitProposal from './pages/Freelancer/SubmitProposal';
 import SubmitWork from './pages/Freelancer/SubmitWork';
 import Projects from './pages/Public/Projects'; // Original projects list
 import Profile from './pages/Public/Profile'; // Public profile page
+import BrowseFreelancers from './pages/Public/BrowseFreelancers';
 
 import { useAuth } from './hooks/useAuth';
 
@@ -83,6 +84,9 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/help-center" element={<HelpCenter />} />
         <Route path="/article-vnpay-escrow" element={<ArticleVNPayEscrow />} />
+        <Route path="/freelancers" element={<BrowseFreelancers />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/freelancers/:id" element={<Profile />} />
         {!token && (
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />
@@ -102,6 +106,9 @@ export default function App() {
         <Route path="/submit-proposal/:projectId" element={<SubmitProposal />} />
         {/* Profile is always accessible when logged in (DashboardLayout handles auth) */}
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/freelancers/:id" element={<Profile />} />
+        <Route path="/freelancers" element={<BrowseFreelancers />} />
         {token && (
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />

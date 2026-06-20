@@ -18,12 +18,20 @@ import {
   // Admin
   getAdminDashboard,
   getAdminUsers,
-  updateAdminUserStatus
+  updateAdminUserStatus,
+
+  // Public Profiles
+  getPublicProfile,
+  getAllFreelancers
 } from '../controllers/userController.js';
 
 import { verifyToken, verifyAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Public routes (accessible by guest or any authenticated user)
+router.get('/profile/:id', getPublicProfile);
+router.get('/freelancers', getAllFreelancers);
 
 // Apply auth middleware to all routes below
 router.use(verifyToken);

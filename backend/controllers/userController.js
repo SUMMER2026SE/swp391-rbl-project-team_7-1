@@ -638,3 +638,129 @@ export const deletePortfolio = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi xóa portfolio.' });
   }
 };
+
+export const getPublicProfile = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: 'ID người dùng không hợp lệ.' });
+    }
+
+    const pool = await poolPromise;
+    
+    // 1. Fetch user from users table
+    const userResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`SELECT user_id, full_name, email, phone, role_default, avatar_url, bio, company_name, website_url, address, created_at, is_email_verified FROM users WHERE user_id = @userId AND status = 'ACTIVE'`);
+
+    if (userResult.recordset.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng hoặc tài khoản không hoạt động.' });
+    }
+
+    const user = userResult.recordset[0];
+
+    // 2. Fetch freelancer profile from freelancer_profiles
+    const flResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary FROM freelancer_profiles WHERE freelancer_id = @userId`);
+    
+    const fl = flResult.recordset[0] || {};
+
+    // 3. Fetch freelancer skills
+    const skillsResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT s.skill_name 
+        FROM freelancer_skills fs
+        JOIN skills s ON fs.skill_id = s.skill_id
+        WHERE fs.freelancer_id = @userId
+      `);
+    const skills = skillsResult.recordset.map(r => r.skill_name);
+
+    // 4. Construct bio_extras compatibility object for frontend
+    const bioExtrasObj = {
+      title: fl.headline || '',
+      hourlyRate: fl.hourly_rate !== undefined ? fl.hourly_rate.toString() : '',
+      availability: fl.availability_status || 'AVAILABLE',
+      experience: fl.experience_years !== undefined ? 
+        (fl.experience_years <= 1 ? 'ENTRY' : fl.experience_years <= 3 ? 'INTERMEDIATE' : 'EXPERT') : 'INTERMEDIATE',
+      skills: skills,
+      portfolio: fl.portfolio_summary || '',
+      linkedin: '', 
+      github: '',
+      companyName: user.company_name || '',
+      industry: '',
+      companySize: '',
+      website: user.website_url || '',
+      companyDesc: user.bio || '',
+      location: user.address || ''
+    };
+
+    user.bio_extras = JSON.stringify(bioExtrasObj);
+
+    res.json({ user });
+  } catch (error) {
+    console.error('Error fetching public profile:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy thông tin profile công khai.' });
+  }
+};
+
+export const getAllFreelancers = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    
+    // Fetch all active freelancers
+    const freelancersResult = await pool.request()
+      .query(`
+        SELECT u.user_id, u.full_name, u.email, u.phone, u.avatar_url, u.bio, u.address, u.created_at,
+               fp.headline, fp.experience_years, fp.hourly_rate, fp.availability_status, fp.portfolio_summary,
+               fp.rating_average, fp.total_reviews
+        FROM users u
+        LEFT JOIN freelancer_profiles fp ON u.user_id = fp.freelancer_id
+        WHERE u.role_default = 'FREELANCER' AND u.status = 'ACTIVE'
+      `);
+
+    const freelancers = freelancersResult.recordset;
+
+    // Fetch all freelancer skills
+    const skillsResult = await pool.request()
+      .query(`
+        SELECT fs.freelancer_id, s.skill_name
+        FROM freelancer_skills fs
+        JOIN skills s ON fs.skill_id = s.skill_id
+      `);
+
+    const skillsMap = {};
+    skillsResult.recordset.forEach(row => {
+      if (!skillsMap[row.freelancer_id]) {
+        skillsMap[row.freelancer_id] = [];
+      }
+      skillsMap[row.freelancer_id].push(row.skill_name);
+    });
+
+    // Attach skills to each freelancer
+    const data = freelancers.map(fl => ({
+      userId: fl.user_id,
+      fullName: fl.full_name,
+      email: fl.email,
+      phone: fl.phone,
+      avatarUrl: fl.avatar_url,
+      bio: fl.bio,
+      address: fl.address,
+      createdAt: fl.created_at,
+      headline: fl.headline || '',
+      experienceYears: fl.experience_years || 0,
+      hourlyRate: fl.hourly_rate || 0,
+      availabilityStatus: fl.availability_status || 'AVAILABLE',
+      portfolioSummary: fl.portfolio_summary || '',
+      ratingAverage: fl.rating_average || 0.0,
+      totalReviews: fl.total_reviews || 0,
+      skills: skillsMap[fl.user_id] || []
+    }));
+
+    res.json({ freelancers: data });
+  } catch (error) {
+    console.error('Error fetching all freelancers:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách freelancer.' });
+  }
+};
