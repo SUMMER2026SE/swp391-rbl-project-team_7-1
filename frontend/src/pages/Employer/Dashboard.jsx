@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
+=======
+import { projectService } from '../../services/projectService';
+>>>>>>> e45152252214d3f3eafc10c72970fd1bfb26ce29
 
 export default function EmployerDashboard() {
   const { user } = useAuth();
@@ -17,12 +21,32 @@ export default function EmployerDashboard() {
 
   const token = localStorage.getItem('token');
 
+<<<<<<< HEAD
+=======
+  const fetchMyProjects = async () => {
+    try {
+      const data = await projectService.getEmployerProjects();
+      if (data && data.success) {
+        setProjects(data.projects || []);
+      } else {
+        setErrorMsg(data.message || 'Không thể tải danh sách dự án.');
+      }
+    } catch (err) {
+      console.error('Error fetching employer projects:', err);
+      setErrorMsg('Lỗi kết nối server.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+>>>>>>> e45152252214d3f3eafc10c72970fd1bfb26ce29
   useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
     }
 
+<<<<<<< HEAD
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
@@ -67,6 +91,41 @@ export default function EmployerDashboard() {
         setErrorMsg('Không thể tải một số dữ liệu bảng điều khiển.');
       } finally {
         setLoading(false);
+=======
+  const handleCloseProject = async (projectId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn đóng dự án này? Sau khi đóng, freelancer sẽ không thể gửi đề xuất mới.')) {
+      return;
+    }
+
+    try {
+      const data = await projectService.closeProject(projectId);
+      if (data && data.success) {
+        setToastMsg('Đã đóng dự án thành công!');
+        fetchMyProjects(); // Reload list
+        setTimeout(() => setToastMsg(''), 3000);
+      } else {
+        alert(data.message || 'Lỗi khi đóng dự án.');
+      }
+    } catch (err) {
+      console.error('Error closing project:', err);
+      alert('Lỗi mạng khi thực hiện đóng dự án.');
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác.')) {
+      return;
+    }
+
+    try {
+      const data = await projectService.deleteProject(projectId);
+      if (data && data.success) {
+        setToastMsg('Đã xóa dự án thành công!');
+        fetchMyProjects(); // Reload list
+        setTimeout(() => setToastMsg(''), 3000);
+      } else {
+        alert(data.message || 'Lỗi khi xóa dự án.');
+>>>>>>> e45152252214d3f3eafc10c72970fd1bfb26ce29
       }
     };
 

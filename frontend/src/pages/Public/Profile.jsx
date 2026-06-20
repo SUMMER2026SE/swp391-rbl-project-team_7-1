@@ -160,6 +160,7 @@ export default function Profile() {
 
   /* portfolios state */
   const [portfolios, setPortfolios] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [showPortModal, setShowPortModal] = useState(false);
   const [editingPort, setEditingPort] = useState(null);
   const [portTitle, setPortTitle] = useState('');
@@ -258,6 +259,18 @@ export default function Profile() {
         : await userService.getPortfolios();
       if (portRes && portRes.success) {
         setPortfolios(portRes.portfolios);
+      }
+
+      const targetId = isPublicView ? id : currentUserId;
+      if (targetId) {
+        try {
+          const reviewsRes = await userService.getFreelancerReviews(targetId);
+          if (reviewsRes && reviewsRes.success) {
+            setReviews(reviewsRes.reviews);
+          }
+        } catch (err) {
+          console.error('Error fetching freelancer reviews:', err);
+        }
       }
     } catch (err) { setAlert({ type:'error', msg:'Lỗi kết nối máy chủ.' }); }
     finally { setLoading(false); }
@@ -485,6 +498,17 @@ export default function Profile() {
                 {activeRole === 'FREELANCER' && eTitle && <p className="text-[13px] text-[#0F766E] font-semibold mt-0.5">{eTitle}</p>}
                 {activeRole === 'EMPLOYER' && eCompanyName && <p className="text-[13px] text-[#0F766E] font-semibold mt-0.5">{eCompanyName}</p>}
                 <p className="text-xs text-[#94A3B8] mt-0.5">{profile?.email}</p>
+                {activeRole === 'FREELANCER' && (
+                  <div className="flex items-center gap-1 mt-1 text-amber-500">
+                    <span className="material-symbols-outlined text-[15px] fill-amber-500">star</span>
+                    <span className="text-xs font-bold text-slate-700">
+                      {profile?.rating_average ? Number(profile.rating_average).toFixed(1) : '0.0'}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      ({profile?.total_reviews || 0} đánh giá)
+                    </span>
+                  </div>
+                )}
 
                 {activeRole === 'FREELANCER' && (
                   <div className="mt-3">
@@ -535,8 +559,8 @@ export default function Profile() {
                 <p className="text-[11px] font-bold uppercase tracking-wide text-[#475569] mb-3">Thống kê</p>
                 <div className="space-y-3">
                   {[
-                    { icon:'star', label:'Tỷ lệ thành công',    value:'—',      color:'text-amber-500' },
-                    { icon:'work', label:'Dự án hoàn thành',     value:'—',      color:'text-[#0F766E]' },
+                    { icon:'star', label:'Điểm đánh giá',    value: profile?.rating_average ? `${Number(profile.rating_average).toFixed(1)} / 5.0` : 'Chưa có',      color:'text-amber-500' },
+                    { icon:'rate_review', label:'Lượt đánh giá',    value: profile?.total_reviews ? `${profile.total_reviews} lượt` : '0 lượt',      color:'text-[#0F766E]' },
                     { icon:'schedule', label:'Thời gian phản hồi', value:'< 1 giờ', color:'text-blue-500' },
                     { icon:'calendar_today', label:'Thành viên từ', value: fmtDate(profile?.created_at), color:'text-[#475569]' },
                   ].map(s => (
@@ -874,6 +898,60 @@ export default function Profile() {
                           className="text-[13px] text-[#0F766E] font-semibold border border-[#0F766E]/30 px-4 py-1.5 rounded-lg hover:bg-teal-50">
                           + Thêm dự án portfolio
                         </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Reviews List */}
+                {activeRole === 'FREELANCER' && (
+                  <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
+                    <h3 className="font-bold text-[#334155] mb-4">
+                      Đánh giá từ khách hàng ({reviews.length})
+                    </h3>
+                    {reviews.length > 0 ? (
+                      <div className="divide-y divide-slate-100">
+                        {reviews.map((rev) => (
+                          <div key={rev.review_id} className="py-4 first:pt-0 last:pb-0">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-slate-100 text-[#0F766E] flex items-center justify-center font-bold text-sm border border-slate-200">
+                                  {rev.reviewer_avatar ? (
+                                    <img src={rev.reviewer_avatar} alt={rev.reviewer_name} className="w-full h-full object-cover rounded-xl" />
+                                  ) : (
+                                    initials(rev.reviewer_name)
+                                  )}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-slate-800 text-sm">{rev.reviewer_name}</h4>
+                                  <div className="flex items-center gap-0.5 mt-0.5">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <span 
+                                        key={star} 
+                                        className={`material-symbols-outlined text-[14px] ${
+                                          star <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'
+                                        }`}
+                                      >
+                                        star
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="text-xs text-slate-400">
+                                {new Date(rev.created_at).toLocaleDateString('vi-VN')}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-600 mt-2 pl-12 italic">
+                              "{rev.comment}"
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center py-6 text-center">
+                        <span className="material-symbols-outlined text-[40px] text-[#CBD5E1] mb-2">rate_review</span>
+                        <p className="text-sm text-[#94A3B8]">Chưa có đánh giá nào từ khách hàng.</p>
                       </div>
                     )}
                   </div>

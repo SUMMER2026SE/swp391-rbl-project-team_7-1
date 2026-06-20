@@ -17,6 +17,11 @@ export default function ReviewSubmission() {
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [revisionNote, setRevisionNote] = useState('');
 
+  // Rating & Review states
+  const [rating, setRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -89,6 +94,25 @@ export default function ReviewSubmission() {
       setErrorMsg(err.response?.data?.message || 'Có lỗi xảy ra khi yêu cầu chỉnh sửa.');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleSendReview = async (e) => {
+    e.preventDefault();
+    if (!rating) return;
+    setReviewLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+    try {
+      const res = await contractService.submitReview(contractId, rating, reviewComment);
+      if (res.success) {
+        setSuccessMsg('Gửi đánh giá thành công!');
+        loadData();
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Có lỗi xảy ra khi gửi đánh giá.');
+    } finally {
+      setReviewLoading(false);
     }
   };
 
@@ -244,42 +268,127 @@ export default function ReviewSubmission() {
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-[#0F766E]"></div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Quyết định nghiệm thu</h3>
-            <p className="text-sm font-medium text-slate-600 mb-6">Nghiệm thu bài nộp để xác nhận hoàn thành công việc và giải ngân tiền ký quỹ.</p>
-            <div className="space-y-3">
-              <button 
-                onClick={handleApprove} 
-                disabled={actionLoading || !latestSubmission || latestSubmission.status === 'APPROVED'}
-                className="w-full bg-[#0F766E] text-white text-sm font-bold py-3.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all disabled:opacity-40 disabled:cursor-not-allowed border-none flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined">check_circle</span>
-                Xác nhận hoàn thành
-              </button>
-              
-              <button 
-                onClick={() => setShowRevisionModal(true)} 
-                disabled={actionLoading || !latestSubmission || latestSubmission.status === 'APPROVED'}
-                className="w-full bg-white text-slate-800 text-sm font-bold py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined">edit_note</span>
-                Yêu cầu chỉnh sửa
-              </button>
-            </div>
+          {/* Action or Review panel */}
+          {contract?.status === 'COMPLETED' ? (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
+              {contract.review_rating ? (
+                // Already reviewed
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-amber-500 fill-amber-500">star</span>
+                    Đánh giá của bạn
+                  </h3>
+                  <p className="text-sm font-medium text-slate-600 mb-4">Bạn đã đánh giá sản phẩm và thái độ làm việc của Freelancer này.</p>
+                  
+                  <div className="mb-4">
+                    <div className="flex items-center gap-1 mb-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span 
+                          key={star} 
+                          className={`material-symbols-outlined text-xl ${
+                            star <= contract.review_rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'
+                          }`}
+                        >
+                          star
+                        </span>
+                      ))}
+                      <span className="text-sm font-bold text-slate-700 ml-2">{contract.review_rating} / 5</span>
+                    </div>
+                    {contract.review_comment && (
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm text-slate-600 italic whitespace-pre-wrap">
+                        "{contract.review_comment}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Not reviewed yet
+                <form onSubmit={handleSendReview}>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Đánh giá Freelancer</h3>
+                  <p className="text-sm font-medium text-slate-600 mb-4">Hợp đồng đã hoàn thành! Hãy dành ít phút để đánh giá chất lượng sản phẩm & dịch vụ của Freelancer.</p>
+                  
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Điểm đánh giá</label>
+                    <div className="flex items-center gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="bg-transparent border-none p-0.5 cursor-pointer focus:outline-none"
+                        >
+                          <span 
+                            className={`material-symbols-outlined text-2xl transition-all ${
+                              star <= rating ? 'text-amber-400 fill-amber-400 scale-110' : 'text-slate-300 hover:text-amber-300'
+                            }`}
+                          >
+                            star
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-            {/* Escrow badge info */}
-            <div className="mt-6 bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-start gap-3">
-              <span className="material-symbols-outlined text-[#0F766E] mt-0.5">gpp_good</span>
-              <div className="text-xs font-medium">
-                <strong className="text-slate-800 block mb-1">Bảo vệ bởi VNPay Escrow</strong>
-                <span className="text-slate-600">
-                  Số tiền ký quỹ <span className="text-[#0F766E] font-bold">{contract ? parseInt(contract.total_amount).toLocaleString() : 0} VNĐ</span> đang được tạm giữ an toàn.
-                </span>
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Lời nhận xét</label>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Mô tả chi tiết trải nghiệm hợp tác của bạn..."
+                      rows="4"
+                      required
+                      className="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={reviewLoading}
+                    className="w-full bg-[#0F766E] text-white text-sm font-bold py-3.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all disabled:opacity-40 disabled:cursor-not-allowed border-none flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {reviewLoading ? 'Đang gửi...' : 'Gửi đánh giá'}
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-[#0F766E]"></div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">Quyết định nghiệm thu</h3>
+              <p className="text-sm font-medium text-slate-600 mb-6">Nghiệm thu bài nộp để xác nhận hoàn thành công việc và giải ngân tiền ký quỹ.</p>
+              <div className="space-y-3">
+                <button 
+                  onClick={handleApprove} 
+                  disabled={actionLoading || !latestSubmission || latestSubmission.status === 'APPROVED'}
+                  className="w-full bg-[#0F766E] text-white text-sm font-bold py-3.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all disabled:opacity-40 disabled:cursor-not-allowed border-none flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">check_circle</span>
+                  Xác nhận hoàn thành
+                </button>
+                
+                <button 
+                  onClick={() => setShowRevisionModal(true)} 
+                  disabled={actionLoading || !latestSubmission || latestSubmission.status === 'APPROVED'}
+                  className="w-full bg-white text-slate-800 text-sm font-bold py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">edit_note</span>
+                  Yêu cầu chỉnh sửa
+                </button>
+              </div>
+
+              {/* Escrow badge info */}
+              <div className="mt-6 bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-start gap-3">
+                <span className="material-symbols-outlined text-[#0F766E] mt-0.5">gpp_good</span>
+                <div className="text-xs font-medium">
+                  <strong className="text-slate-800 block mb-1">Bảo vệ bởi VNPay Escrow</strong>
+                  <span className="text-slate-600">
+                    Số tiền ký quỹ <span className="text-[#0F766E] font-bold">{contract ? parseInt(contract.total_amount).toLocaleString() : 0} VNĐ</span> đang được tạm giữ an toàn.
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

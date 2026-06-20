@@ -662,7 +662,7 @@ export const getPublicProfile = async (req, res) => {
     // 2. Fetch freelancer profile from freelancer_profiles
     const flResult = await pool.request()
       .input('userId', sql.Int, userId)
-      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary FROM freelancer_profiles WHERE freelancer_id = @userId`);
+      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary, rating_average, total_reviews FROM freelancer_profiles WHERE freelancer_id = @userId`);
     
     const fl = flResult.recordset[0] || {};
 
@@ -693,10 +693,14 @@ export const getPublicProfile = async (req, res) => {
       companySize: '',
       website: user.website_url || '',
       companyDesc: user.bio || '',
-      location: user.address || ''
+      location: user.address || '',
+      ratingAverage: fl.rating_average || 0.0,
+      totalReviews: fl.total_reviews || 0
     };
 
     user.bio_extras = JSON.stringify(bioExtrasObj);
+    user.rating_average = fl.rating_average || 0.0;
+    user.total_reviews = fl.total_reviews || 0;
 
     res.json({ user });
   } catch (error) {
@@ -764,3 +768,26 @@ export const getAllFreelancers = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi lấy danh sách freelancer.' });
   }
 };
+
+export const getFreelancerReviews = async (req, res) => {
+  try {
+    const { freelancerId } = req.params;
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input('freelancerId', sql.Int, freelancerId)
+      .query(`
+        SELECT r.*, u.full_name as reviewer_name, u.avatar_url as reviewer_avatar
+        FROM reviews r
+        JOIN users u ON r.reviewer_id = u.user_id
+        WHERE r.reviewee_id = @freelancerId
+        ORDER BY r.created_at DESC
+      `);
+
+    res.json({ success: true, reviews: result.recordset });
+  } catch (error) {
+    console.error('Error in getFreelancerReviews:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách đánh giá.' });
+  }
+};
+

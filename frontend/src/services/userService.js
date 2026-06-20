@@ -54,5 +54,10 @@ export const userService = {
   getAllFreelancers: async () => {
     const response = await api.get('/user/freelancers');
     return response.data;
+  },
+
+  getFreelancerReviews: async (freelancerId) => {
+    const response = await api.get(`/user/${freelancerId}/reviews`);
+    return response.data;
   }
 };
