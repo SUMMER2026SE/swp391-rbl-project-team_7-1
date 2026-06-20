@@ -18,7 +18,7 @@ export default function Sidebar() {
     path.startsWith('/manage-proposals') ||
     path === '/review-submission' ||
     path === '/revision-requested' ||
-    path === '/project-details' ||
+    path.startsWith('/project-details') ||
     path === '/post-project' ||
     path === '/escrow-checkout'
   ) {
@@ -146,7 +146,7 @@ export default function Sidebar() {
     if (path === item.link) return true;
     if (item.label === 'Tìm Freelancer' && (path === '/freelancers' || path.startsWith('/profile/') || path.startsWith('/freelancers/'))) return true;
     if (item.label === 'Báo cáo' && path.startsWith('/admin-report')) return true;
-    if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested' || path === '/project-details' || path === '/post-project')) return true;
+    if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested' || path.startsWith('/project-details') || path === '/post-project')) return true;
     if (item.label === 'Ví tiền' && path.endsWith('-wallet')) return true;
     if (item.label === 'Hồ sơ' && path === '/profile') return true;
     return false;

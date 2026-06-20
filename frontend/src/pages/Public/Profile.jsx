@@ -309,6 +309,18 @@ export default function Profile() {
   const changePwd = async e => {
     e.preventDefault(); setAlert({ type:'', msg:'' });
     if (newPwd !== conPwd) { setAlert({ type:'error', msg:'Mật khẩu xác nhận không khớp.' }); return; }
+    
+    if (newPwd === oldPwd) {
+      setAlert({ type:'error', msg:'Mật khẩu mới trùng với mật khẩu cũ.' });
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(newPwd)) {
+      setAlert({ type:'error', msg:'Mật khẩu phải có ít nhất 8 ký tự, bao gồm: 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt.' });
+      return;
+    }
+
     setSavingPwd(true);
     try {
       await userService.changePassword(oldPwd, newPwd);

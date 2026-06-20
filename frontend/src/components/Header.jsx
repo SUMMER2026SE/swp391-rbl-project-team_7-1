@@ -62,7 +62,7 @@ export default function Header({ layout = 'dashboard' }) {
       path.startsWith('/manage-proposals') ||
       path === '/review-submission' ||
       path === '/revision-requested' ||
-      path === '/project-details' ||
+      path.startsWith('/project-details') ||
       path === '/post-project' ||
       path === '/escrow-checkout'
     ) {

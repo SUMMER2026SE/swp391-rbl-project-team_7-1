@@ -307,7 +307,7 @@ export default function BrowseProjects() {
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-xl text-teal-950 mb-1.5 font-bold group-hover:text-teal-700 transition-colors cursor-pointer tracking-tight" onClick={() => navigate(token ? '/project-details' : '/project-details')}>
+                    <h3 className="text-xl text-teal-950 mb-1.5 font-bold group-hover:text-teal-700 transition-colors cursor-pointer tracking-tight" onClick={() => navigate(`/project-details/${project.id}`)}>
                       {project.title}
                     </h3>
                     <p className="text-sm text-slate-500 flex items-center gap-3">
@@ -350,7 +350,7 @@ export default function BrowseProjects() {
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-auto border-t border-slate-100 pt-5">
                   <button 
-                    onClick={() => navigate(token ? '/project-details' : '/project-details')}
+                    onClick={() => navigate(`/project-details/${project.id}`)}
                     className="flex-1 bg-white border border-slate-200 text-slate-700 text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-slate-50 hover:text-teal-700 hover:border-slate-300 transition-all active:scale-[0.98] text-center shadow-sm"
                   >
                     Xem chi tiết

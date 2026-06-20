@@ -44,8 +44,9 @@ export default function ForgotPassword() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setErrorMsg('Mật khẩu mới phải có ít nhất 8 ký tự.');
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setErrorMsg('Mật khẩu phải có ít nhất 8 ký tự, bao gồm: 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt.');
       return;
     }
 

@@ -81,7 +81,22 @@ export default function App() {
     <Routes>
       {/* --- Public Pages with PublicLayout (Header & Footer) --- */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<LandingPage />} />
+        <Route 
+          path="/" 
+          element={
+            token ? (
+              user?.roleDefault === 'ADMIN' ? (
+                <Navigate to="/admin-dashboard" replace />
+              ) : user?.roleDefault === 'EMPLOYER' ? (
+                <Navigate to="/employer-dashboard" replace />
+              ) : (
+                <Navigate to="/freelancer-dashboard" replace />
+              )
+            ) : (
+              <LandingPage />
+            )
+          } 
+        />
         <Route path="/help-center" element={<HelpCenter />} />
         <Route path="/article-vnpay-escrow" element={<ArticleVNPayEscrow />} />
         <Route path="/freelancers" element={<BrowseFreelancers />} />
@@ -90,7 +105,7 @@ export default function App() {
         {!token && (
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />
-            <Route path="/project-details" element={<ProjectDetails />} />
+            <Route path="/project-details/:id" element={<ProjectDetails />} />
             <Route path="/profile" element={<Profile />} />
           </>
         )}
@@ -112,7 +127,7 @@ export default function App() {
         {token && (
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />
-            <Route path="/project-details" element={<ProjectDetails />} />
+            <Route path="/project-details/:id" element={<ProjectDetails />} />
             
             {/* Wallet / Payment / Project Routes */}
             <Route path="/wallet/transactions" element={<TransactionHistoryPage />} />

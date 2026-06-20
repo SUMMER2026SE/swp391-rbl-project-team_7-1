@@ -79,7 +79,7 @@ export const getProjectById = async (req, res) => {
     const result = await pool.request()
       .input('projectId', sql.Int, id)
       .query(`
-        SELECT p.*, pc.category_name, u.full_name as company_name, u.avatar_url, u.address as location, u.email as contact_email
+        SELECT p.*, pc.category_name, u.full_name as company_name, u.avatar_url, u.address as location, u.email as contact_email, u.created_at as company_joined_at
         FROM projects p
         LEFT JOIN project_categories pc ON p.category_id = pc.category_id
         LEFT JOIN users u ON p.employer_id = u.user_id
@@ -102,6 +102,52 @@ export const getProjectById = async (req, res) => {
         WHERE ps.project_id = @projectId
       `);
     project.skills = skillsResult.recordset.map(r => r.skill_name);
+
+    // Fetch proposals count and average bid
+    const proposalsStats = await pool.request()
+      .input('projectId', sql.Int, id)
+      .query(`
+        SELECT COUNT(*) as count, AVG(proposed_price) as avg_bid 
+        FROM proposals 
+        WHERE project_id = @projectId
+      `);
+    project.proposalsCount = proposalsStats.recordset[0].count || 0;
+    project.averageBid = proposalsStats.recordset[0].avg_bid || 0;
+
+    // Fetch related projects
+    const relatedResult = await pool.request()
+      .input('categoryId', sql.Int, project.category_id)
+      .input('projectId', sql.Int, id)
+      .query(`
+        SELECT TOP 3 p.project_id, p.title, p.budget_min, p.budget_max, p.budget_type, p.deadline, pc.category_name
+        FROM projects p
+        LEFT JOIN project_categories pc ON p.category_id = pc.category_id
+        WHERE p.category_id = @categoryId AND p.project_id != @projectId AND p.status = 'OPEN'
+        ORDER BY p.created_at DESC
+      `);
+    project.relatedProjects = relatedResult.recordset;
+
+    // Count total projects posted by this employer
+    const employerStats = await pool.request()
+      .input('employerId', sql.Int, project.employer_id)
+      .query(`
+        SELECT COUNT(*) as total_projects 
+        FROM projects 
+        WHERE employer_id = @employerId
+      `);
+    const totalProjects = employerStats.recordset[0].total_projects || 0;
+    project.employerTotalProjects = totalProjects;
+
+    // Calculate actual hire rate (projects that are IN_PROGRESS or COMPLETED)
+    const hiredStats = await pool.request()
+      .input('employerId', sql.Int, project.employer_id)
+      .query(`
+        SELECT COUNT(*) as hired_projects 
+        FROM projects 
+        WHERE employer_id = @employerId AND status IN ('IN_PROGRESS', 'COMPLETED')
+      `);
+    const hiredProjects = hiredStats.recordset[0].hired_projects || 0;
+    project.employerHireRate = totalProjects > 0 ? Math.round((hiredProjects * 100) / totalProjects) : 0;
 
     res.json({ success: true, project });
   } catch (error) {
@@ -244,14 +290,37 @@ export const createProject = async (req, res) => {
     const budget_max = req.body.budget_max || req.body.budgetMax;
     const required_freelancer_count = req.body.required_freelancer_count || req.body.requiredFreelancerCount;
     const deadline = req.body.deadline;
-    const skills = req.body.skills;
+    let skills = req.body.skills;
+    if (typeof skills === 'string') {
+      try {
+        skills = JSON.parse(skills);
+      } catch (e) {
+        skills = skills.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
 
     if (!title || !description || !budget_type) {
       return res.status(400).json({ message: 'Vui lòng cung cấp tiêu đề, mô tả và loại ngân sách.' });
     }
 
+    const pool = await poolPromise;
+
     let categoryId = parseInt(category_id);
-    if (isNaN(categoryId)) {
+    const customCategory = req.body.customCategory;
+    if ((isNaN(categoryId) || category_id === 'other') && customCategory && customCategory.trim()) {
+      const catCheck = await pool.request()
+        .input('categoryName', sql.NVarChar, customCategory.trim())
+        .query(`SELECT category_id FROM project_categories WHERE category_name = @categoryName`);
+      
+      if (catCheck.recordset.length > 0) {
+        categoryId = catCheck.recordset[0].category_id;
+      } else {
+        const catInsert = await pool.request()
+          .input('categoryName', sql.NVarChar, customCategory.trim())
+          .query(`INSERT INTO project_categories (category_name) VALUES (@categoryName); SELECT SCOPE_IDENTITY() AS category_id;`);
+        categoryId = catInsert.recordset[0].category_id;
+      }
+    } else if (isNaN(categoryId)) {
       const catMap = {
         'web': 1, 'Programming': 1,
         'design': 2, 'Design': 2,
@@ -261,8 +330,6 @@ export const createProject = async (req, res) => {
       };
       categoryId = catMap[category_id] || 1; 
     }
-
-    const pool = await poolPromise;
 
     const bType = budget_type.toUpperCase() === 'HOURLY' ? 'HOURLY' : 'FIXED';
     const numFreelancers = required_freelancer_count ? parseInt(required_freelancer_count) : 1;
@@ -276,6 +343,11 @@ export const createProject = async (req, res) => {
       }
     }
 
+    let attachmentUrl = null;
+    if (req.file) {
+      attachmentUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
     const result = await pool.request()
       .input('employerId', sql.Int, employerId)
       .input('categoryId', sql.Int, categoryId)
@@ -286,9 +358,10 @@ export const createProject = async (req, res) => {
       .input('budgetMax', sql.Decimal(18, 2), budget_max ? parseFloat(budget_max) : null)
       .input('requiredFreelancerCount', sql.Int, numFreelancers)
       .input('deadline', sql.Date, deadlineDate)
+      .input('attachmentUrl', sql.NVarChar, attachmentUrl)
       .query(`
-        INSERT INTO projects (employer_id, category_id, title, description, budget_type, budget_min, budget_max, required_freelancer_count, deadline, status, created_at)
-        VALUES (@employerId, @categoryId, @title, @description, @budgetType, @budgetMin, @budgetMax, @requiredFreelancerCount, @deadline, 'OPEN', SYSUTCDATETIME());
+        INSERT INTO projects (employer_id, category_id, title, description, budget_type, budget_min, budget_max, required_freelancer_count, deadline, status, attachment_url, created_at)
+        VALUES (@employerId, @categoryId, @title, @description, @budgetType, @budgetMin, @budgetMax, @requiredFreelancerCount, @deadline, 'OPEN', @attachmentUrl, SYSUTCDATETIME());
         SELECT SCOPE_IDENTITY() AS project_id;
       `);
 
@@ -351,7 +424,14 @@ export const updateProject = async (req, res) => {
     const budget_max = req.body.budget_max || req.body.budgetMax;
     const required_freelancer_count = req.body.required_freelancer_count || req.body.requiredFreelancerCount;
     const deadline = req.body.deadline;
-    const skills = req.body.skills;
+    let skills = req.body.skills;
+    if (typeof skills === 'string') {
+      try {
+        skills = JSON.parse(skills);
+      } catch (e) {
+        skills = skills.split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
 
     if (!title || !description || !budget_type) {
       return res.status(400).json({ message: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc.' });
@@ -381,7 +461,21 @@ export const updateProject = async (req, res) => {
     }
 
     let categoryId = parseInt(category_id);
-    if (isNaN(categoryId)) {
+    const customCategory = req.body.customCategory;
+    if ((isNaN(categoryId) || category_id === 'other') && customCategory && customCategory.trim()) {
+      const catCheck = await pool.request()
+        .input('categoryName', sql.NVarChar, customCategory.trim())
+        .query(`SELECT category_id FROM project_categories WHERE category_name = @categoryName`);
+      
+      if (catCheck.recordset.length > 0) {
+        categoryId = catCheck.recordset[0].category_id;
+      } else {
+        const catInsert = await pool.request()
+          .input('categoryName', sql.NVarChar, customCategory.trim())
+          .query(`INSERT INTO project_categories (category_name) VALUES (@categoryName); SELECT SCOPE_IDENTITY() AS category_id;`);
+        categoryId = catInsert.recordset[0].category_id;
+      }
+    } else if (isNaN(categoryId)) {
       const catMap = {
         'web': 1, 'Programming': 1,
         'design': 2, 'Design': 2,
@@ -395,7 +489,25 @@ export const updateProject = async (req, res) => {
     const bType = budget_type.toUpperCase() === 'HOURLY' ? 'HOURLY' : 'FIXED';
     const numFreelancers = required_freelancer_count ? parseInt(required_freelancer_count) : 1;
 
-    await pool.request()
+    let attachmentUrl = undefined;
+    if (req.file) {
+      attachmentUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    let updateQuery = `
+      UPDATE projects
+      SET category_id = @categoryId,
+          title = @title,
+          description = @description,
+          budget_type = @budgetType,
+          budget_min = @budgetMin,
+          budget_max = @budgetMax,
+          required_freelancer_count = @requiredFreelancerCount,
+          deadline = @deadline,
+          updated_at = SYSUTCDATETIME()
+    `;
+    
+    const request = pool.request()
       .input('projectId', sql.Int, id)
       .input('categoryId', sql.Int, categoryId)
       .input('title', sql.NVarChar, title)
@@ -404,20 +516,16 @@ export const updateProject = async (req, res) => {
       .input('budgetMin', sql.Decimal(18, 2), budget_min ? parseFloat(budget_min) : null)
       .input('budgetMax', sql.Decimal(18, 2), budget_max ? parseFloat(budget_max) : null)
       .input('requiredFreelancerCount', sql.Int, numFreelancers)
-      .input('deadline', sql.Date, deadlineDate)
-      .query(`
-        UPDATE projects
-        SET category_id = @categoryId,
-            title = @title,
-            description = @description,
-            budget_type = @budgetType,
-            budget_min = @budgetMin,
-            budget_max = @budgetMax,
-            required_freelancer_count = @requiredFreelancerCount,
-            deadline = @deadline,
-            updated_at = SYSUTCDATETIME()
-        WHERE project_id = @projectId
-      `);
+      .input('deadline', sql.Date, deadlineDate);
+
+    if (attachmentUrl !== undefined) {
+      updateQuery += `, attachment_url = @attachmentUrl`;
+      request.input('attachmentUrl', sql.NVarChar, attachmentUrl);
+    }
+    
+    updateQuery += ` WHERE project_id = @projectId`;
+
+    await request.query(updateQuery);
 
     await pool.request()
       .input('projectId', sql.Int, id)
