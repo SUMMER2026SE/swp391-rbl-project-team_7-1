@@ -30,6 +30,7 @@ import WithdrawFunds from './pages/Wallet/WithdrawFunds';
 // Pages - Employer
 import EmployerDashboard from './pages/Employer/Dashboard';
 import EmployerWallet from './pages/Employer/Wallet';
+import MyProjects from './pages/Employer/MyProjects';
 
 // Pages - Freelancer
 import FreelancerDashboard from './pages/Freelancer/Dashboard';
@@ -138,7 +139,8 @@ export default function App() {
         )}
 
         {/* Employer Dashboard Paths */}
-        <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+         <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+        <Route path="/my-projects" element={<MyProjects />} />
         <Route path="/employer-wallet" element={<EmployerWallet />} />
         <Route path="/messages-employer" element={<MessagesEmployer />} />
         <Route path="/manage-proposals/:projectId" element={<ManageProposals />} />
