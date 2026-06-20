@@ -213,7 +213,9 @@ export default function EmployerDashboard() {
                         </span>
                       </td>
                       <td className="py-4 text-center text-sm font-bold text-slate-600">
-                        {project.proposalsCount || 0}
+                        <Link to={`/manage-proposals/${project.project_id}`} className="text-[#0F766E] hover:underline font-bold">
+                          {project.proposalsCount || 0}
+                        </Link>
                       </td>
                       <td className="py-4 text-right">
                         <div className="flex justify-end items-center gap-2">
