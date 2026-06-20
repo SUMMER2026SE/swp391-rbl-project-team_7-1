@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { projectService } from '../../services/projectService';
 
 export default function EmployerDashboard() {
   const [projects, setProjects] = useState([]);
@@ -12,13 +13,8 @@ export default function EmployerDashboard() {
 
   const fetchMyProjects = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/projects/my/employer-projects', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
+      const data = await projectService.getEmployerProjects();
+      if (data && data.success) {
         setProjects(data.projects || []);
       } else {
         setErrorMsg(data.message || 'Không thể tải danh sách dự án.');
@@ -45,14 +41,8 @@ export default function EmployerDashboard() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/projects/${projectId}/close`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
+      const data = await projectService.closeProject(projectId);
+      if (data && data.success) {
         setToastMsg('Đã đóng dự án thành công!');
         fetchMyProjects(); // Reload list
         setTimeout(() => setToastMsg(''), 3000);
@@ -71,14 +61,8 @@ export default function EmployerDashboard() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
+      const data = await projectService.deleteProject(projectId);
+      if (data && data.success) {
         setToastMsg('Đã xóa dự án thành công!');
         fetchMyProjects(); // Reload list
         setTimeout(() => setToastMsg(''), 3000);

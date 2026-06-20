@@ -437,7 +437,7 @@ export default function Projects() {
                   </div>
                   
                   <Link
-                    to={`/projects/${project.id}`}
+                    to={`/project-details/${project.id}`}
                     className="font-label-md text-label-md text-white bg-primary px-md py-sm rounded-2xl hover:bg-primary-container transition-colors shrink-0 inline-flex items-center justify-center cursor-pointer"
                   >
                     Xem chi tiết
