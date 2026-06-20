@@ -64,6 +64,8 @@ export default function Header({ layout = 'dashboard' }) {
       path === '/revision-requested' ||
       path.startsWith('/project-details') ||
       path === '/post-project' ||
+      path.startsWith('/edit-project') ||
+      path === '/my-projects' ||
       path === '/escrow-checkout'
     ) {
       currentRole = 'employer';
