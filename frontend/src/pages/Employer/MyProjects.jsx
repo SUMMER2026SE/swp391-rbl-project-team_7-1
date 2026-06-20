@@ -311,9 +311,12 @@ export default function MyProjects() {
                       </td>
 
                       <td className="py-5 px-6 text-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-800 text-xs font-black shadow-inner">
+                        <Link 
+                          to={`/manage-proposals/${project.project_id}`}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 hover:bg-teal-50 hover:text-[#0F766E] text-slate-800 text-xs font-black shadow-inner transition-colors"
+                        >
                           {project.proposalsCount || 0}
-                        </span>
+                        </Link>
                       </td>
 
                       <td className="py-5 px-6 text-right">
