@@ -1,275 +1,388 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { chatService } from '../../services/chatService';
 
 export default function EmployerDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [projects, setProjects] = useState([]);
+  const [contracts, setContracts] = useState([]);
+  const [balance, setBalance] = useState(0);
+  const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [toastMsg, setToastMsg] = useState('');
-  const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
-
-  const fetchMyProjects = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/projects/my/employer-projects', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
-        setProjects(data.projects || []);
-      } else {
-        setErrorMsg(data.message || 'Không thể tải danh sách dự án.');
-      }
-    } catch (err) {
-      console.error('Error fetching employer projects:', err);
-      setErrorMsg('Lỗi kết nối server.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
     }
-    fetchMyProjects();
-  }, [token]);
 
-  const handleCloseProject = async (projectId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn đóng dự án này? Sau khi đóng, freelancer sẽ không thể gửi đề xuất mới.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/projects/${projectId}/close`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // 1. Fetch employer projects (for metrics)
+        const projectsRes = await fetch('http://localhost:5000/api/projects/my/employer-projects', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const projectsData = await projectsRes.json();
+        if (projectsRes.ok && projectsData.success) {
+          setProjects(projectsData.projects || []);
         }
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
-        setToastMsg('Đã đóng dự án thành công!');
-        fetchMyProjects(); // Reload list
-        setTimeout(() => setToastMsg(''), 3000);
-      } else {
-        alert(data.message || 'Lỗi khi đóng dự án.');
-      }
-    } catch (err) {
-      console.error('Error closing project:', err);
-      alert('Lỗi mạng khi thực hiện đóng dự án.');
-    }
-  };
 
-  const handleDeleteProject = async (projectId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+        // 2. Fetch contracts (active hirings)
+        const contractsRes = await fetch('http://localhost:5000/api/contracts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const contractsData = await contractsRes.json();
+        if (contractsRes.ok && contractsData.success) {
+          setContracts(contractsData.contracts || []);
         }
-      });
-      const data = await response.json();
-      if (response.ok && data.success) {
-        setToastMsg('Đã xóa dự án thành công!');
-        fetchMyProjects(); // Reload list
-        setTimeout(() => setToastMsg(''), 3000);
-      } else {
-        alert(data.message || 'Lỗi khi xóa dự án.');
+
+        // 3. Fetch Wallet balance
+        const walletRes = await fetch('http://localhost:5000/api/wallet/balance', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const walletData = await walletRes.json();
+        if (walletRes.ok) {
+          setBalance(walletData.balance || 0);
+        }
+
+        // 4. Fetch recent messages
+        try {
+          const chatData = await chatService.getConversations('EMPLOYER');
+          setConversations(chatData.conversations || []);
+        } catch (chatErr) {
+          console.error('Error fetching chat conversations in employer dashboard:', chatErr);
+        }
+
+      } catch (err) {
+        console.error('Error fetching employer dashboard data:', err);
+        setErrorMsg('Không thể tải một số dữ liệu bảng điều khiển.');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error deleting project:', err);
-      alert('Lỗi mạng khi thực hiện xóa dự án.');
-    }
+    };
+
+    fetchDashboardData();
+  }, [token, navigate]);
+
+  const getPastelColor = (name) => {
+    if (!name) return 'bg-teal-50 text-teal-700 border-teal-100';
+    const charCode = name.charCodeAt(0) + (name.charCodeAt(1) || 0);
+    const colors = [
+      'bg-teal-50 text-teal-700 border-teal-100',
+      'bg-blue-50 text-blue-700 border-blue-100',
+      'bg-indigo-50 text-indigo-700 border-indigo-100',
+      'bg-purple-50 text-purple-700 border-purple-100',
+      'bg-rose-50 text-rose-700 border-rose-100',
+      'bg-amber-50 text-amber-700 border-amber-100',
+      'bg-emerald-50 text-emerald-700 border-emerald-100',
+    ];
+    return colors[charCode % colors.length];
   };
 
   // Metrics
   const totalProjects = projects.length;
   const openProjects = projects.filter(p => p.status === 'OPEN').length;
-  const closedProjects = projects.filter(p => p.status === 'CLOSED').length;
+  const activeContractsCount = contracts.filter(c => c.status === 'ACTIVE').length;
   const pendingProposalsCount = projects.reduce((acc, p) => acc + (p.proposalsCount || 0), 0);
+  const unreadMessagesCount = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
   return (
-    <main className="flex-1 min-h-screen pb-20 md:pb-0 bg-slate-50">
+    <main className="flex-1 min-h-screen pb-20 md:pb-10 bg-[#F8FAFC]">
       {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white text-slate-800 px-6 py-4 rounded-2xl shadow-xl border border-slate-100 max-w-sm animate-bounce">
-          <span className="material-symbols-outlined text-[24px] text-green-500">check_circle</span>
-          <span className="font-semibold text-sm">{toastMsg}</span>
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white/95 backdrop-blur-md text-slate-800 px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(15,118,110,0.15)] border border-teal-100 max-w-sm animate-[bounce_1s_infinite]">
+          <span className="material-symbols-outlined text-[24px] text-teal-600 font-bold">check_circle</span>
+          <span className="font-bold text-sm text-slate-700">{toastMsg}</span>
         </div>
       )}
 
-      {/*  Canvas  */}
-      <div className="pt-8 md:pt-10 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
-        {/*  Header  */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="font-display-hero text-display-hero text-[#1E293B] mb-2 font-bold">Quản lý Dự án &amp; Nhân sự</h1>
-            <p className="font-body-base text-body-base text-[#475569]">Dưới đây là tóm tắt các hoạt động và công việc đang chờ xử lý của bạn.</p>
-          </div>
-          <Link 
-            to="/post-project" 
-            className="px-6 py-3 bg-[#0F766E] text-white rounded-xl font-bold hover:bg-[#0D5E58] hover:shadow-lg transition-all text-center flex items-center justify-center gap-2 self-start md:self-auto border-none"
-          >
-            <span className="material-symbols-outlined text-[20px]">add</span> Đăng dự án mới
-          </Link>
-        </div>
+      {/* Styled inline keyframes for text slide-up fade in and floating blobs */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(15px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes floatBlob1 {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -40px) scale(1.15); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes floatBlob2 {
+          0% { transform: translate(0px, 0px) scale(1.1); }
+          50% { transform: translate(-30px, 30px) scale(0.85); }
+          100% { transform: translate(0px, 0px) scale(1.1); }
+        }
+        @keyframes floatBlob3 {
+          0% { transform: translate(0px, 0px) scale(0.95); }
+          50% { transform: translate(25px, 25px) scale(1.1); }
+          100% { transform: translate(0px, 0px) scale(0.95); }
+        }
+        .animate-greeting {
+          animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-blob-1 {
+          animation: floatBlob1 16s infinite ease-in-out;
+        }
+        .animate-blob-2 {
+          animation: floatBlob2 20s infinite ease-in-out;
+        }
+        .animate-blob-3 {
+          animation: floatBlob3 14s infinite ease-in-out;
+        }
+      `}} />
 
+      {/* Light Header with Premium Blended Gradient (Loang màu nhạt thuần xanh siêu xịn) */}
+      <div className="pt-8 pb-10 px-6 md:px-12 bg-gradient-to-br from-teal-50/40 via-[#F8FAFC] to-sky-50/40 border-b border-slate-100 shadow-[0_1px_3px_rgba(15,23,42,0.02)] relative overflow-hidden">
+        {/* Soft Blended Pastel Blobs (Animated & Vivid - Green/Teal/Sky Theme) */}
+        <div className="absolute top-[-40%] right-[-10%] w-[450px] h-[450px] bg-gradient-to-br from-emerald-300/40 to-teal-200/40 rounded-full blur-[100px] pointer-events-none animate-blob-1"></div>
+        <div className="absolute bottom-[-30%] left-[10%] w-[400px] h-[400px] bg-gradient-to-tr from-teal-200/40 to-sky-200/40 rounded-full blur-[90px] pointer-events-none animate-blob-2"></div>
+        <div className="absolute top-[10%] left-[45%] w-[320px] h-[320px] bg-gradient-to-r from-sky-300/35 to-emerald-100/40 rounded-full blur-[85px] pointer-events-none animate-blob-3"></div>
+        
+        <div className="max-w-7xl mx-auto relative z-10 animate-greeting">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-[#0F766E] border border-teal-100 mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E]"></span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Không gian tuyển dụng</span>
+          </div>
+          
+          <h1 className="text-3xl md:text-4.5xl font-black tracking-tight text-slate-800 mb-2">
+            Chào mừng trở lại, {user?.fullName || 'Doanh nghiệp'}
+          </h1>
+          <p className="text-slate-500 font-semibold text-sm md:text-base max-w-2xl leading-relaxed">
+            Kiểm soát tiến độ các dự án đang tuyển dụng, nghiệm thu hợp đồng đang hoạt động và theo dõi số dư ký quỹ VNPay.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Workspace */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12 pt-10 relative z-20">
+        
         {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-100 rounded-xl text-sm">
-            {errorMsg}
+          <div className="mb-8 p-4 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl text-sm flex items-center gap-2 font-medium">
+            <span className="material-symbols-outlined text-[20px]">error</span>
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        {/*  Key Metrics Bento Grid  */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-sm hover:-translate-y-0.5 transition-all duration-300">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-[#0F766E]">
-                <span className="material-symbols-outlined">work</span>
+        {/* Key Metrics Bento Grid (All clickable) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          
+          {/* Card 1: Click to My Projects */}
+          <Link to="/my-projects" className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Tổng số dự án đăng</span>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50 group-hover:bg-blue-100/50 transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">work</span>
+                </div>
               </div>
-              <h3 className="text-sm font-semibold text-slate-500">Tổng số dự án</h3>
+              <p className="text-4xl font-black text-slate-800 tracking-tight">{totalProjects}</p>
             </div>
-            <p className="text-3xl font-extrabold text-[#1E293B]">{totalProjects}</p>
-            <p className="text-xs text-slate-400 mt-2">Đã tạo trên hệ thống</p>
-          </div>
+            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-bold group-hover:text-blue-600 transition-colors">
+              <span>Xem danh sách</span>
+              <span className="material-symbols-outlined text-[16px]">east</span>
+            </div>
+          </Link>
 
-          <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-sm hover:-translate-y-0.5 transition-all duration-300">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                <span className="material-symbols-outlined">check_circle</span>
+          {/* Card 2: Click to My Projects */}
+          <Link to="/my-projects" className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Dự án đang mở tuyển</span>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100/50 group-hover:bg-emerald-100/50 transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">bolt</span>
+                </div>
               </div>
-              <h3 className="text-sm font-semibold text-slate-500">Dự án đang mở</h3>
+              <p className="text-4xl font-black text-slate-800 tracking-tight">{openProjects}</p>
             </div>
-            <p className="text-3xl font-extrabold text-[#1E293B]">{openProjects}</p>
-            <p className="text-xs text-[#0F766E] mt-2">Sẵn sàng nhận đề xuất</p>
-          </div>
+            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-bold group-hover:text-emerald-600 transition-colors">
+              <span>Quản lý hồ sơ</span>
+              <span className="text-emerald-600 font-extrabold flex items-center gap-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Live
+              </span>
+            </div>
+          </Link>
 
-          <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-sm hover:-translate-y-0.5 transition-all duration-300">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
-                <span className="material-symbols-outlined">block</span>
+          {/* Card 3: Click to Wallet */}
+          <Link to="/employer-wallet" className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Số dư ví tiền</span>
+                <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100/50 group-hover:bg-rose-100/50 transition-colors">
+                  <span className="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+                </div>
               </div>
-              <h3 className="text-sm font-semibold text-slate-500">Dự án đã đóng</h3>
+              <p className="text-2xl font-black text-slate-800 tracking-tight">{Math.round(balance).toLocaleString('vi-VN')} đ</p>
             </div>
-            <p className="text-3xl font-extrabold text-[#1E293B]">{closedProjects}</p>
-            <p className="text-xs text-slate-400 mt-2">Hết hạn hoặc đã dừng</p>
-          </div>
+            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-bold group-hover:text-rose-500 transition-colors">
+              <span>Xem chi tiết ví</span>
+              <span className="material-symbols-outlined text-[16px]">east</span>
+            </div>
+          </Link>
 
-          <div className="bg-white rounded-xl p-6 border border-[#E2E8F0] shadow-sm hover:-translate-y-0.5 transition-all duration-300">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
-                <span className="material-symbols-outlined">description</span>
+          {/* Card 4: Click to Contracts list */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.02)] hover:shadow-[0_15px_35px_rgba(15,23,42,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hợp đồng hoạt động</span>
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100/50">
+                  <span className="material-symbols-outlined text-[22px]">handshake</span>
+                </div>
               </div>
-              <h3 className="text-sm font-semibold text-slate-500">Tổng số đề xuất</h3>
+              <p className="text-4xl font-black text-slate-800 tracking-tight">{activeContractsCount}</p>
             </div>
-            <p className="text-3xl font-extrabold text-[#1E293B]">{pendingProposalsCount}</p>
-            <p className="text-xs text-slate-400 mt-2">Từ các freelancer gửi đến</p>
+            <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-medium">
+              <span>Freelancer đang làm việc</span>
+              <span className="text-indigo-600 font-bold">Hired</span>
+            </div>
           </div>
         </div>
 
-        {/* Project List Section */}
-        <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-6 mb-12">
-          <h2 className="text-lg font-bold text-slate-800 mb-6">Danh sách dự án của bạn</h2>
+        {/* Dashboard split content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           
-          {loading ? (
-            <div className="text-center py-12 text-slate-500 font-semibold">Đang tải dữ liệu...</div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <span className="material-symbols-outlined text-5xl mb-2">find_in_page</span>
-              <p>Bạn chưa đăng dự án nào trên hệ thống.</p>
-              <Link to="/post-project" className="text-[#0F766E] font-bold mt-2 inline-block hover:underline">
-                Đăng dự án đầu tiên của bạn ngay!
-              </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] text-slate-400 text-xs uppercase font-bold">
-                    <th className="pb-3 font-semibold">Tên dự án</th>
-                    <th className="pb-3 font-semibold">Danh mục</th>
-                    <th className="pb-3 font-semibold">Ngân sách</th>
-                    <th className="pb-3 font-semibold">Thời hạn</th>
-                    <th className="pb-3 font-semibold text-center">Trạng thái</th>
-                    <th className="pb-3 font-semibold text-center">Đề xuất</th>
-                    <th className="pb-3 font-semibold text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E2E8F0]">
-                  {projects.map((project) => (
-                    <tr key={project.project_id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 font-bold text-slate-800 max-w-xs truncate">
-                        {project.title}
-                      </td>
-                      <td className="py-4 text-sm text-slate-600 font-medium">
-                        {project.category_name || 'Lập trình Web'}
-                      </td>
-                      <td className="py-4 text-sm font-bold text-[#0F766E]">
-                        {project.budget_max ? `${Math.round(project.budget_max).toLocaleString('vi-VN')} đ` : 'Liên hệ'}
-                        <span className="block text-[10px] text-slate-400 font-semibold tracking-wider">
-                          {project.budget_type === 'HOURLY' ? 'Theo giờ' : 'Cố định'}
-                        </span>
-                      </td>
-                      <td className="py-4 text-sm text-slate-600 font-semibold">
-                        {project.deadline ? new Date(project.deadline).toLocaleDateString('vi-VN') : 'Không có'}
-                      </td>
-                      <td className="py-4 text-center">
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${project.status === 'OPEN' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
-                          {project.status === 'OPEN' ? 'Đang mở' : 'Đã đóng'}
-                        </span>
-                      </td>
-                      <td className="py-4 text-center text-sm font-bold text-slate-600">
-                        {project.proposalsCount || 0}
-                      </td>
-                      <td className="py-4 text-right">
-                        <div className="flex justify-end items-center gap-2">
-                          <Link 
-                            to={`/manage-proposals/${project.project_id}`} 
-                            className="px-3 py-1.5 text-xs font-bold text-[#0F766E] hover:bg-teal-50 rounded-lg transition-all"
-                          >
-                            Đề xuất
-                          </Link>
-                          {project.status === 'OPEN' && (
-                            <>
-                              <Link 
-                                to={`/edit-project/${project.project_id}`} 
-                                className="p-1.5 text-slate-500 hover:text-[#0F766E] hover:bg-slate-100 rounded-lg transition-all"
-                                title="Chỉnh sửa"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">edit</span>
-                              </Link>
-                              <button 
-                                onClick={() => handleCloseProject(project.project_id)}
-                                className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer border-none bg-transparent"
-                                title="Đóng dự án"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">cancel</span>
-                              </button>
-                            </>
-                          )}
-                          <button 
-                            onClick={() => handleDeleteProject(project.project_id)}
-                            className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer border-none bg-transparent"
-                            title="Xóa dự án"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                          </button>
+          {/* Active Hirings List (Left Column) */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.03)] overflow-hidden">
+              <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Nhân sự &amp; Hợp đồng đang thuê</h2>
+                  <p className="text-slate-400 text-xs mt-0.5 font-medium">Theo dõi các Freelancer đang làm việc và nghiệm thu sản phẩm.</p>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-20 text-slate-500 font-semibold flex flex-col items-center justify-center gap-2">
+                  <div className="w-8 h-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs">Đang tải danh sách hợp đồng...</span>
+                </div>
+              ) : contracts.length === 0 ? (
+                <div className="text-center py-16 text-slate-400 px-6 flex flex-col items-center justify-center">
+                  <span className="material-symbols-outlined text-[48px] text-slate-300 mb-3">supervisor_account</span>
+                  <p className="text-sm font-semibold text-slate-500">Bạn chưa ký hợp đồng nào.</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm mb-4">Duyệt hồ sơ đề xuất nộp bài của freelancer để tiến hành giao dịch ký quỹ tuyển dụng.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {contracts.map((contract) => (
+                    <div key={contract.contract_id} className="p-6 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                            contract.status === 'COMPLETED' 
+                              ? 'bg-slate-100 text-slate-500 border-slate-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          }`}>
+                            {contract.status === 'COMPLETED' ? 'Đã nghiệm thu' : 'Đang thực hiện'}
+                          </span>
+                          <span className="text-slate-400 text-xs font-semibold">
+                            Mã HĐ: #{contract.contract_id}
+                          </span>
                         </div>
-                      </td>
-                    </tr>
+                        
+                        <h3 className="font-extrabold text-slate-800 text-base mb-1 truncate">
+                          {contract.contract_title || contract.project_title}
+                        </h3>
+                        
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400 font-semibold">
+                          <span className="flex items-center gap-1 text-[#0F766E] font-bold">
+                            <span className="material-symbols-outlined text-[16px]">payments</span>
+                            {Math.round(contract.total_amount).toLocaleString('vi-VN')} đ
+                          </span>
+                          <span>•</span>
+                          <span>Bắt đầu: {new Date(contract.created_at).toLocaleDateString('vi-VN')}</span>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 flex items-center gap-2">
+                        {contract.status !== 'COMPLETED' ? (
+                          <Link 
+                            to={`/review-submission/${contract.contract_id}`}
+                            className="px-4 py-2 bg-teal-50 text-[#0F766E] border border-teal-100 rounded-xl text-xs font-bold hover:bg-[#0F766E] hover:text-white transition-all flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">rate_review</span>
+                            Nghiệm thu
+                          </Link>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400 bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl">
+                            Hoàn tất &amp; Đã trả
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Recent Messages / Chat (Right Column) */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.03)] overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                    Tin nhắn gần đây
+                    {unreadMessagesCount > 0 && (
+                      <span className="px-2.5 py-0.5 text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-100 rounded-full animate-pulse">
+                        {unreadMessagesCount} mới
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Hộp thư trao đổi công việc liên lạc đối tác.</p>
+                </div>
+                <Link to="/messages-employer" className="text-xs font-bold text-[#0F766E] hover:text-[#0D5E58] transition-colors flex items-center gap-0.5">
+                  Xem hộp thư <span className="material-symbols-outlined text-[14px]">east</span>
+                </Link>
+              </div>
+
+              {conversations.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-xs font-medium">
+                  Không có tin nhắn gần đây.
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-50">
+                  {conversations.slice(0, 4).map((conv) => (
+                    <div 
+                      key={conv.conversationId} 
+                      onClick={() => navigate('/messages-employer')}
+                      className="p-4 hover:bg-slate-50/70 cursor-pointer transition-all duration-200 flex items-center gap-3.5 relative group border-l-2 border-transparent hover:border-[#0F766E]"
+                    >
+                      <div className="relative shrink-0">
+                        <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center font-extrabold text-sm uppercase tracking-wider transition-transform group-hover:scale-105 duration-200 shadow-sm ${getPastelColor(conv.partnerName)}`}>
+                          {conv.partnerName ? conv.partnerName.slice(0, 2) : 'FL'}
+                        </div>
+                        {conv.unreadCount > 0 && (
+                          <div className="w-3.5 h-3.5 bg-rose-500 border-2 border-white rounded-full absolute -top-1 -right-1 animate-pulse z-10"></div>
+                        )}
+                      </div>
+                      
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-black text-slate-800 group-hover:text-[#0F766E] transition-colors truncate">{conv.partnerName}</h4>
+                          <span className="text-[9px] text-slate-400 font-bold shrink-0 ml-2">
+                            {conv.lastMessageTime ? new Date(conv.lastMessageTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : ''}
+                          </span>
+                        </div>
+                        <p className={`text-xs truncate mt-0.5 ${conv.unreadCount > 0 ? 'text-slate-800 font-bold' : 'text-slate-400 font-medium'}`}>
+                          {conv.lastMessage || 'Bắt đầu cuộc hội thoại mới'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
     </main>
