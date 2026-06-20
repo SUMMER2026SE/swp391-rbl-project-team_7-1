@@ -191,7 +191,9 @@ export default function EmployerDashboard() {
                   {projects.map((project) => (
                     <tr key={project.project_id} className="hover:bg-slate-50 transition-colors">
                       <td className="py-4 font-bold text-slate-800 max-w-xs truncate">
-                        {project.title}
+                        <Link to={`/project-details/${project.project_id}`} className="hover:text-[#0F766E] transition-colors">
+                          {project.title}
+                        </Link>
                       </td>
                       <td className="py-4 text-sm text-slate-600 font-medium">
                         {project.category_name || 'Lập trình Web'}
