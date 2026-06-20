@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-const API = 'http://localhost:5000/api';
+import { userService } from '../../services/userService';
 
 const ALL_SKILLS = [
   'React', 'Node.js', 'UI/UX Design', 'Figma', 'HTML/CSS', 'TypeScript', 
@@ -32,15 +31,10 @@ export default function BrowseFreelancers() {
     const fetchFreelancers = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API}/user/freelancers`);
-        const data = await res.json();
-        if (res.ok) {
-          setFreelancers(data.freelancers || []);
-        } else {
-          setError(data.message || 'Lỗi tải danh sách freelancer.');
-        }
+        const data = await userService.getAllFreelancers();
+        setFreelancers(data.freelancers || []);
       } catch (err) {
-        setError('Lỗi kết nối máy chủ.');
+        setError(err.response?.data?.message || 'Lỗi kết nối máy chủ.');
       } finally {
         setLoading(false);
       }
