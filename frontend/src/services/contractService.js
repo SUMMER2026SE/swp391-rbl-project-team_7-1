@@ -11,6 +11,11 @@ export const contractService = {
     return response.data;
   },
 
+  getContractByProjectId: async (projectId) => {
+    const response = await api.get(`/contracts/project/${projectId}`);
+    return response.data;
+  },
+
   submitWork: async (contractId, formData) => {
     const response = await api.post(`/contracts/${contractId}/submissions`, formData, {
       headers: {

@@ -350,14 +350,24 @@ export default function MyProjects() {
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide border ${
                           project.status === 'OPEN' 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
-                            : project.status === 'CLOSED'
+                          : project.status === 'IN_PROGRESS'
+                            ? 'bg-blue-50 text-blue-700 border-blue-100'
+                          : project.status === 'CLOSED'
                             ? 'bg-amber-50 text-amber-700 border-amber-100'
-                            : project.status === 'REJECTED'
+                          : project.status === 'REJECTED'
                             ? 'bg-rose-50 text-rose-700 border-rose-100'
-                            : 'bg-slate-100 text-slate-500 border-slate-200'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
                         }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : project.status === 'CLOSED' ? 'bg-amber-500 animate-pulse' : project.status === 'REJECTED' ? 'bg-rose-500' : 'bg-slate-400'}`}></span>
-                          {project.status === 'OPEN' ? 'Đang mở' : project.status === 'CLOSED' ? 'Chờ duyệt' : project.status === 'REJECTED' ? 'Từ chối duyệt' : 'Đã hoàn thành'}
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : 
+                            project.status === 'IN_PROGRESS' ? 'bg-blue-500 animate-pulse' :
+                            project.status === 'CLOSED' ? 'bg-amber-500 animate-pulse' : 
+                            project.status === 'REJECTED' ? 'bg-rose-500' : 'bg-slate-400'
+                          }`}></span>
+                          {project.status === 'OPEN' ? 'Đang mở' : 
+                           project.status === 'IN_PROGRESS' ? 'Đang thực hiện' :
+                           project.status === 'CLOSED' ? 'Chờ duyệt' : 
+                           project.status === 'REJECTED' ? 'Từ chối duyệt' : 'Đã hoàn thành'}
                         </span>
                       </td>
 

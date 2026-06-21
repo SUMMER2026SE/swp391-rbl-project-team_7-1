@@ -51,7 +51,7 @@ export default function Header({ layout = 'dashboard' }) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setDropdownOpen(false);
-    navigate('/');
+    window.location.href = '/';
   };
 
   // Helper to determine the opposite dashboard role when clicking "Switch Role"

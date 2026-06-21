@@ -280,11 +280,22 @@ export default function EmployerDashboard() {
                     <div key={contract.contract_id} className="p-6 hover:bg-slate-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${contract.status === 'COMPLETED'
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                            contract.status === 'COMPLETED'
                               ? 'bg-slate-100 text-slate-500 border-slate-200'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                            }`}>
-                            {contract.status === 'COMPLETED' ? 'Đã nghiệm thu' : 'Đang thực hiện'}
+                              : contract.latest_submission_status === 'SUBMITTED'
+                                ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                : contract.latest_submission_status === 'REVISION_REQUESTED'
+                                  ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          }`}>
+                            {contract.status === 'COMPLETED' 
+                              ? 'Đã nghiệm thu' 
+                              : contract.latest_submission_status === 'SUBMITTED'
+                                ? 'Chờ duyệt sản phẩm'
+                                : contract.latest_submission_status === 'REVISION_REQUESTED'
+                                  ? 'Yêu cầu chỉnh sửa'
+                                  : 'Đang thực hiện'}
                           </span>
                           <span className="text-slate-400 text-xs font-semibold">
                             Mã HĐ: #{contract.contract_id}

@@ -2,6 +2,73 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { contractService } from '../../services/contractService';
 
+const renderDescription = (desc) => {
+  if (!desc) return null;
+  const marker = '[Đường dẫn sản phẩm]:';
+  const index = desc.indexOf(marker);
+  
+  if (index !== -1) {
+    const notes = desc.substring(0, index).trim();
+    const link = desc.substring(index + marker.length).trim();
+    return (
+      <div className="space-y-4">
+        <p className="whitespace-pre-line leading-relaxed">{notes}</p>
+        {link && (
+          <div className="mt-4 p-4 bg-teal-50/50 border border-teal-100 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-[#0F766E] bg-teal-100/30 p-2.5 rounded-xl">link</span>
+              <div className="min-w-0">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Đường dẫn sản phẩm</span>
+                <a 
+                  href={link} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-[#0F766E] hover:text-[#0D5E58] font-bold text-sm break-all transition-colors underline decoration-2 decoration-[#0F766E]/20 hover:decoration-[#0D5E58] inline-flex items-center gap-1"
+                >
+                  {link}
+                </a>
+              </div>
+            </div>
+            <a 
+              href={link} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0F766E] hover:bg-[#0D5E58] text-white text-xs font-bold rounded-xl shadow-sm hover:shadow-md transition-all decoration-none flex-shrink-0 cursor-pointer"
+            >
+              Mở liên kết
+              <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return <p className="whitespace-pre-line leading-relaxed">{desc}</p>;
+};
+
+const renderSimpleDescription = (desc) => {
+  if (!desc) return null;
+  const marker = '[Đường dẫn sản phẩm]:';
+  const index = desc.indexOf(marker);
+  if (index !== -1) {
+    const notes = desc.substring(0, index).trim();
+    const link = desc.substring(index + marker.length).trim();
+    return (
+      <div className="space-y-1">
+        <p className="text-sm text-slate-600 line-clamp-2">{notes}</p>
+        {link && (
+          <p className="text-xs text-slate-500 flex items-center gap-1">
+            <span className="material-symbols-outlined text-[12px] text-[#0F766E]">link</span>
+            Link: <a href={link} target="_blank" rel="noopener noreferrer" className="text-[#0F766E] hover:underline break-all font-semibold">{link}</a>
+          </p>
+        )}
+      </div>
+    );
+  }
+  return <p className="text-sm text-slate-600 line-clamp-2">{desc}</p>;
+};
+
 export default function ReviewSubmission() {
   const { contractId } = useParams();
   const navigate = useNavigate();
@@ -170,8 +237,8 @@ export default function ReviewSubmission() {
                   <span className="material-symbols-outlined text-[#0F766E] bg-slate-100 p-2 rounded-2xl">description</span>
                   <h2 className="text-lg font-bold text-slate-800">Thông tin bài nộp của Freelancer</h2>
                 </div>
-                <div className="text-base text-slate-600 space-y-4 whitespace-pre-line">
-                  {latestSubmission.description}
+                <div className="text-base text-slate-600 space-y-4">
+                  {renderDescription(latestSubmission.description)}
                 </div>
                 <p className="text-xs text-slate-400 mt-4">
                   Gửi vào lúc: {new Date(latestSubmission.submitted_at).toLocaleString('vi-VN')}
@@ -239,7 +306,7 @@ export default function ReviewSubmission() {
                       <span className="text-xs text-slate-400">{new Date(sub.submitted_at).toLocaleString('vi-VN')}</span>
                       <span className="text-xs font-semibold text-slate-600 uppercase bg-slate-100 px-2 py-0.5 rounded">{sub.status}</span>
                     </div>
-                    <p className="text-sm text-slate-600 line-clamp-2">{sub.description}</p>
+                    {renderSimpleDescription(sub.description)}
                     {sub.revision_note && (
                       <div className="mt-2 p-2 bg-amber-50 text-xs text-amber-800 rounded border border-amber-100">
                         <strong>Yêu cầu chỉnh sửa:</strong> {sub.revision_note}
@@ -253,7 +320,7 @@ export default function ReviewSubmission() {
         </div>
 
         {/* Right Column: Decision Action panel */}
-        <div className="lg:col-span-4 space-y-6 sticky top-24">
+        <div className="lg:col-span-4 space-y-6">
           {/* Freelancer details */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-4">Thực hiện bởi</h3>

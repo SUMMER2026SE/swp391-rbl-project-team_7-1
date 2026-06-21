@@ -120,13 +120,13 @@ export default function AdminWithdrawals() {
             </select>
             <button 
               onClick={() => {}} 
-              className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-sm font-bold shadow-[0_4px_12px_rgba(15,118,110,0.15)] hover:bg-[#0d5e58] hover:shadow-[0_4px_16px_rgba(15,118,110,0.25)] transition-all cursor-pointer animate-fade-in"
+              className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-sm font-bold shadow-[0_4px_12px_rgba(15,118,110,0.15)] hover:bg-[#0d5e58] hover:shadow-[0_4px_16px_rgba(15,118,110,0.25)] transition-all cursor-pointer animate-fade-in border-none"
             >
               Tìm kiếm
             </button>
             <button 
               onClick={() => { setSearch(''); setStatusFilter('ALL'); }} 
-              className="px-5 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+              className="px-5 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer border border-solid"
             >
               Đặt lại
             </button>
@@ -207,14 +207,14 @@ export default function AdminWithdrawals() {
                             <button
                               onClick={() => handleAction(w.withdrawal_id, 'approve')}
                               disabled={loading}
-                              className="px-3.5 py-1.5 bg-[#0F766E] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#0d5e58] disabled:opacity-50 transition-all cursor-pointer"
+                              className="px-3.5 py-1.5 bg-[#0F766E] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#0d5e58] disabled:opacity-50 transition-all cursor-pointer border-none"
                             >
                               Duyệt
                             </button>
                             <button
                               onClick={() => handleAction(w.withdrawal_id, 'reject')}
                               disabled={loading}
-                              className="px-3.5 py-1.5 bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-600 hover:text-white disabled:opacity-50 transition-all cursor-pointer"
+                              className="px-3.5 py-1.5 bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-600 hover:text-white disabled:opacity-50 transition-all cursor-pointer border-none"
                             >
                               Từ chối
                             </button>

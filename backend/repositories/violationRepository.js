@@ -151,3 +151,19 @@ export const createNotification = async (userId, message) => {
     // fallback or alternative check if required
   }
 };
+
+export const createViolationReport = async ({ reporterId, reportedUserId, projectId, messageId, reviewId, reportType, reason }) => {
+  const pool = await poolPromise;
+  await pool.request()
+    .input('reporterId', sql.Int, reporterId)
+    .input('reportedUserId', sql.Int, reportedUserId)
+    .input('projectId', sql.Int, projectId || null)
+    .input('messageId', sql.Int, messageId || null)
+    .input('reviewId', sql.Int, reviewId || null)
+    .input('reportType', sql.VarChar, reportType)
+    .input('reason', sql.NVarChar, reason)
+    .query(`
+      INSERT INTO violation_reports (reporter_id, reported_user_id, project_id, message_id, review_id, report_type, reason, status, created_at)
+      VALUES (@reporterId, @reportedUserId, @projectId, @messageId, @reviewId, @reportType, @reason, 'PENDING', SYSUTCDATETIME())
+    `);
+};

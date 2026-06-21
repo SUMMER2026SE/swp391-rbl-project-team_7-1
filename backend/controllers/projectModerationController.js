@@ -12,11 +12,9 @@ export const getPendingProjects = async (req, res) => {
     const offset = (pageNum - 1) * lim;
 
     const pool = await poolPromise;
-    const request = pool.request();
 
     let whereClause = "WHERE p.status = 'CLOSED'";
     if (q) {
-      request.input('search', sql.NVarChar, `%${q}%`);
       whereClause += ` AND (p.title LIKE @search OR u.full_name LIKE @search)`;
     }
 
@@ -27,10 +25,12 @@ export const getPendingProjects = async (req, res) => {
       LEFT JOIN users u ON p.employer_id = u.user_id
       ${whereClause}
     `;
-    request.input('offset', sql.Int, offset);
-    request.input('limit', sql.Int, lim);
 
-    const countResult = await pool.request().query(countQuery);
+    const countReq = pool.request();
+    if (q) {
+      countReq.input('search', sql.NVarChar, `%${q}%`);
+    }
+    const countResult = await countReq.query(countQuery);
     const total = countResult.recordset[0]?.total || 0;
     const totalPages = Math.max(Math.ceil(total / lim), 1);
 

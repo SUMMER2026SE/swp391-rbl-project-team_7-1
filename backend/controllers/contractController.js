@@ -9,9 +9,10 @@ export const getContractById = async (req, res) => {
     const result = await pool.request()
       .input('contractId', sql.Int, contractId)
       .query(`
-        SELECT c.*, p.title as project_title, p.description as project_description,
+        SELECT c.*, p.title as project_title, p.description as project_description, p.deadline as project_deadline,
                u_emp.full_name as employer_name, u_free.full_name as freelancer_name,
-               r.rating as review_rating, r.comment as review_comment
+               r.rating as review_rating, r.comment as review_comment,
+               (SELECT TOP 1 status FROM work_submissions WHERE contract_id = c.contract_id ORDER BY submitted_at DESC) as latest_submission_status
         FROM contracts c
         JOIN projects p ON c.project_id = p.project_id
         JOIN users u_emp ON c.employer_id = u_emp.user_id
@@ -44,7 +45,8 @@ export const getActiveContracts = async (req, res) => {
     const result = await pool.request()
       .input('userId', sql.Int, userId)
       .query(`
-        SELECT c.*, p.title as project_title
+        SELECT c.*, p.title as project_title, p.deadline as project_deadline,
+               (SELECT TOP 1 status FROM work_submissions WHERE contract_id = c.contract_id ORDER BY submitted_at DESC) as latest_submission_status
         FROM contracts c
         JOIN projects p ON c.project_id = p.project_id
         WHERE (c.employer_id = @userId OR c.freelancer_id = @userId)
@@ -55,6 +57,41 @@ export const getActiveContracts = async (req, res) => {
   } catch (error) {
     console.error('Error in getActiveContracts:', error);
     res.status(500).json({ message: 'Lỗi server khi lấy danh sách hợp đồng.' });
+  }
+};
+
+export const getContractByProjectId = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.user.id;
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT c.*, p.title as project_title, p.deadline as project_deadline,
+               u_emp.full_name as employer_name, u_free.full_name as freelancer_name,
+               r.rating as review_rating, r.comment as review_comment,
+               (SELECT TOP 1 status FROM work_submissions WHERE contract_id = c.contract_id ORDER BY submitted_at DESC) as latest_submission_status
+        FROM contracts c
+        JOIN projects p ON c.project_id = p.project_id
+        JOIN users u_emp ON c.employer_id = u_emp.user_id
+        JOIN users u_free ON c.freelancer_id = u_free.user_id
+        LEFT JOIN reviews r ON c.contract_id = r.contract_id
+        WHERE c.project_id = @projectId
+          AND (c.employer_id = @userId OR c.freelancer_id = @userId)
+        ORDER BY c.created_at DESC
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.json({ success: false, contract: null, message: 'Chưa có hợp đồng cho dự án này.' });
+    }
+
+    res.json({ success: true, contract: result.recordset[0] });
+  } catch (error) {
+    console.error('Error in getContractByProjectId:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy hợp đồng dự án.' });
   }
 };
 
@@ -174,56 +211,53 @@ export const approveSubmission = async (req, res) => {
       return res.status(400).json({ message: 'Bài nộp này đã được duyệt trước đó.' });
     }
 
-    // 2. Perform Transaction: Approve Submission, Complete Contract/Project, Release Escrow to Freelancer
+    // 2. Perform Transaction — each step uses its OWN request() to avoid duplicate param errors
     const tx = new sql.Transaction(pool);
     await tx.begin();
 
     try {
-      const request = tx.request();
-
       // Update submission status
-      await request
+      await tx.request()
         .input('submissionId', sql.Int, submissionId)
         .query("UPDATE work_submissions SET status = 'APPROVED', updated_at = SYSUTCDATETIME() WHERE submission_id = @submissionId");
 
       // Update contract status
-      await request
+      await tx.request()
         .input('contractId', sql.Int, sub.contract_id)
         .query("UPDATE contracts SET status = 'COMPLETED', completed_at = SYSUTCDATETIME(), updated_at = SYSUTCDATETIME() WHERE contract_id = @contractId");
 
       // Update project status to COMPLETED
-      await request
+      await tx.request()
         .input('projectId', sql.Int, sub.project_id)
         .query("UPDATE projects SET status = 'COMPLETED', updated_at = SYSUTCDATETIME() WHERE project_id = @projectId");
 
       // Find EscrowAccount
-      const escrowResult = await request
+      const escrowResult = await tx.request()
         .input('projectId', sql.Int, sub.project_id)
         .query("SELECT TOP 1 escrow_id, amount FROM EscrowAccounts WHERE project_id = @projectId AND status = 'FUNDED'");
 
       if (escrowResult.recordset.length > 0) {
         const escrow = escrowResult.recordset[0];
 
-        // Update EscrowAccount
-        await request
+        // Update EscrowAccount status
+        await tx.request()
           .input('escrowId', sql.Int, escrow.escrow_id)
           .query("UPDATE EscrowAccounts SET status = 'RELEASED' WHERE escrow_id = @escrowId");
 
-        // Insert EscrowTransaction
-        await request
+        // Insert EscrowTransaction record
+        await tx.request()
           .input('escrowId', sql.Int, escrow.escrow_id)
           .input('amount', sql.Decimal(18, 2), escrow.amount)
           .query("INSERT INTO EscrowTransactions (escrow_id, amount, type, status) VALUES (@escrowId, @amount, 'RELEASE', 'COMPLETED')");
 
-        // Find Freelancer Wallet
-        let walletRes = await request
+        // Find or create Freelancer Wallet
+        const walletRes = await tx.request()
           .input('freelancerId', sql.Int, sub.freelancer_id)
           .query("SELECT wallet_id FROM Wallet WHERE user_id = @freelancerId");
 
         let walletId;
         if (walletRes.recordset.length === 0) {
-          // Create Wallet if not exists
-          const newWalletRes = await request
+          const newWalletRes = await tx.request()
             .input('freelancerId', sql.Int, sub.freelancer_id)
             .query("INSERT INTO Wallet (user_id, balance, created_at, updated_at) VALUES (@freelancerId, 0, GETDATE(), GETDATE()); SELECT SCOPE_IDENTITY() as wallet_id;");
           walletId = newWalletRes.recordset[0].wallet_id;
@@ -232,13 +266,13 @@ export const approveSubmission = async (req, res) => {
         }
 
         // Add funds to Freelancer Wallet
-        await request
+        await tx.request()
           .input('walletId', sql.Int, walletId)
           .input('amount', sql.Decimal(18, 2), escrow.amount)
           .query("UPDATE Wallet SET balance = balance + @amount, updated_at = GETDATE() WHERE wallet_id = @walletId");
 
-        // Insert WalletTransaction
-        await request
+        // Insert WalletTransaction record
+        await tx.request()
           .input('walletId', sql.Int, walletId)
           .input('amount', sql.Decimal(18, 2), escrow.amount)
           .input('desc', sql.NVarChar(255), `Nhận thanh toán nghiệm thu hợp đồng: ${sub.contract_title}`)
@@ -293,21 +327,19 @@ export const requestRevision = async (req, res) => {
     await tx.begin();
 
     try {
-      const request = tx.request();
-
-      // Update submission status to REVISION_REQUESTED
-      await request
+      // Update submission status to REVISION_REQUESTED (own request to avoid duplicate params)
+      await tx.request()
         .input('submissionId', sql.Int, submissionId)
         .query("UPDATE work_submissions SET status = 'REVISION_REQUESTED', updated_at = SYSUTCDATETIME() WHERE submission_id = @submissionId");
 
-      // Insert revision request record
-      await request
+      // Insert revision request record (own request)
+      await tx.request()
         .input('submissionId', sql.Int, submissionId)
         .input('employerId', sql.Int, employerId)
         .input('note', sql.NVarChar, note)
         .query(`
           INSERT INTO revisions (submission_id, requested_by, revision_note, status, created_at)
-          VALUES (@submissionId, @employerId, @note, 'ACTIVE', SYSUTCDATETIME())
+          VALUES (@submissionId, @employerId, @note, 'REQUESTED', SYSUTCDATETIME())
         `);
 
       await tx.commit();
@@ -367,24 +399,22 @@ export const createContractReview = async (req, res) => {
     await tx.begin();
 
     try {
-      const request = tx.request();
-      
       // Insert review
-      await request
+      await tx.request()
         .input('contractId', sql.Int, contractId)
         .input('reviewerId', sql.Int, employerId)
         .input('revieweeId', sql.Int, contract.freelancer_id)
         .input('rating', sql.Int, ratingVal)
         .input('comment', sql.NVarChar, comment || null)
         .query(`
-          INSERT INTO reviews (contract_id, reviewer_id, reviewee_id, rating, comment, created_at)
-          VALUES (@contractId, @reviewerId, @revieweeId, @rating, @comment, SYSUTCDATETIME())
+          INSERT INTO reviews (contract_id, from_user_id, to_user_id, rating, comment, status, created_at)
+          VALUES (@contractId, @reviewerId, @revieweeId, @rating, @comment, 'VISIBLE', SYSUTCDATETIME())
         `);
 
       // Calculate new ratings aggregation for freelancer
-      const ratingsRes = await request
+      const ratingsRes = await tx.request()
         .input('freelancerId', sql.Int, contract.freelancer_id)
-        .query('SELECT rating FROM reviews WHERE reviewee_id = @freelancerId');
+        .query('SELECT rating FROM reviews WHERE to_user_id = @freelancerId');
 
       const reviewsList = ratingsRes.recordset;
       const totalReviews = reviewsList.length;
@@ -392,7 +422,8 @@ export const createContractReview = async (req, res) => {
       const ratingAverage = totalReviews > 0 ? (totalSum / totalReviews) : 0;
 
       // Update freelancer_profiles safely using IF EXISTS
-      await request
+      await tx.request()
+        .input('freelancerId', sql.Int, contract.freelancer_id)
         .input('ratingAverage', sql.Decimal(3, 2), ratingAverage)
         .input('totalReviews', sql.Int, totalReviews)
         .query(`

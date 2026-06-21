@@ -785,8 +785,8 @@ export const getFreelancerReviews = async (req, res, next) => {
       .query(`
         SELECT r.*, u.full_name as reviewer_name, u.avatar_url as reviewer_avatar
         FROM reviews r
-        JOIN users u ON r.reviewer_id = u.user_id
-        WHERE r.reviewee_id = @freelancerId
+        JOIN users u ON r.from_user_id = u.user_id
+        WHERE r.to_user_id = @freelancerId
         ORDER BY r.created_at DESC
       `);
 
