@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUser(null);
-    navigate('/login');
+    navigate('/');
   };
 
   const updateProfile = (updatedData) => {
