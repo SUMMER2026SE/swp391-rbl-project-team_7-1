@@ -642,11 +642,11 @@ export const deletePortfolio = async (req, res) => {
   }
 };
 
-export const getPublicProfile = async (req, res) => {
+export const getPublicProfile = async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);
     if (isNaN(userId)) {
-      return res.status(400).json({ message: 'ID người dùng không hợp lệ.' });
+      return next();
     }
 
     const pool = await poolPromise;
