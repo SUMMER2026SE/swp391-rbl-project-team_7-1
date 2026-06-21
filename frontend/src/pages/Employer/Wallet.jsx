@@ -91,7 +91,7 @@ export default function EmployerWallet() {
           <div>
             <p className="font-body-sm text-body-sm text-[#475569] mb-1">Số dư ví (Wallet Balance)</p>
             <h3 className="font-headline-2xl text-headline-2xl text-[#334155]">
-              ${wallet?.balance !== undefined ? parseFloat(wallet.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              {wallet?.balance !== undefined ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(wallet.balance) : '0 ₫'}
             </h3>
             <p className="font-body-sm text-body-sm text-[#475569] mt-2 text-xs">
               Mã ví: #{wallet?.wallet_id || 'N/A'}
