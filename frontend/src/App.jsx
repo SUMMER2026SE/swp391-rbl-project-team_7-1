@@ -19,6 +19,7 @@ import AdminUsers from './pages/Admin/Users';
 import ProposalModeration from './pages/Admin/ProposalModeration';
 import ViolationHandling from './pages/Admin/ViolationHandling';
 import ProjectModeration from './pages/Admin/ProjectModeration';
+import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 import AIChatPage from './pages/AI/AIChatPage';
 
 // Pages - Wallet & Payment (Iteration 2)
@@ -157,6 +158,7 @@ export default function App() {
         <Route path="/admin-users" element={<AdminUsers />} />
         <Route path="/admin-project-moderation" element={<ProposalModeration />} />
         <Route path="/admin-project-approval" element={<ProjectModeration />} />
+        <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
         <Route path="/admin-dispute-management" element={<DisputeManagement />} />
         <Route path="/admin-disputes" element={<AdminDisputes />} />
         <Route path="/admin-generate-report" element={<AdminGenerateReport />} />

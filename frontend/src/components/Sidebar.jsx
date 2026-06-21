@@ -126,7 +126,7 @@ export default function Sidebar() {
       { label: 'Trang chủ', icon: 'dashboard', link: '/admin-dashboard' },
       { label: 'Người dùng', icon: 'group', link: '/admin-users' },
       { label: 'Duyệt dự án', icon: 'fact_check', link: '/admin-project-approval' },
-      { label: 'Duyệt đề xuất', icon: 'assignment', link: '/admin-project-moderation' },
+      { label: 'Duyệt rút tiền', icon: 'payments', link: '/admin-withdrawals' },
       { label: 'Tranh chấp', icon: 'gavel', link: '/admin-dispute-management' },
       { label: 'Vi phạm', icon: 'warning', link: '/admin-violations' },
       { label: 'Báo cáo', icon: 'summarize', link: '/admin-generate-report' },
