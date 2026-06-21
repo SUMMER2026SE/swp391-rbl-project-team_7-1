@@ -519,9 +519,12 @@ export const getMyPortfolios = async (req, res) => {
   }
 };
 
-export const getFreelancerPortfolios = async (req, res) => {
+export const getFreelancerPortfolios = async (req, res, next) => {
   try {
     const { freelancerId } = req.params;
+    if (isNaN(parseInt(freelancerId, 10))) {
+      return next();
+    }
     const pool = await poolPromise;
     const result = await pool.request()
       .input('freelancerId', sql.Int, freelancerId)
@@ -769,9 +772,12 @@ export const getAllFreelancers = async (req, res) => {
   }
 };
 
-export const getFreelancerReviews = async (req, res) => {
+export const getFreelancerReviews = async (req, res, next) => {
   try {
     const { freelancerId } = req.params;
+    if (isNaN(parseInt(freelancerId, 10))) {
+      return next();
+    }
     const pool = await poolPromise;
 
     const result = await pool.request()
