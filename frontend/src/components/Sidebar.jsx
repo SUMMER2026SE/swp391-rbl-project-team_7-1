@@ -10,6 +10,11 @@ export default function Sidebar() {
   const path = location.pathname;
   const navigate = useNavigate();
 
+  const [localUser, setLocalUser] = React.useState(() => {
+    const s = localStorage.getItem('user');
+    return s ? JSON.parse(s) : null;
+  });
+
   let role = 'freelancer';
   if (path.startsWith('/admin')) {
     role = 'admin';
@@ -34,11 +39,6 @@ export default function Sidebar() {
       role = 'freelancer';
     }
   }
-
-  const [localUser, setLocalUser] = React.useState(() => {
-    const s = localStorage.getItem('user');
-    return s ? JSON.parse(s) : null;
-  });
 
   const [unreadCount, setUnreadCount] = React.useState(0);
 
