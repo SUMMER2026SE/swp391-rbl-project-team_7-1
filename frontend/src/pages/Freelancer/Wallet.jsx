@@ -84,7 +84,7 @@ export default function FreelancerWallet() {
           </div>
           <div className="relative z-10">
             <p className="font-display-hero text-display-hero text-[#334155]">
-              ${wallet?.balance !== undefined ? parseFloat(wallet.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+              {wallet?.balance !== undefined ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(wallet.balance) : '0 ₫'}
             </p>
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-2 flex items-center gap-1">
               <span className="material-symbols-outlined text-[16px] text-green-600">check_circle</span>
