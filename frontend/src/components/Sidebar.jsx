@@ -18,8 +18,10 @@ export default function Sidebar() {
     path.startsWith('/manage-proposals') ||
     path === '/review-submission' ||
     path === '/revision-requested' ||
-    path === '/project-details' ||
+    path.startsWith('/project-details') ||
     path === '/post-project' ||
+    path.startsWith('/edit-project') ||
+    path === '/my-projects' ||
     path === '/escrow-checkout'
   ) {
     role = 'employer';
@@ -110,6 +112,7 @@ export default function Sidebar() {
   } else if (role === 'employer') {
     items = [
       { label: 'Bảng điều khiển', icon: 'dashboard', link: '/employer-dashboard' },
+      { label: 'Dự án của tôi', icon: 'work', link: '/my-projects' },
       { label: 'Ví tiền', icon: 'payments', link: '/employer-wallet' },
       { label: 'Tin nhắn', icon: 'chat', link: '/messages-employer' },
       { label: 'Trợ lý AI', icon: 'smart_toy', link: '/ai-chat' },
@@ -142,8 +145,10 @@ export default function Sidebar() {
   const isItemActive = (item) => {
     if (item.link === '#') return false;
     if (path === item.link) return true;
+    if (item.label === 'Tìm Freelancer' && (path === '/freelancers' || path.startsWith('/profile/') || path.startsWith('/freelancers/'))) return true;
     if (item.label === 'Báo cáo' && path.startsWith('/admin-report')) return true;
-    if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested' || path === '/project-details' || path === '/post-project')) return true;
+    if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested')) return true;
+    if (item.label === 'Dự án của tôi' && (path === '/my-projects' || path.startsWith('/manage-proposals') || path.startsWith('/project-details') || path === '/post-project' || path.startsWith('/edit-project'))) return true;
     if (item.label === 'Ví tiền' && path.endsWith('-wallet')) return true;
     if (item.label === 'Hồ sơ' && path === '/profile') return true;
     return false;

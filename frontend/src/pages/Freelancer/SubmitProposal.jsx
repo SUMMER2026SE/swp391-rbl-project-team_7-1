@@ -132,15 +132,18 @@ export default function SubmitProposal() {
                     <input 
                       className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-14 pr-4 text-slate-800 focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all text-base font-medium" 
                       id="bid-input" 
-                      placeholder="Ví dụ: 15000000" 
-                      type="number"
+                      placeholder="Ví dụ: 15.000.000" 
+                      type="text"
                       required
-                      value={bidAmount}
-                      onChange={(e) => setBidAmount(e.target.value)}
+                      value={bidAmount ? bidAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
+                      onChange={(e) => {
+                        const rawVal = e.target.value.replace(/\./g, '').replace(/\D/g, '');
+                        setBidAmount(rawVal);
+                      }}
                     />
                   </div>
                   <p className="text-sm font-medium text-[#0F766E] mt-2 text-right">
-                    Ngân sách dự kiến: {project?.budget_min?.toLocaleString()} - {project?.budget_max?.toLocaleString()} VNĐ
+                    Ngân sách dự kiến: {project?.budget_max?.toLocaleString()} VNĐ
                   </p>
                 </div>
                 <div>

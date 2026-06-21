@@ -46,7 +46,7 @@ export default function PaymentSuccess() {
         </div>
         {/*  Actions  */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/project-details" className="bg-[#0F766E] text-white text-base font-medium py-3 px-6 rounded-2xl hover:bg-none hover:bg-[#0F766E] transition-all duration-500 ease-out hover:shadow-[0_10px_25px_rgba(15,118,110,0.18)] flex-1 flex items-center justify-center gap-2">
+          <Link to="/employer-dashboard" className="bg-[#0F766E] text-white text-base font-medium py-3 px-6 rounded-2xl hover:bg-none hover:bg-[#0F766E] transition-all duration-500 ease-out hover:shadow-[0_10px_25px_rgba(15,118,110,0.18)] flex-1 flex items-center justify-center gap-2">
             Xem Dự án
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </Link>

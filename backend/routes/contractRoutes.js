@@ -8,7 +8,8 @@ import {
   submitWork, 
   getContractSubmissions, 
   approveSubmission, 
-  requestRevision 
+  requestRevision,
+  createContractReview
 } from '../controllers/contractController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
@@ -47,5 +48,8 @@ router.get('/:contractId/submissions', getContractSubmissions);
 // Approve / Request revision on submission
 router.post('/submissions/:submissionId/approve', approveSubmission);
 router.post('/submissions/:submissionId/revision', requestRevision);
+
+// Review submission
+router.post('/:contractId/review', createContractReview);
 
 export default router;

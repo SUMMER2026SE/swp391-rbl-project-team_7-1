@@ -42,5 +42,23 @@ export const proposalService = {
   acceptProposal: async (proposalId) => {
     const response = await api.post(`/admin/proposals/${proposalId}/accept`);
     return response.data;
+  },
+
+  getProposalById: async (proposalId) => {
+    const response = await api.get(`/proposals/${proposalId}`);
+    return response.data;
+  },
+
+  updateProposal: async (proposalId, proposalData) => {
+    const config = proposalData instanceof FormData ? {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    } : {};
+    const response = await api.put(`/proposals/${proposalId}`, proposalData, config);
+    return response.data;
+  },
+
+  deleteProposal: async (proposalId) => {
+    const response = await api.delete(`/proposals/${proposalId}`);
+    return response.data;
   }
 };

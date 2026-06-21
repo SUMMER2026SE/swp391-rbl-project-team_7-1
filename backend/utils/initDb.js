@@ -43,8 +43,22 @@ export const initDb = async () => {
       );
     `);
 
-    console.log('✅ Wallet Management tables initialized (if not existed)');
+    // Create reviews Table
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='reviews' and xtype='U')
+      CREATE TABLE reviews (
+        review_id INT IDENTITY(1,1) PRIMARY KEY,
+        contract_id INT NOT NULL,
+        reviewer_id INT NOT NULL,
+        reviewee_id INT NOT NULL,
+        rating INT NOT NULL,
+        comment NVARCHAR(1000),
+        created_at DATETIME DEFAULT GETDATE()
+      );
+    `);
+
+    console.log('✅ Wallet Management and Review tables initialized (if not existed)');
   } catch (error) {
-    console.error('❌ Failed to initialize Wallet Management tables:', error);
+    console.error('❌ Failed to initialize database tables:', error);
   }
 };

@@ -34,5 +34,10 @@ export const projectService = {
   getEmployerProjects: async () => {
     const response = await api.get('/projects/my/employer-projects');
     return response.data;
+  },
+
+  deleteProject: async (id) => {
+    const response = await api.delete(`/projects/${id}`);
+    return response.data;
   }
 };

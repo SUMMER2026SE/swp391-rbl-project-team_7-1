@@ -29,8 +29,6 @@ import recommendationRoutes from './routes/recommendationRoutes.js';
 import { sql, poolPromise } from './config/db.js';
 import { initDb } from './utils/initDb.js';
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 

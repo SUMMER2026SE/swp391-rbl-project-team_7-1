@@ -30,6 +30,7 @@ import WithdrawFunds from './pages/Wallet/WithdrawFunds';
 // Pages - Employer
 import EmployerDashboard from './pages/Employer/Dashboard';
 import EmployerWallet from './pages/Employer/Wallet';
+import MyProjects from './pages/Employer/MyProjects';
 
 // Pages - Freelancer
 import FreelancerDashboard from './pages/Freelancer/Dashboard';
@@ -58,9 +59,11 @@ import ProjectDetails from './pages/Public/ProjectDetails';
 import ReviewSubmission from './pages/Employer/ReviewSubmission';
 import RevisionRequested from './pages/Employer/RevisionRequested';
 import SubmitProposal from './pages/Freelancer/SubmitProposal';
+import EditProposal from './pages/Freelancer/EditProposal';
 import SubmitWork from './pages/Freelancer/SubmitWork';
 import Projects from './pages/Public/Projects'; // Original projects list
 import Profile from './pages/Public/Profile'; // Public profile page
+import BrowseFreelancers from './pages/Public/BrowseFreelancers';
 
 import { useAuth } from './hooks/useAuth';
 
@@ -80,13 +83,31 @@ export default function App() {
     <Routes>
       {/* --- Public Pages with PublicLayout (Header & Footer) --- */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<LandingPage />} />
+        <Route 
+          path="/" 
+          element={
+            token ? (
+              user?.roleDefault === 'ADMIN' ? (
+                <Navigate to="/admin-dashboard" replace />
+              ) : user?.roleDefault === 'EMPLOYER' ? (
+                <Navigate to="/employer-dashboard" replace />
+              ) : (
+                <Navigate to="/freelancer-dashboard" replace />
+              )
+            ) : (
+              <LandingPage />
+            )
+          } 
+        />
         <Route path="/help-center" element={<HelpCenter />} />
         <Route path="/article-vnpay-escrow" element={<ArticleVNPayEscrow />} />
+        <Route path="/freelancers" element={<BrowseFreelancers />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/freelancers/:id" element={<Profile />} />
         {!token && (
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />
-            <Route path="/project-details" element={<ProjectDetails />} />
+            <Route path="/project-details/:id" element={<ProjectDetails />} />
             <Route path="/profile" element={<Profile />} />
           </>
         )}
@@ -100,12 +121,16 @@ export default function App() {
         <Route path="/messages-freelancer" element={<MessagesFreelancer />} />
         <Route path="/submit-work/:contractId" element={<SubmitWork />} />
         <Route path="/submit-proposal/:projectId" element={<SubmitProposal />} />
+        <Route path="/edit-proposal/:proposalId" element={<EditProposal />} />
         {/* Profile is always accessible when logged in (DashboardLayout handles auth) */}
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/freelancers/:id" element={<Profile />} />
+        <Route path="/freelancers" element={<BrowseFreelancers />} />
         {token && (
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />
-            <Route path="/project-details" element={<ProjectDetails />} />
+            <Route path="/project-details/:id" element={<ProjectDetails />} />
             
             {/* Wallet / Payment / Project Routes */}
             <Route path="/wallet/transactions" element={<TransactionHistoryPage />} />
@@ -116,7 +141,8 @@ export default function App() {
         )}
 
         {/* Employer Dashboard Paths */}
-        <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+         <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+        <Route path="/my-projects" element={<MyProjects />} />
         <Route path="/employer-wallet" element={<EmployerWallet />} />
         <Route path="/messages-employer" element={<MessagesEmployer />} />
         <Route path="/manage-proposals/:projectId" element={<ManageProposals />} />

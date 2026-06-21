@@ -149,22 +149,70 @@ export default function BrowseProjects() {
   });
 
   return (
-    <div className="bg-slate-50 min-h-screen flex flex-col w-full">
-      
-      {/* Full-width Hero Banner */}
-      <section className={`bg-gradient-to-br from-teal-50 via-white to-teal-50/50 border-b border-teal-100/50 py-16 px-6 md:px-12 w-full ${!token ? 'pt-[116px] md:pt-[124px]' : 'pt-12'}`}>
-        <div className="max-w-[1440px] mx-auto text-center md:text-left">
-          <h1 className="text-4xl md:text-5xl text-teal-950 font-extrabold tracking-tight mb-4">
+    <div className="bg-[#F8FAFC] min-h-screen flex flex-col w-full">
+      {/* Styled inline keyframes for text slide-up fade in and floating blobs */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(15px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes floatBlob1 {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -40px) scale(1.15); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes floatBlob2 {
+          0% { transform: translate(0px, 0px) scale(1.1); }
+          50% { transform: translate(-30px, 30px) scale(0.85); }
+          100% { transform: translate(0px, 0px) scale(1.1); }
+        }
+        @keyframes floatBlob3 {
+          0% { transform: translate(0px, 0px) scale(0.95); }
+          50% { transform: translate(25px, 25px) scale(1.1); }
+          100% { transform: translate(0px, 0px) scale(0.95); }
+        }
+        .animate-greeting {
+          animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-blob-1 {
+          animation: floatBlob1 16s infinite ease-in-out;
+        }
+        .animate-blob-2 {
+          animation: floatBlob2 20s infinite ease-in-out;
+        }
+        .animate-blob-3 {
+          animation: floatBlob3 14s infinite ease-in-out;
+        }
+      `}} />
+
+      {/* Light Header with Premium Blended Gradient & Subtle Dot Grid Pattern (Trend 2026 SaaS UI) */}
+      <div className={`px-6 md:px-12 bg-gradient-to-br from-[#F0F9F8] via-[#F3F8FC] to-[#F5FCF8] border-b border-slate-100/60 shadow-sm relative overflow-hidden ${!token ? 'pt-[116px] md:pt-[124px] pb-14' : 'pt-12 pb-14'}`}>
+        {/* Modern Dot Grid Background Pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-25 pointer-events-none"></div>
+
+        {/* Soft Blended Pastel Aurora Blobs (Extremely subtle, sleek mesh style) */}
+        <div className="absolute top-[-50%] right-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-teal-200/10 to-emerald-200/10 rounded-full blur-[110px] pointer-events-none animate-blob-1"></div>
+        <div className="absolute bottom-[-40%] left-[5%] w-[450px] h-[450px] bg-gradient-to-tr from-sky-200/10 to-cyan-200/10 rounded-full blur-[110px] pointer-events-none animate-blob-2"></div>
+        <div className="absolute top-[0%] left-[40%] w-[380px] h-[380px] bg-gradient-to-r from-emerald-200/8 to-teal-200/8 rounded-full blur-[90px] pointer-events-none animate-blob-3"></div>
+
+        <div className="max-w-7xl mx-auto text-left relative z-10 animate-greeting">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[#0F766E] border border-slate-200/60 shadow-sm mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E] animate-pulse"></span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Danh mục công việc</span>
+          </div>
+
+          <h1 className="text-4xl md:text-5.5xl font-black tracking-tight mb-3 leading-none pb-1 bg-gradient-to-r from-slate-900 via-[#0F766E] to-slate-800 bg-clip-text text-transparent">
             Khám phá dự án phù hợp
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl font-medium mx-auto md:mx-0">
+          <p className="text-slate-500 font-semibold text-sm md:text-base max-w-2xl leading-relaxed">
             Tìm kiếm cơ hội việc làm tốt nhất cho kỹ năng của bạn. Lọc theo ngân sách, loại công việc và công nghệ.
           </p>
         </div>
-      </section>
+      </div>
 
       {/* Main Grid View */}
-      <main className="flex-grow w-full max-w-[1440px] mx-auto px-6 md:px-12 py-10 flex flex-col md:flex-row gap-8">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-10 flex flex-col md:flex-row gap-8">
         
         {/* Filter Sidebar */}
         <aside className="w-full md:w-72 flex-shrink-0 mb-8 md:mb-0">
@@ -307,7 +355,7 @@ export default function BrowseProjects() {
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-xl text-teal-950 mb-1.5 font-bold group-hover:text-teal-700 transition-colors cursor-pointer tracking-tight" onClick={() => navigate(token ? '/project-details' : '/project-details')}>
+                    <h3 className="text-xl text-teal-950 mb-1.5 font-bold group-hover:text-teal-700 transition-colors cursor-pointer tracking-tight" onClick={() => navigate(`/project-details/${project.id}`)}>
                       {project.title}
                     </h3>
                     <p className="text-sm text-slate-500 flex items-center gap-3">
@@ -350,7 +398,7 @@ export default function BrowseProjects() {
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-auto border-t border-slate-100 pt-5">
                   <button 
-                    onClick={() => navigate(token ? '/project-details' : '/project-details')}
+                    onClick={() => navigate(`/project-details/${project.id}`)}
                     className="flex-1 bg-white border border-slate-200 text-slate-700 text-sm font-semibold py-2.5 px-4 rounded-xl hover:bg-slate-50 hover:text-teal-700 hover:border-slate-300 transition-all active:scale-[0.98] text-center shadow-sm"
                   >
                     Xem chi tiết

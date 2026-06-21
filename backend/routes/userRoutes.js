@@ -18,12 +18,21 @@ import {
   // Admin
   getAdminDashboard,
   getAdminUsers,
-  updateAdminUserStatus
+  updateAdminUserStatus,
+
+  // Public Profiles
+  getPublicProfile,
+  getAllFreelancers,
+  getFreelancerReviews
 } from '../controllers/userController.js';
 
 import { verifyToken, verifyAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// Public routes (accessible by guest or any authenticated user)
+router.get('/profile/:id', getPublicProfile);
+router.get('/freelancers', getAllFreelancers);
 
 // Apply auth middleware to all routes below
 router.use(verifyToken);
@@ -41,6 +50,7 @@ router.delete('/profile/portfolios/:portfolioId', deletePortfolio);
 
 // Public route to get a freelancer's portfolios (unprotected by token or verified separately)
 router.get('/:freelancerId/portfolios', getFreelancerPortfolios);
+router.get('/:freelancerId/reviews', getFreelancerReviews);
 
 // Admin-only user management routes
 router.get('/admin/dashboard', verifyAdmin, getAdminDashboard);
