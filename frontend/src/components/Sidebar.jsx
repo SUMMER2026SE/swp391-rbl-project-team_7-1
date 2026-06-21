@@ -15,29 +15,11 @@ export default function Sidebar() {
     return s ? JSON.parse(s) : null;
   });
 
-  let role = 'freelancer';
-  if (path.startsWith('/admin')) {
+  const activeRole = localStorage.getItem('active_role');
+  let role = activeRole || localUser?.roleDefault?.toLowerCase() || 'freelancer';
+  
+  if (path.startsWith('/admin') || localUser?.roleDefault === 'ADMIN') {
     role = 'admin';
-  } else if (
-    path.includes('employer') ||
-    path.startsWith('/manage-proposals') ||
-    path === '/review-submission' ||
-    path === '/revision-requested' ||
-    path === '/post-project' ||
-    path.startsWith('/edit-project') ||
-    path === '/my-projects' ||
-    path === '/escrow-checkout'
-  ) {
-    role = 'employer';
-  } else if (path.startsWith('/project-details')) {
-    const userRole = localUser?.roleDefault?.toLowerCase();
-    if (userRole === 'admin') {
-      role = 'admin';
-    } else if (userRole === 'employer') {
-      role = 'employer';
-    } else {
-      role = 'freelancer';
-    }
   }
 
   const [unreadCount, setUnreadCount] = React.useState(0);

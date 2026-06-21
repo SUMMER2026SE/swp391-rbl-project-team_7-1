@@ -100,7 +100,7 @@ export default function EscrowDepositPage() {
           <p className="text-slate-500 mb-8 leading-relaxed">Tuyệt vời! Số tiền <strong className="text-slate-700">{formatMoney(amount)}</strong> đã được giữ an toàn trong hệ thống Escrow cho dự án #{projectId}. Dự án sẽ tự động chuyển sang trạng thái Đang thực hiện.</p>
           <div className="flex flex-col gap-3">
             <button 
-              onClick={() => navigate(`/employer/projects/${projectId}`)}
+              onClick={() => navigate(`/project-details/${projectId}`)}
               className="w-full bg-[#0F766E] text-white py-3.5 rounded-xl font-bold hover:bg-[#0d615b] transition-all shadow-lg shadow-teal-900/20"
             >
               Xem dự án ngay
