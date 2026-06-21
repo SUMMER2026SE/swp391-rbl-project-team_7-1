@@ -62,7 +62,6 @@ export default function Header({ layout = 'dashboard' }) {
       path.startsWith('/manage-proposals') ||
       path === '/review-submission' ||
       path === '/revision-requested' ||
-      path.startsWith('/project-details') ||
       path === '/post-project' ||
       path.startsWith('/edit-project') ||
       path === '/my-projects' ||
@@ -71,6 +70,13 @@ export default function Header({ layout = 'dashboard' }) {
       currentRole = 'employer';
     } else if (path.startsWith('/admin')) {
       currentRole = 'admin';
+    } else if (path.startsWith('/project-details')) {
+      const userRole = user?.roleDefault?.toLowerCase();
+      if (userRole === 'admin') {
+        currentRole = 'admin';
+      } else if (userRole === 'employer') {
+        currentRole = 'employer';
+      }
     }
 
     if (currentRole === 'freelancer') {

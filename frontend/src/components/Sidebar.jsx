@@ -18,13 +18,21 @@ export default function Sidebar() {
     path.startsWith('/manage-proposals') ||
     path === '/review-submission' ||
     path === '/revision-requested' ||
-    path.startsWith('/project-details') ||
     path === '/post-project' ||
     path.startsWith('/edit-project') ||
     path === '/my-projects' ||
     path === '/escrow-checkout'
   ) {
     role = 'employer';
+  } else if (path.startsWith('/project-details')) {
+    const userRole = localUser?.roleDefault?.toLowerCase();
+    if (userRole === 'admin') {
+      role = 'admin';
+    } else if (userRole === 'employer') {
+      role = 'employer';
+    } else {
+      role = 'freelancer';
+    }
   }
 
   const [localUser, setLocalUser] = React.useState(() => {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { aiChatService } from '../../services/aiChatService';
 import './AIAssistantWidget.css';
 
@@ -6,6 +7,7 @@ const TYPING_SPEED_MIN = 15;
 const TYPING_SPEED_MAX = 30;
 
 export default function AIAssistantWidget() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -184,6 +186,17 @@ export default function AIAssistantWidget() {
     }
   };
 
+  const handleLinkClick = (e) => {
+    const target = e.target.closest('a');
+    if (target && target.classList.contains('ai-msg-link')) {
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('/')) {
+        e.preventDefault();
+        navigate(href);
+      }
+    }
+  };
+
   const renderMessageContent = (content) => {
     const lines = content.split('\n');
     return lines.map((line, i) => {
@@ -259,7 +272,7 @@ export default function AIAssistantWidget() {
             </div>
           )}
           
-          <div className="ai-messages-list">
+          <div className="ai-messages-list" onClick={handleLinkClick}>
             {messages.length === 0 && !sending ? (
               <div className="ai-welcome-box">
                 <span className="material-symbols-outlined ai-welcome-icon">chat_bubble</span>

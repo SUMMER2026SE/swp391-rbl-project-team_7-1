@@ -41,7 +41,9 @@ export default function ProjectDetails() {
     );
   }
 
-  const isOwner = currentUser && project && currentUser.user_id === project.employer_id;
+  const isOwner = currentUser && project && (
+    (currentUser.userId || currentUser.user_id || currentUser.id) === project.employer_id
+  );
 
   // Status mapping
   const getStatusBadge = (status) => {
