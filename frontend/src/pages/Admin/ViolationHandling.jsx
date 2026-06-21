@@ -14,6 +14,15 @@ const statusBadge = (status) => {
   }
 };
 
+const getStatusLabelVi = (status) => {
+  switch (status) {
+    case 'PENDING': return 'Chờ xử lý';
+    case 'RESOLVED': return 'Đã giải quyết';
+    case 'DISMISSED': return 'Đã bác bỏ';
+    default: return status;
+  }
+};
+
 export default function ViolationHandling() {
   const [violations, setViolations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,132 +155,155 @@ export default function ViolationHandling() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-margin-desktop">
-      <div className="max-w-container-max mx-auto w-full flex flex-col gap-8">
+    <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+      <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 pb-12">
         
-        {/* Page Header */}
-        <div>
-          <h1 className="font-headline-2xl text-headline-2xl text-[#334155] mb-2">Admin Violation Handling</h1>
-          <p className="font-body-base text-body-base text-[#475569]">Xem xét và xử lý các báo cáo vi phạm của người dùng trên hệ thống.</p>
+        {/* Header */}
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Xử lý báo cáo vi phạm</h1>
+          <p className="text-sm text-slate-500 font-medium">Xem xét, kiểm tra nội dung và thực hiện các quyết định kỷ luật (Cảnh cáo, Khóa tài khoản) đối với các hành vi vi phạm điều khoản nền tảng.</p>
         </div>
 
-        {/* Filters */}
-        <form onSubmit={handleSearch} className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
-          <div className="relative flex-1 min-w-[200px] max-w-md">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#475569]">search</span>
+        {/* Sync Form Filters */}
+        <form onSubmit={handleSearch} className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:max-w-md">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg font-body-sm text-body-sm text-[#334155] focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors"
-              placeholder="Search by reported user's name or email..."
+              className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all duration-200"
+              placeholder="Tìm theo tên hoặc email tài khoản bị báo cáo..."
               type="text"
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              className="px-3 py-2 border border-[#E2E8F0] rounded-lg bg-white"
+              className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all"
             >
-              <option value="">All Report Types</option>
-              <option value="SPAM">Spam</option>
-              <option value="HARASSMENT">Harassment</option>
-              <option value="FRAUD">Fraud</option>
-              <option value="VIOLATION">Violation</option>
-              <option value="OTHER">Other</option>
+              <option value="">Tất cả loại vi phạm</option>
+              <option value="SPAM">Spam / Rác tin</option>
+              <option value="HARASSMENT">Quấy rối / Công kích</option>
+              <option value="FRAUD">Lừa đảo / Gian lận</option>
+              <option value="VIOLATION">Vi phạm điều khoản</option>
+              <option value="OTHER">Khác</option>
             </select>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-[#E2E8F0] rounded-lg bg-white"
+              className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all"
             >
-              <option value="">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="DISMISSED">Dismissed</option>
+              <option value="">Tất cả trạng thái</option>
+              <option value="PENDING">Chờ xử lý</option>
+              <option value="RESOLVED">Đã giải quyết</option>
+              <option value="DISMISSED">Đã bác bỏ</option>
             </select>
-            <button type="submit" className="px-4 py-2 bg-[#0F766E] text-white rounded-lg">Search</button>
-            <button type="button" onClick={handleReset} className="px-4 py-2 border border-[#E2E8F0] rounded-lg">Reset</button>
+            <button type="submit" className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-sm font-bold shadow-[0_4px_12px_rgba(15,118,110,0.15)] hover:bg-[#0d5e58] hover:shadow-[0_4px_16px_rgba(15,118,110,0.25)] transition-all cursor-pointer">
+              Tìm kiếm
+            </button>
+            <button type="button" onClick={handleReset} className="px-5 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer">
+              Đặt lại
+            </button>
           </div>
         </form>
 
-        {/* Alert Notifications */}
+        {/* Alerts */}
         {alert.msg && (
-          <div className={`px-4 py-3 rounded-xl border ${alert.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800'}`}>
-            {alert.msg}
+          <div className={`p-4 rounded-2xl border flex items-center gap-2 text-sm font-semibold ${
+            alert.type === 'success' 
+              ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+              : 'bg-rose-50 border-rose-100 text-rose-800'
+          }`}>
+            <span className="material-symbols-outlined text-[18px]">
+              {alert.type === 'success' ? 'check_circle' : 'error'}
+            </span>
+            <span>{alert.msg}</span>
           </div>
         )}
 
-        {/* Table List */}
-        <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] overflow-hidden">
+        {/* Violations Table Card */}
+        <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] overflow-hidden">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                  <th className="py-4 px-6 font-semibold text-slate-700">Report ID</th>
-                  <th className="py-4 px-6 font-semibold text-slate-700">Report Type</th>
-                  <th className="py-4 px-6 font-semibold text-slate-700">Reported User</th>
-                  <th className="py-4 px-6 font-semibold text-slate-700">Reporter</th>
-                  <th className="py-4 px-6 font-semibold text-slate-700">Status</th>
-                  <th className="py-4 px-6 font-semibold text-slate-700">Created Date</th>
-                  <th className="py-4 px-6 font-semibold text-slate-700 text-right">Actions</th>
+                <tr className="bg-slate-50 border-b border-[#E2E8F0]">
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Mã báo cáo</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Loại vi phạm</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Tài khoản bị báo cáo</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Người báo cáo</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Trạng thái</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngày báo cáo</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
+              <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="py-10 text-center text-[#475569]">Loading violations...</td>
+                    <td colSpan="7" className="py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-8 h-8 border-3 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-xs font-semibold text-slate-400">Đang tải danh sách báo cáo vi phạm...</p>
+                      </div>
+                    </td>
                   </tr>
                 ) : violations.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="py-10 text-center text-[#475569]">No violations found.</td>
+                    <td colSpan="7" className="py-16 text-center text-slate-400 font-semibold text-sm">
+                      Không tìm thấy báo cáo vi phạm nào.
+                    </td>
                   </tr>
                 ) : (
                   violations.map((v) => (
-                    <tr key={v.report_id} className="hover:bg-[#F8FAFC] transition-colors">
-                      <td className="py-4 px-6">#{v.report_id}</td>
-                      <td className="py-4 px-6 font-semibold text-slate-700">{v.report_type}</td>
-                      <td className="py-4 px-6">
-                        <div>
-                          <div className="font-semibold text-slate-800">{v.reported_name}</div>
-                          <div className="text-xs text-slate-500">{v.reported_email}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div>
-                          <div className="font-semibold text-slate-800">{v.reporter_name}</div>
-                          <div className="text-xs text-slate-500">{v.reporter_email}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold text-xs ${statusBadge(v.status)}`}>
-                          {v.status}
+                    <tr key={v.report_id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-6 text-sm text-slate-500 font-semibold">#{v.report_id}</td>
+                      <td className="py-4 px-6 text-sm font-bold text-slate-800">
+                        <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-xs font-bold text-slate-600">
+                          {v.report_type}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-slate-500">
-                        {new Date(v.created_at).toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      <td className="py-4 px-6">
+                        <div>
+                          <div className="font-bold text-slate-850 text-sm">{v.reported_name}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{v.reported_email}</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div>
+                          <div className="font-bold text-slate-850 text-sm">{v.reporter_name}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{v.reporter_email}</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusBadge(v.status)}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${v.status === 'PENDING' ? 'bg-amber-500' : v.status === 'RESOLVED' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                          {getStatusLabelVi(v.status)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-sm text-slate-500 font-semibold">
+                        {new Date(v.created_at).toLocaleDateString('vi-VN', { dateStyle: 'short' })}
                       </td>
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleViewDetails(v.report_id)}
-                            className="px-3 py-1.5 rounded-md border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs transition-colors"
+                            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors cursor-pointer"
                           >
-                            View Details
+                            Chi tiết
                           </button>
                           {v.status === 'PENDING' && (
                             <>
                               <button
                                 onClick={() => handleResolveClick(v)}
-                                className="px-3 py-1.5 rounded-md border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white text-xs transition-colors"
+                                className="px-3 py-1.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#0d5e58] text-xs font-bold transition-colors cursor-pointer"
                               >
-                                Resolve
+                                Xử lý
                               </button>
                               <button
                                 onClick={() => handleDismiss(v.report_id)}
-                                className="px-3 py-1.5 rounded-md border border-red-100 bg-red-50 text-red-700 hover:bg-red-600 hover:text-white text-xs transition-colors"
+                                className="px-3 py-1.5 rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                               >
-                                Dismiss
+                                Bỏ qua
                               </button>
                             </>
                           )}
@@ -283,105 +315,105 @@ export default function ViolationHandling() {
               </tbody>
             </table>
           </div>
-        </div>
 
-        {/* Pagination */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl">
-          <div className="text-sm text-[#475569]">
-            Hiển thị {violations.length} trên {total} báo cáo vi phạm
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                if (page > 1) {
-                  const nextPage = page - 1;
-                  setPage(nextPage);
-                  fetchViolations({ page: nextPage });
-                }
-              }}
-              disabled={page <= 1}
-              className="px-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-[#475569]">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => {
-                if (page < totalPages) {
-                  const nextPage = page + 1;
-                  setPage(nextPage);
-                  fetchViolations({ page: nextPage });
-                }
-              }}
-              disabled={page >= totalPages}
-              className="px-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] disabled:opacity-50"
-            >
-              Next
-            </button>
+          {/* Pagination */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 border-t border-slate-100 bg-slate-50/50">
+            <div className="text-xs font-semibold text-slate-500">
+              Hiển thị {violations.length} trên tổng số {total} báo cáo vi phạm.
+            </div>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => {
+                  if (page > 1) {
+                    const nextPage = page - 1;
+                    setPage(nextPage);
+                    fetchViolations({ page: nextPage });
+                  }
+                }}
+                disabled={page <= 1}
+                className="px-3.5 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-bold text-slate-600 shadow-sm disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
+              >
+                Trước
+              </button>
+              <span className="text-xs font-extrabold text-slate-700 bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-xl">
+                Trang {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => {
+                  if (page < totalPages) {
+                    const nextPage = page + 1;
+                    setPage(nextPage);
+                    fetchViolations({ page: nextPage });
+                  }
+                }}
+                disabled={page >= totalPages}
+                className="px-3.5 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-bold text-slate-600 shadow-sm disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
+              >
+                Sau
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* View Details Modal */}
       {showDetailModal && selectedViolation && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowDetailModal(false)}>
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-800">Chi tiết báo cáo #{selectedViolation.report_id}</h2>
-              <button onClick={() => setShowDetailModal(false)} className="text-slate-400 hover:text-slate-600">
-                <span className="material-symbols-outlined">close</span>
+              <h2 className="text-base font-black text-slate-800">Chi tiết báo cáo vi phạm #{selectedViolation.report_id}</h2>
+              <button onClick={() => setShowDetailModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
             <div className="p-6 flex flex-col gap-6 max-h-[75vh] overflow-y-auto">
               <div>
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Thông tin báo cáo</h3>
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                   <div>
-                    <span className="text-xs text-slate-500 block">Loại báo cáo</span>
-                    <span className="font-semibold text-slate-700">{selectedViolation.report_type}</span>
+                    <span className="text-xs text-slate-500 block font-semibold">Loại báo cáo</span>
+                    <span className="font-bold text-slate-800 text-sm mt-0.5 block">{selectedViolation.report_type}</span>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500 block">Trạng thái</span>
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mt-1 ${statusBadge(selectedViolation.status)}`}>
-                      {selectedViolation.status}
+                    <span className="text-xs text-slate-500 block font-semibold">Trạng thái</span>
+                    <span className={`inline-block px-2.5 py-0.5 rounded-lg text-xs font-bold border mt-1 ${statusBadge(selectedViolation.status)}`}>
+                      {getStatusLabelVi(selectedViolation.status)}
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-xs text-slate-500 block">Lý do báo cáo</span>
-                    <p className="text-slate-700 font-medium mt-1">{selectedViolation.reason || 'Không có lý do chi tiết.'}</p>
+                    <span className="text-xs text-slate-500 block font-semibold">Lý do báo cáo cụ thể</span>
+                    <p className="text-slate-700 font-semibold mt-1 text-sm bg-white p-3 rounded-xl border border-slate-100">{selectedViolation.reason || 'Không có lý do chi tiết.'}</p>
                   </div>
                   {selectedViolation.project_id && (
                     <div>
-                      <span className="text-xs text-slate-500 block">ID Dự án liên quan</span>
-                      <span className="font-semibold text-slate-700">#{selectedViolation.project_id}</span>
+                      <span className="text-xs text-slate-500 block font-semibold">Mã ID dự án liên quan</span>
+                      <span className="font-bold text-slate-700 text-xs mt-0.5 block">#{selectedViolation.project_id}</span>
                     </div>
                   )}
                   {selectedViolation.created_at && (
                     <div>
-                      <span className="text-xs text-slate-500 block">Ngày tạo</span>
-                      <span className="font-semibold text-slate-700">{new Date(selectedViolation.created_at).toLocaleString('vi-VN')}</span>
+                      <span className="text-xs text-slate-500 block font-semibold">Ngày tạo báo cáo</span>
+                      <span className="font-bold text-slate-700 text-xs mt-0.5 block">{new Date(selectedViolation.created_at).toLocaleString('vi-VN')}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Người báo cáo (Reporter)</h3>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 h-full">
-                    <p className="font-bold text-slate-800">{selectedViolation.reporter?.full_name}</p>
-                    <p className="text-xs text-slate-500 mt-1">{selectedViolation.reporter?.email}</p>
-                    <p className="text-xs text-slate-500 mt-2">Trạng thái: <span className="font-semibold text-slate-700">{selectedViolation.reporter?.status}</span></p>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Người gửi báo cáo (Reporter)</h3>
+                  <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-[#E2E8F0]">
+                    <p className="font-bold text-slate-800 text-sm">{selectedViolation.reporter?.full_name}</p>
+                    <p className="text-xs text-slate-400 font-semibold mt-1">{selectedViolation.reporter?.email}</p>
+                    <p className="text-xs text-slate-500 mt-2 font-semibold">Trạng thái tài khoản: <span className="text-emerald-700">{selectedViolation.reporter?.status}</span></p>
                   </div>
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Người bị báo cáo (Reported)</h3>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 h-full">
-                    <p className="font-bold text-slate-800">{selectedViolation.reported_user?.full_name}</p>
-                    <p className="text-xs text-slate-500 mt-1">{selectedViolation.reported_user?.email}</p>
-                    <p className="text-xs text-slate-500 mt-2">Trạng thái: <span className="font-semibold text-slate-700">{selectedViolation.reported_user?.status}</span></p>
+                  <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-[#E2E8F0]">
+                    <p className="font-bold text-slate-800 text-sm">{selectedViolation.reported_user?.full_name}</p>
+                    <p className="text-xs text-slate-400 font-semibold mt-1">{selectedViolation.reported_user?.email}</p>
+                    <p className="text-xs text-slate-500 mt-2 font-semibold">Trạng thái tài khoản: <span className="text-[#0F766E]">{selectedViolation.reported_user?.status}</span></p>
                   </div>
                 </div>
               </div>
@@ -389,7 +421,7 @@ export default function ViolationHandling() {
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-sm transition-colors"
+                className="px-4 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
                 Đóng
               </button>
@@ -397,15 +429,15 @@ export default function ViolationHandling() {
                 <>
                   <button
                     onClick={() => handleDismiss(selectedViolation.report_id)}
-                    className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-600 hover:text-white rounded-lg text-sm border border-red-100 transition-colors"
+                    className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-100 transition-colors cursor-pointer"
                   >
-                    Bác bỏ (Dismiss)
+                    Bác bỏ báo cáo
                   </button>
                   <button
                     onClick={() => handleResolveClick(selectedViolation)}
-                    className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0D5E58] rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                    className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0d5e58] rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
-                    Xử lý vi phạm
+                    Phạt vi phạm
                   </button>
                 </>
               )}
@@ -416,21 +448,21 @@ export default function ViolationHandling() {
 
       {/* Resolve Action Modal */}
       {showResolveModal && selectedViolation && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowResolveModal(false)}>
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-800">Xử lý báo cáo vi phạm #{selectedViolation.report_id}</h2>
-              <button onClick={() => setShowResolveModal(false)} className="text-slate-400 hover:text-slate-600">
-                <span className="material-symbols-outlined">close</span>
+              <h2 className="text-base font-black text-slate-800 font-bold">Xử phạt tài khoản vi phạm</h2>
+              <button onClick={() => setShowResolveModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
             <div className="p-6 flex flex-col gap-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-500 font-semibold">
                 Chọn hình thức kỷ luật đối với người dùng <span className="font-bold text-slate-800">{selectedViolation.reported_name || selectedViolation.reported_user?.full_name}</span>:
               </p>
 
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+              <div className="flex flex-col gap-2.5">
+                <label className="flex items-center gap-3 p-3 border border-[#E2E8F0] rounded-2xl hover:bg-slate-50 cursor-pointer transition-colors">
                   <input
                     type="radio"
                     name="resolveAction"
@@ -440,12 +472,12 @@ export default function ViolationHandling() {
                     className="text-[#0F766E] focus:ring-[#0F766E]"
                   />
                   <div>
-                    <span className="block font-semibold text-slate-800 text-sm">WARN (Cảnh cáo)</span>
-                    <span className="text-xs text-slate-500">Gửi thông báo cảnh cáo chính thức tới người dùng.</span>
+                    <span className="block font-bold text-slate-800 text-sm">WARN (Cảnh cáo tài khoản)</span>
+                    <span className="text-xs text-slate-400 font-medium">Gửi email cảnh báo vi phạm điều khoản chính thức.</span>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                <label className="flex items-center gap-3 p-3 border border-[#E2E8F0] rounded-2xl hover:bg-slate-50 cursor-pointer transition-colors">
                   <input
                     type="radio"
                     name="resolveAction"
@@ -455,12 +487,12 @@ export default function ViolationHandling() {
                     className="text-[#0F766E] focus:ring-[#0F766E]"
                   />
                   <div>
-                    <span className="block font-semibold text-slate-800 text-sm">SUSPEND (Tạm đình chỉ)</span>
-                    <span className="text-xs text-slate-500">Khóa tài khoản tạm thời của người dùng này.</span>
+                    <span className="block font-bold text-slate-800 text-sm">SUSPEND (Khóa tạm thời)</span>
+                    <span className="text-xs text-slate-400 font-medium">Đình chỉ quyền đăng nhập tạm thời của người dùng.</span>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                <label className="flex items-center gap-3 p-3 border border-[#E2E8F0] rounded-2xl hover:bg-slate-50 cursor-pointer transition-colors">
                   <input
                     type="radio"
                     name="resolveAction"
@@ -470,12 +502,12 @@ export default function ViolationHandling() {
                     className="text-[#0F766E] focus:ring-[#0F766E]"
                   />
                   <div>
-                    <span className="block font-semibold text-slate-800 text-sm">BAN USER (Khóa vĩnh viễn)</span>
-                    <span className="text-xs text-slate-500">Cấm tài khoản vĩnh viễn khỏi toàn bộ hệ thống.</span>
+                    <span className="block font-bold text-slate-800 text-sm">BAN USER (Khóa vĩnh viễn)</span>
+                    <span className="text-xs text-slate-400 font-medium">Khóa tài khoản vĩnh viễn và chấm dứt mọi dịch vụ.</span>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                <label className="flex items-center gap-3 p-3 border border-[#E2E8F0] rounded-2xl hover:bg-slate-50 cursor-pointer transition-colors">
                   <input
                     type="radio"
                     name="resolveAction"
@@ -485,8 +517,8 @@ export default function ViolationHandling() {
                     className="text-[#0F766E] focus:ring-[#0F766E]"
                   />
                   <div>
-                    <span className="block font-semibold text-slate-800 text-sm">NO ACTION (Không xử phạt)</span>
-                    <span className="text-xs text-slate-500">Đánh dấu báo cáo là đã xử lý mà không xử phạt.</span>
+                    <span className="block font-bold text-slate-800 text-sm">NO ACTION (Bỏ qua xử phạt)</span>
+                    <span className="text-xs text-slate-400 font-medium">Đánh dấu đã giải quyết mà không áp dụng hình thức phạt nào.</span>
                   </div>
                 </label>
               </div>
@@ -494,15 +526,15 @@ export default function ViolationHandling() {
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowResolveModal(false)}
-                className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-sm transition-colors"
+                className="px-4 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 onClick={handleResolveSubmit}
-                className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0D5E58] rounded-lg text-sm font-semibold transition-colors"
+                className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0d5e58] rounded-xl text-xs font-bold transition-colors cursor-pointer"
               >
-                Xác nhận xử lý
+                Xác nhận
               </button>
             </div>
           </div>

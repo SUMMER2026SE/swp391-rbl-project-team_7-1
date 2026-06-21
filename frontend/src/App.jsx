@@ -8,17 +8,11 @@ import PublicLayout from './layouts/PublicLayout';
 // Pages - Admin
 import AdminAnalytics from './pages/Admin/Analytics';
 import AdminDashboard from './pages/Admin/Dashboard';
-import AdminDisputes from './pages/Admin/Disputes';
 import DisputeManagement from './pages/Admin/DisputeManagement';
-import AdminGenerateReport from './pages/Admin/GenerateReport';
-import AdminReportHistory from './pages/Admin/ReportHistory';
-import AdminReportManagement from './pages/Admin/ReportManagement';
-import AdminReportSuccess from './pages/Admin/ReportSuccess';
-import AdminSettings from './pages/Admin/Settings';
+import AdminProjects from './pages/Admin/AdminProjects';
 import AdminUsers from './pages/Admin/Users';
 import ProposalModeration from './pages/Admin/ProposalModeration';
 import ViolationHandling from './pages/Admin/ViolationHandling';
-import ProjectModeration from './pages/Admin/ProjectModeration';
 import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 import AIChatPage from './pages/AI/AIChatPage';
 
@@ -157,16 +151,10 @@ export default function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-users" element={<AdminUsers />} />
         <Route path="/admin-project-moderation" element={<ProposalModeration />} />
-        <Route path="/admin-project-approval" element={<ProjectModeration />} />
         <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
-        <Route path="/admin-dispute-management" element={<DisputeManagement />} />
-        <Route path="/admin-disputes" element={<AdminDisputes />} />
-        <Route path="/admin-generate-report" element={<AdminGenerateReport />} />
-        <Route path="/admin-report-history" element={<AdminReportHistory />} />
-        <Route path="/admin-report-management" element={<AdminReportManagement />} />
-        <Route path="/admin-report-success" element={<AdminReportSuccess />} />
+        <Route path="/admin-disputes" element={<DisputeManagement />} />
         <Route path="/admin-analytics" element={<AdminAnalytics />} />
-        <Route path="/admin-settings" element={<AdminSettings />} />
+        <Route path="/admin-projects" element={<AdminProjects />} />
         <Route path="/admin-violations" element={<ViolationHandling />} />
         <Route path="/ai-chat" element={<AIChatPage />} />
       </Route>

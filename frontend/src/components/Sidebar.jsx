@@ -123,15 +123,13 @@ export default function Sidebar() {
     bottom_btn_link = '/post-project';
   } else if (role === 'admin') {
     items = [
-      { label: 'Trang chủ', icon: 'dashboard', link: '/admin-dashboard' },
+      { label: 'Bảng điều khiển', icon: 'dashboard', link: '/admin-dashboard' },
       { label: 'Người dùng', icon: 'group', link: '/admin-users' },
-      { label: 'Duyệt dự án', icon: 'fact_check', link: '/admin-project-approval' },
+      { label: 'Tổng dự án', icon: 'work', link: '/admin-projects' },
       { label: 'Duyệt rút tiền', icon: 'payments', link: '/admin-withdrawals' },
-      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-dispute-management' },
+      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-disputes' },
       { label: 'Vi phạm', icon: 'warning', link: '/admin-violations' },
-      { label: 'Báo cáo', icon: 'summarize', link: '/admin-generate-report' },
-      { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' },
-      { label: 'Cài đặt', icon: 'settings', link: '/admin-settings' }
+      { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' }
     ];
     user_name = user ? user.fullName : 'Admin Panel';
     user_role = 'Quản trị viên';
@@ -142,7 +140,6 @@ export default function Sidebar() {
     if (item.link === '#') return false;
     if (path === item.link) return true;
     if (item.label === 'Tìm Freelancer' && (path === '/freelancers' || path.startsWith('/profile/') || path.startsWith('/freelancers/'))) return true;
-    if (item.label === 'Duyệt dự án' && (path === '/admin-project-approval')) return true;
     if (item.label === 'Báo cáo' && path.startsWith('/admin-report')) return true;
     if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested')) return true;
     if (item.label === 'Dự án của tôi' && (path === '/my-projects' || path.startsWith('/manage-proposals') || path.startsWith('/project-details') || path === '/post-project' || path.startsWith('/edit-project'))) return true;

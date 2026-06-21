@@ -122,25 +122,86 @@ export const getDashboardStats = async () => {
   const pool = await poolPromise;
 
   // Execute all independent count queries in parallel
-  const [totalUsersResult, totalFreelancersResult, totalEmployersResult, totalProjectsResult, activeContractsResult, pendingDisputesResult, pendingReportsResult, totalRevenueResult] = await Promise.all([
-    pool.request().query('SELECT COUNT(*) as count FROM users WHERE role_default != \'ADMIN\''),
-    pool.request().query('SELECT COUNT(*) as count FROM users WHERE role_default = \'FREELANCER\''),
-    pool.request().query('SELECT COUNT(*) as count FROM users WHERE role_default = \'EMPLOYER\''),
-    pool.request().query('SELECT COUNT(*) as count FROM projects'),
-    pool.request().query('SELECT COUNT(*) as count FROM contracts WHERE status IN (\'ACTIVE\', \'APPROVED\')'),
-    pool.request().query('SELECT COUNT(*) as count FROM disputes WHERE status = \'PENDING\''),
-    pool.request().query('SELECT COUNT(*) as count FROM reports WHERE status = \'PENDING\''),
-    pool.request().query('SELECT ISNULL(SUM(amount), 0) as total FROM transactions WHERE status = \'COMPLETED\''),
+  const [
+    totalUsersResult,
+    totalProjectsResult,
+    activeContractsResult,
+    pendingDisputesResult,
+    pendingReportsResult,
+    totalRevenueResult,
+    pendingWithdrawalsResult,
+    pendingProjectsResult,
+    topFreelancersResult
+  ] = await Promise.all([
+    pool.request().query("SELECT COUNT(*) as count FROM users WHERE role_default != 'ADMIN'"),
+    pool.request().query("SELECT COUNT(*) as count FROM projects"),
+    pool.request().query("SELECT COUNT(*) as count FROM contracts WHERE status IN ('ACTIVE', 'APPROVED')"),
+    pool.request().query("SELECT COUNT(*) as count FROM disputes WHERE status = 'OPEN'"),
+    pool.request().query("SELECT COUNT(*) as count FROM violation_reports WHERE status = 'PENDING'"),
+    pool.request().query("SELECT ISNULL(SUM(amount), 0) as total FROM payments WHERE payment_status = 'COMPLETED'"),
+    pool.request().query("SELECT COUNT(*) as count FROM WithdrawalRequests WHERE status = 'PENDING'"),
+    pool.request().query("SELECT COUNT(*) as count FROM projects WHERE status = 'CLOSED'"),
+    pool.request().query(`
+      SELECT TOP 5 u.user_id, u.full_name, u.email, u.avatar_url, ISNULL(SUM(c.total_amount), 0) as total_earned
+      FROM contracts c
+      JOIN users u ON c.freelancer_id = u.user_id
+      WHERE c.status = 'COMPLETED'
+      GROUP BY u.user_id, u.full_name, u.email, u.avatar_url
+      ORDER BY total_earned DESC
+    `)
   ]);
+
+  // Fetch real latest 5 projects with owner name
+  const latestProjectsRes = await pool.request().query(`
+    SELECT TOP 5 p.project_id, p.title, p.status, p.budget_min, u.full_name as owner_name
+    FROM projects p
+    LEFT JOIN users u ON p.employer_id = u.user_id
+    ORDER BY p.created_at DESC
+  `);
+
+  // Fetch real latest 5 payments with payer name
+  const latestPaymentsRes = await pool.request().query(`
+    SELECT TOP 5 p.payment_id, p.amount, p.payment_method, p.paid_at, u.full_name as payer_name, pr.title as project_title
+    FROM payments p
+    LEFT JOIN users u ON p.payer_id = u.user_id
+    LEFT JOIN contracts c ON p.contract_id = c.contract_id
+    LEFT JOIN projects pr ON c.project_id = pr.project_id
+    ORDER BY p.created_at DESC
+  `);
+
+  // Fetch real trends
+  const monthlyUsersRes = await pool.request().query(`
+    SELECT TOP 6
+      FORMAT(created_at, 'yyyy-MM') as month,
+      COUNT(*) as count
+    FROM users
+    WHERE role_default != 'ADMIN'
+    GROUP BY FORMAT(created_at, 'yyyy-MM')
+    ORDER BY month DESC
+  `);
+
+  const monthlyProjectsRes = await pool.request().query(`
+    SELECT TOP 6
+      FORMAT(created_at, 'yyyy-MM') as month,
+      COUNT(*) as count
+    FROM projects
+    GROUP BY FORMAT(created_at, 'yyyy-MM')
+    ORDER BY month DESC
+  `);
 
   return {
     totalUsers: totalUsersResult.recordset[0]?.count || 0,
-    totalFreelancers: totalFreelancersResult.recordset[0]?.count || 0,
-    totalEmployers: totalEmployersResult.recordset[0]?.count || 0,
     totalProjects: totalProjectsResult.recordset[0]?.count || 0,
     activeContracts: activeContractsResult.recordset[0]?.count || 0,
     pendingDisputes: pendingDisputesResult.recordset[0]?.count || 0,
     pendingReports: pendingReportsResult.recordset[0]?.count || 0,
     totalRevenue: totalRevenueResult.recordset[0]?.total || 0,
+    pendingWithdrawals: pendingWithdrawalsResult.recordset[0]?.count || 0,
+    pendingProjects: pendingProjectsResult.recordset[0]?.count || 0,
+    latestProjects: latestProjectsRes.recordset || [],
+    latestPayments: latestPaymentsRes.recordset || [],
+    topFreelancers: topFreelancersResult.recordset || [],
+    monthlyUsers: (monthlyUsersRes.recordset || []).reverse(),
+    monthlyProjects: (monthlyProjectsRes.recordset || []).reverse()
   };
 };

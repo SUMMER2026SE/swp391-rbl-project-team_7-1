@@ -13,8 +13,8 @@ export const getOverviewStats = async () => {
     pool.request().query(`SELECT COUNT(*) as count FROM contracts WHERE status IN ('ACTIVE', 'APPROVED')`),
     pool.request().query(`SELECT COUNT(*) as count FROM contracts WHERE status = 'COMPLETED'`),
     pool.request().query(`SELECT COUNT(*) as count FROM disputes WHERE status = 'OPEN'`),
-    pool.request().query(`SELECT COUNT(*) as count FROM reports WHERE status = 'PENDING'`),
-    pool.request().query(`SELECT ISNULL(SUM(amount), 0) as total FROM transactions WHERE status = 'COMPLETED'`),
+    pool.request().query(`SELECT COUNT(*) as count FROM violation_reports WHERE status = 'PENDING'`),
+    pool.request().query(`SELECT ISNULL(SUM(amount), 0) as total FROM payments WHERE payment_status = 'COMPLETED'`),
   ];
 
   const results = await Promise.all(queries);
@@ -40,8 +40,8 @@ export const getMonthlyRevenue = async () => {
     SELECT 
       FORMAT(created_at, 'yyyy-MM') as month,
       ISNULL(SUM(amount), 0) as amount
-    FROM transactions
-    WHERE status = 'COMPLETED'
+    FROM payments
+    WHERE payment_status = 'COMPLETED'
       AND created_at >= DATEADD(MONTH, -12, GETDATE())
     GROUP BY FORMAT(created_at, 'yyyy-MM')
     ORDER BY month ASC

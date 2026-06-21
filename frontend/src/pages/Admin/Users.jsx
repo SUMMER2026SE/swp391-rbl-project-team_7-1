@@ -9,7 +9,7 @@ const statusBadge = (status) => {
     case 'SUSPENDED':
       return 'bg-amber-50 text-amber-700 border border-amber-100';
     case 'BANNED':
-      return 'bg-red-50 text-red-700 border border-red-100';
+      return 'bg-rose-50 text-rose-700 border border-rose-100';
     default:
       return 'bg-slate-50 text-slate-700 border border-slate-100';
   }
@@ -41,7 +41,7 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(25);
+  const [limit, setLimit] = useState(15);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -131,116 +131,190 @@ export default function AdminUsers() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-margin-desktop">
-      <div className="max-w-container-max mx-auto w-full flex flex-col gap-8">
-        {/* Page Header & Filters */}
-        <div className="flex flex-col gap-6">
-          <div>
-            <h1 className="font-headline-2xl text-headline-2xl text-[#334155] mb-2">Người dùng</h1>
-            <p className="font-body-base text-body-base text-[#475569]">Quản lý, xác minh và giám sát người tham gia nền tảng.</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-4 bg-[#FFFFFF] p-4 rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#475569]">search</span>
+    <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+      <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 pb-12">
+        
+        {/* Header */}
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Quản lý người dùng</h1>
+          <p className="text-sm text-slate-500 font-medium">Giám sát, phân quyền, khóa hoặc mở khóa tài khoản của người dùng trên toàn hệ thống.</p>
+        </div>
+
+        {/* Sync Form & Filter System */}
+        <div className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)]">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            {/* Search Input */}
+            <div className="relative w-full md:max-w-md">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); fetchUsers({ page: 1, limit }); } }}
-                className="w-full pl-10 pr-4 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg font-body-sm text-body-sm text-[#334155] focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-colors"
-                placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
+                className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all duration-200"
+                placeholder="Tìm kiếm theo tên, email, điện thoại..."
                 type="text"
               />
             </div>
-            <div className="flex items-center gap-3">
-              <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); }} className="px-3 py-2 border border-[#E2E8F0] rounded-lg bg-white">
+            
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+              <select 
+                value={roleFilter} 
+                onChange={(e) => setRoleFilter(e.target.value)} 
+                className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all"
+              >
                 <option value="">Tất cả vai trò</option>
                 <option value="FREELANCER">Freelancer</option>
                 <option value="EMPLOYER">Nhà tuyển dụng</option>
                 <option value="ADMIN">Quản trị viên</option>
               </select>
-              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); }} className="px-3 py-2 border border-[#E2E8F0] rounded-lg bg-white">
+
+              <select 
+                value={statusFilter} 
+                onChange={(e) => setStatusFilter(e.target.value)} 
+                className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all"
+              >
                 <option value="">Tất cả trạng thái</option>
                 <option value="ACTIVE">Hoạt động</option>
                 <option value="SUSPENDED">Tạm khóa</option>
                 <option value="BANNED">Bị cấm</option>
               </select>
-              <button onClick={() => { setPage(1); fetchUsers({ page: 1, limit }); }} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg">Tìm kiếm</button>
-              <button onClick={() => { setSearch(''); setRoleFilter(''); setStatusFilter(''); setPage(1); fetchUsers({ page: 1, limit }); }} className="px-4 py-2 border border-[#E2E8F0] rounded-lg">Đặt lại</button>
+
+              <button 
+                onClick={() => { setPage(1); fetchUsers({ page: 1, limit }); }} 
+                className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-sm font-bold shadow-[0_4px_12px_rgba(15,118,110,0.15)] hover:bg-[#0d5e58] hover:shadow-[0_4px_16px_rgba(15,118,110,0.25)] transition-all cursor-pointer"
+              >
+                Tìm kiếm
+              </button>
+              
+              <button 
+                onClick={() => { setSearch(''); setRoleFilter(''); setStatusFilter(''); setPage(1); fetchUsers({ page: 1, limit }); }} 
+                className="px-5 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
+              >
+                Đặt lại
+              </button>
             </div>
           </div>
         </div>
 
+        {/* Alerts */}
         {alert.msg && (
-          <div className={`px-4 py-3 rounded-xl ${alert.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-red-50 border-red-100 text-red-800'} border`}>
+          <div className={`px-4 py-3 rounded-2xl border flex items-center gap-2 text-sm font-semibold ${
+            alert.type === 'success' 
+              ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+              : 'bg-rose-50 border-rose-100 text-rose-800'
+          }`}>
+            <span className="material-symbols-outlined text-[18px]">
+              {alert.type === 'success' ? 'check_circle' : 'error'}
+            </span>
             {alert.msg}
           </div>
         )}
 
-        <div className="bg-[#FFFFFF] rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] overflow-hidden">
+        {/* Users Table Card */}
+        <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] overflow-hidden">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                  <th className="py-4 px-6 font-label-caps text-label-caps text-[#475569] font-semibold">Người dùng</th>
-                  <th className="py-4 px-6 font-label-caps text-label-caps text-[#475569] font-semibold">Điện thoại</th>
-                  <th className="py-4 px-6 font-label-caps text-label-caps text-[#475569] font-semibold">Vai trò</th>
-                  <th className="py-4 px-6 font-label-caps text-label-caps text-[#475569] font-semibold">Trạng thái</th>
-                  <th className="py-4 px-6 font-label-caps text-label-caps text-[#475569] font-semibold">Xác thực</th>
-                  <th className="py-4 px-6 font-label-caps text-label-caps text-[#475569] font-semibold">Ngày tạo</th>
-                  <th className="py-4 px-6 font-label-caps text-label-caps text-[#475569] font-semibold text-right">Thao tác</th>
+                <tr className="bg-slate-50 border-b border-[#E2E8F0]">
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Họ tên &amp; Email</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Số điện thoại</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Vai trò</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Trạng thái</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Xác thực</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngày tham gia</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider text-right">Thao tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
+              <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="py-10 text-center text-[#475569]">Đang tải người dùng...</td>
+                    <td colSpan="7" className="py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-8 h-8 border-3 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-sm font-semibold text-slate-400">Đang tải danh sách người dùng...</p>
+                      </div>
+                    </td>
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="py-10 text-center text-[#475569]">Không tìm thấy người dùng.</td>
+                    <td colSpan="7" className="py-16 text-center text-slate-400 font-semibold text-sm">
+                      Không tìm thấy thông tin người dùng nào phù hợp.
+                    </td>
                   </tr>
                 ) : (
                   users.map((user) => (
-                    <tr key={user.user_id} className="hover:bg-[#F8FAFC] transition-colors group">
+                    <tr key={user.user_id} className="hover:bg-slate-50/50 transition-colors">
+                      {/* Name & Email */}
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#475569] font-bold font-body-sm">
-                            {user.full_name ? user.full_name.split(' ').map((part) => part[0]).slice(0, 2).join('') : 'U'}
+                          <div className="w-10 h-10 rounded-2xl bg-teal-50 text-[#0F766E] border border-teal-100 flex items-center justify-center font-bold text-sm">
+                            {user.full_name ? user.full_name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() : 'U'}
                           </div>
                           <div>
-                            <div className="font-body-base text-body-base font-semibold text-[#334155]">{user.full_name}</div>
-                            <div className="font-body-sm text-body-sm text-[#475569]">{user.email}</div>
+                            <div className="font-bold text-slate-800 text-sm">{user.full_name}</div>
+                            <div className="text-xs text-slate-400 font-medium mt-0.5">{user.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-6 font-body-sm text-body-sm text-[#475569]">{user.phone || '-'}</td>
-                      <td className="py-4 px-6 font-body-sm text-body-sm text-[#334155]">{roleText(user.role_default)}</td>
+
+                      {/* Phone */}
+                      <td className="py-4 px-6 font-semibold text-slate-600 text-sm">{user.phone || '-'}</td>
+
+                      {/* Role */}
+                      <td className="py-4 px-6 font-bold text-slate-700 text-sm">
+                        <span className={`px-2.5 py-0.5 rounded-lg text-xs border ${
+                          user.role_default === 'ADMIN' 
+                            ? 'bg-purple-50 text-purple-700 border-purple-100' 
+                            : user.role_default === 'EMPLOYER' 
+                            ? 'bg-blue-50 text-blue-700 border-blue-100' 
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        }`}>
+                          {roleText(user.role_default)}
+                        </span>
+                      </td>
+
+                      {/* Status */}
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-caps text-label-caps ${statusBadge(user.status)}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'ACTIVE' ? 'bg-emerald-500' : user.status === 'BANNED' ? 'bg-red-500' : 'bg-slate-400'}`}></span>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusBadge(user.status)}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'ACTIVE' ? 'bg-emerald-500' : user.status === 'BANNED' ? 'bg-rose-500' : 'bg-slate-400'}`}></span>
                           {statusText(user.status)}
                         </span>
                       </td>
+
+                      {/* Verification Status */}
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-caps text-label-caps ${user.is_email_verified ? 'bg-slate-50 text-slate-700 border border-slate-100' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${user.is_email_verified ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-                          {user.is_email_verified ? 'Đã xác thực' : 'Chưa xác thực'}
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold ${
+                          user.is_email_verified 
+                            ? 'bg-slate-50 text-slate-600 border border-slate-100' 
+                            : 'bg-amber-50 text-amber-700 border border-amber-100'
+                        }`}>
+                          <span className={`material-symbols-outlined text-[14px] ${user.is_email_verified ? 'text-emerald-500' : 'text-amber-500'}`}>
+                            {user.is_email_verified ? 'verified' : 'pending'}
+                          </span>
+                          {user.is_email_verified ? 'Đã xác minh' : 'Chưa xác minh'}
                         </span>
                       </td>
-                      <td className="py-4 px-6 font-body-sm text-body-sm text-[#475569]">{new Date(user.created_at).toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+
+                      {/* Join Date */}
+                      <td className="py-4 px-6 text-slate-500 text-sm font-semibold">
+                        {new Date(user.created_at).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                      </td>
+
+                      {/* Actions */}
                       <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2">
                           {user.status === 'ACTIVE' && (
                             <>
                               <button
                                 onClick={() => handleAction(user.user_id, 'suspend')}
-                                className="px-3 py-1.5 rounded-md border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white font-label-caps text-label-caps transition-colors"
+                                className="px-3 py-1.5 rounded-xl border border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white text-xs font-bold transition-all cursor-pointer"
                               >
                                 Tạm khóa
                               </button>
                               <button
                                 onClick={() => handleAction(user.user_id, 'ban')}
-                                className="px-3 py-1.5 rounded-md border border-red-100 bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-label-caps text-label-caps transition-colors"
+                                className="px-3 py-1.5 rounded-xl border border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white text-xs font-bold transition-all cursor-pointer"
                               >
                                 Cấm
                               </button>
@@ -251,13 +325,13 @@ export default function AdminUsers() {
                             <>
                               <button
                                 onClick={() => handleAction(user.user_id, 'activate')}
-                                className="px-3 py-1.5 rounded-md border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-label-caps text-label-caps transition-colors"
+                                className="px-3 py-1.5 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white text-xs font-bold transition-all cursor-pointer"
                               >
                                 Kích hoạt
                               </button>
                               <button
                                 onClick={() => handleAction(user.user_id, 'ban')}
-                                className="px-3 py-1.5 rounded-md border border-red-100 bg-red-50 text-red-700 hover:bg-red-600 hover:text-white font-label-caps text-label-caps transition-colors"
+                                className="px-3 py-1.5 rounded-xl border border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white text-xs font-bold transition-all cursor-pointer"
                               >
                                 Cấm
                               </button>
@@ -267,7 +341,7 @@ export default function AdminUsers() {
                           {user.status === 'BANNED' && (
                             <button
                               onClick={() => handleAction(user.user_id, 'activate')}
-                              className="px-3 py-1.5 rounded-md border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-label-caps text-label-caps transition-colors"
+                              className="px-3 py-1.5 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white text-xs font-bold transition-all cursor-pointer"
                             >
                               Kích hoạt
                             </button>
@@ -280,44 +354,46 @@ export default function AdminUsers() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 border-t border-slate-100 bg-slate-50/50">
+            <div className="text-xs font-semibold text-slate-500">
+              Hiển thị {users.length} trên tổng số {total} tài khoản người dùng.
+            </div>
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => {
+                  if (page > 1) {
+                    const nextPage = page - 1;
+                    setPage(nextPage);
+                    fetchUsers({ page: nextPage, limit });
+                  }
+                }}
+                disabled={page <= 1}
+                className="px-3.5 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-bold text-slate-600 shadow-sm disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
+              >
+                Trước
+              </button>
+              <span className="text-xs font-extrabold text-slate-700 bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-xl">
+                Trang {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => {
+                  if (page < totalPages) {
+                    const nextPage = page + 1;
+                    setPage(nextPage);
+                    fetchUsers({ page: nextPage, limit });
+                  }
+                }}
+                disabled={page >= totalPages}
+                className="px-3.5 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-bold text-slate-600 shadow-sm disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
+              >
+                Sau
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mt-4 px-4 py-3 bg-[#FFFFFF] border-t border-[#E2E8F0]">
-          <div className="text-sm text-[#475569]">
-            Hiển thị {users.length} trên {total} người dùng
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                if (page > 1) {
-                  const nextPage = page - 1;
-                  setPage(nextPage);
-                  fetchUsers({ page: nextPage, limit });
-                }
-              }}
-              disabled={page <= 1}
-              className="px-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] disabled:opacity-50"
-            >
-              Trước
-            </button>
-            <span className="text-sm text-[#475569]">
-              Trang {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => {
-                if (page < totalPages) {
-                  const nextPage = page + 1;
-                  setPage(nextPage);
-                  fetchUsers({ page: nextPage, limit });
-                }
-              }}
-              disabled={page >= totalPages}
-              className="px-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-[#334155] disabled:opacity-50"
-            >
-              Sau
-            </button>
-          </div>
-        </div>
       </div>
     </main>
   );
