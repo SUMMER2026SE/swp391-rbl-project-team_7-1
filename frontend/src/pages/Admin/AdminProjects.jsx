@@ -150,8 +150,14 @@ export default function AdminProjects() {
         );
       case 'CLOSED':
         return (
-          <span className="bg-slate-50 text-slate-500 border border-slate-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
-            Chờ duyệt/Đóng
+          <span className="bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+            Chờ duyệt
+          </span>
+        );
+      case 'REJECTED':
+        return (
+          <span className="bg-rose-50 text-rose-700 border border-rose-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+            Từ chối duyệt
           </span>
         );
       case 'COMPLETED':
@@ -204,7 +210,8 @@ export default function AdminProjects() {
                 className="w-full px-4 py-2.5 bg-slate-50/50 border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all duration-200 appearance-none cursor-pointer"
               >
                 <option value="">Tất cả trạng thái</option>
-                <option value="CLOSED">Chờ duyệt / Đã đóng</option>
+                <option value="CLOSED">Chờ duyệt</option>
+                <option value="REJECTED">Từ chối duyệt</option>
                 <option value="OPEN">Đang tuyển dụng</option>
                 <option value="COMPLETED">Đã hoàn thành</option>
               </select>

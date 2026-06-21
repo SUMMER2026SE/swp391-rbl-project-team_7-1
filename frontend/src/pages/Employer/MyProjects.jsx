@@ -274,6 +274,12 @@ export default function MyProjects() {
                 >
                   Chờ duyệt
                 </button>
+                <button 
+                  onClick={() => setStatusFilter('REJECTED')}
+                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'REJECTED' ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  Từ chối
+                </button>
               </div>
             </div>
           </div>
@@ -346,10 +352,12 @@ export default function MyProjects() {
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
                             : project.status === 'CLOSED'
                             ? 'bg-amber-50 text-amber-700 border-amber-100'
+                            : project.status === 'REJECTED'
+                            ? 'bg-rose-50 text-rose-700 border-rose-100'
                             : 'bg-slate-100 text-slate-500 border-slate-200'
                         }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : project.status === 'CLOSED' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'}`}></span>
-                          {project.status === 'OPEN' ? 'Đang mở' : project.status === 'CLOSED' ? 'Chờ duyệt' : 'Đã hoàn thành'}
+                          <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : project.status === 'CLOSED' ? 'bg-amber-500 animate-pulse' : project.status === 'REJECTED' ? 'bg-rose-500' : 'bg-slate-400'}`}></span>
+                          {project.status === 'OPEN' ? 'Đang mở' : project.status === 'CLOSED' ? 'Chờ duyệt' : project.status === 'REJECTED' ? 'Từ chối duyệt' : 'Đã hoàn thành'}
                         </span>
                       </td>
 

@@ -143,8 +143,14 @@ export const rejectProject = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Dự án không ở trạng thái chờ duyệt.' });
     }
 
-    // Keep status as CLOSED = rejected/not approved
-    // Optionally store rejection reason (we won't modify DB)
+    await pool.request()
+      .input('projectId', sql.Int, id)
+      .query(`
+        UPDATE projects 
+        SET status = 'REJECTED', updated_at = SYSUTCDATETIME() 
+        WHERE project_id = @projectId
+      `);
+
     res.json({ success: true, message: 'Dự án đã bị từ chối.' });
   } catch (error) {
     console.error('Error rejecting project:', error);
