@@ -57,7 +57,59 @@ export const initDb = async () => {
       );
     `);
 
-    console.log('✅ Wallet Management and Review tables initialized (if not existed)');
+    // Create/Update ai_chat_sessions Table
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ai_chat_sessions' and xtype='U')
+      BEGIN
+        CREATE TABLE ai_chat_sessions (
+          session_id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT NOT NULL,
+          title NVARCHAR(255) NOT NULL,
+          created_at DATETIME DEFAULT GETDATE(),
+          updated_at DATETIME DEFAULT GETDATE()
+        );
+      END
+      ELSE
+      BEGIN
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_sessions') AND name = 'title')
+          ALTER TABLE ai_chat_sessions ADD title NVARCHAR(255) NOT NULL DEFAULT 'New Chat';
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_sessions') AND name = 'created_at')
+          ALTER TABLE ai_chat_sessions ADD created_at DATETIME DEFAULT GETDATE();
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_sessions') AND name = 'updated_at')
+          ALTER TABLE ai_chat_sessions ADD updated_at DATETIME DEFAULT GETDATE();
+      END
+    `);
+
+    // Create/Update ai_chat_messages Table
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='ai_chat_messages' and xtype='U')
+      BEGIN
+        CREATE TABLE ai_chat_messages (
+          message_id INT IDENTITY(1,1) PRIMARY KEY,
+          session_id INT NOT NULL,
+          role VARCHAR(50) NOT NULL,
+          content NVARCHAR(MAX) NOT NULL,
+          created_at DATETIME DEFAULT GETDATE()
+        );
+      END
+      ELSE
+      BEGIN
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_messages') AND name = 'session_id')
+          ALTER TABLE ai_chat_messages ADD session_id INT NOT NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_messages') AND name = 'role')
+          ALTER TABLE ai_chat_messages ADD role VARCHAR(50) NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_messages') AND name = 'content')
+          ALTER TABLE ai_chat_messages ADD content NVARCHAR(MAX) NOT NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_messages') AND name = 'created_at')
+          ALTER TABLE ai_chat_messages ADD created_at DATETIME DEFAULT GETDATE();
+        
+        -- Make sender_type NULL-able if it exists so it doesn't block INSERTs
+        IF EXISTS (SELECT * FROM syscolumns WHERE id = object_id('ai_chat_messages') AND name = 'sender_type')
+          ALTER TABLE ai_chat_messages ALTER COLUMN sender_type VARCHAR(50) NULL;
+      END
+    `);
+
+    console.log('✅ Wallet Management, Review, and AI Chat tables initialized (if not existed)');
   } catch (error) {
     console.error('❌ Failed to initialize database tables:', error);
   }

@@ -54,7 +54,7 @@ export default function EmployerWallet() {
 
   if (loading) {
     return (
-      <main className="flex-1 ml-0 overflow-y-auto w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12 bg-[#F8FAFC]">
+      <main className="flex-1 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12 bg-[#F8FAFC]">
         <div className="flex justify-center items-center h-64">
           <span className="material-symbols-outlined animate-spin text-4xl text-[#0F766E]">progress_activity</span>
         </div>
@@ -63,7 +63,7 @@ export default function EmployerWallet() {
   }
 
   return (
-    <main className="flex-1 ml-0 overflow-y-auto w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12 bg-[#F8FAFC]">
+    <main className="flex-1 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 md:py-12 bg-[#F8FAFC] flex flex-col">
       <header className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
         <div>
           <h1 className="font-display-hero-mobile md:font-display-hero text-display-hero-mobile md:text-display-hero text-[#334155] mb-2">Wallet &amp; Transactions</h1>
