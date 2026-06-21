@@ -215,9 +215,9 @@ export default function MyProjects() {
 
           <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.015)] flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dự án đã đóng</span>
-              <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100/50">
-                <span className="material-symbols-outlined text-[20px]">lock</span>
+              <span className="text-xs font-bold text-slate-400 tracking-wider">DỰ ÁN CHỜ DUYỆT</span>
+              <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-100/50">
+                <span className="material-symbols-outlined text-[20px]">fact_check</span>
               </div>
             </div>
             <p className="text-3xl font-black text-slate-800 tracking-tight mt-3">{closedProjects}</p>
@@ -270,9 +270,9 @@ export default function MyProjects() {
                 </button>
                 <button 
                   onClick={() => setStatusFilter('CLOSED')}
-                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'CLOSED' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === 'CLOSED' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                 >
-                  Đã đóng
+                  Chờ duyệt
                 </button>
               </div>
             </div>
@@ -344,10 +344,12 @@ export default function MyProjects() {
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide border ${
                           project.status === 'OPEN' 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                            : project.status === 'CLOSED'
+                            ? 'bg-amber-50 text-amber-700 border-amber-100'
                             : 'bg-slate-100 text-slate-500 border-slate-200'
                         }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
-                          {project.status === 'OPEN' ? 'Đang mở' : 'Đã đóng'}
+                          <span className={`w-1.5 h-1.5 rounded-full ${project.status === 'OPEN' ? 'bg-emerald-500 animate-pulse' : project.status === 'CLOSED' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'}`}></span>
+                          {project.status === 'OPEN' ? 'Đang mở' : project.status === 'CLOSED' ? 'Chờ duyệt' : 'Đã hoàn thành'}
                         </span>
                       </td>
 
