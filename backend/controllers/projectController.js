@@ -361,7 +361,7 @@ export const createProject = async (req, res) => {
       .input('attachmentUrl', sql.NVarChar, attachmentUrl)
       .query(`
         INSERT INTO projects (employer_id, category_id, title, description, budget_type, budget_min, budget_max, required_freelancer_count, deadline, status, attachment_url, created_at)
-        VALUES (@employerId, @categoryId, @title, @description, @budgetType, @budgetMin, @budgetMax, @requiredFreelancerCount, @deadline, 'OPEN', @attachmentUrl, SYSUTCDATETIME());
+        VALUES (@employerId, @categoryId, @title, @description, @budgetType, @budgetMin, @budgetMax, @requiredFreelancerCount, @deadline, 'CLOSED', @attachmentUrl, SYSUTCDATETIME());
         SELECT SCOPE_IDENTITY() AS project_id;
       `);
 

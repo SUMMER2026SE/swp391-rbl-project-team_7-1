@@ -125,16 +125,14 @@ export default function Sidebar() {
     bottom_btn_link = '/post-project';
   } else if (role === 'admin') {
     items = [
-      { label: 'Bảng điều khiển', icon: 'dashboard', link: '/admin-dashboard' },
-      { label: 'Quản lý người dùng', icon: 'group', link: '/admin-users' },
-      { label: 'Duyệt đề xuất', icon: 'fact_check', link: '/admin-project-moderation' },
-      { label: 'Quản lý tranh chấp', icon: 'gavel', link: '/admin-dispute-management' },
-      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-disputes' },
+      { label: 'Trang chủ', icon: 'dashboard', link: '/admin-dashboard' },
+      { label: 'Người dùng', icon: 'group', link: '/admin-users' },
+      { label: 'Duyệt dự án', icon: 'fact_check', link: '/admin-project-approval' },
+      { label: 'Duyệt đề xuất', icon: 'assignment', link: '/admin-project-moderation' },
+      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-dispute-management' },
+      { label: 'Vi phạm', icon: 'warning', link: '/admin-violations' },
       { label: 'Báo cáo', icon: 'summarize', link: '/admin-generate-report' },
-      { label: 'Quản lý báo cáo', icon: 'report', link: '/admin-report-management' },
-      { label: 'Xử lý vi phạm', icon: 'gavel', link: '/admin-violations' },
       { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' },
-      { label: 'Trợ lý AI', icon: 'smart_toy', link: '/ai-chat' },
       { label: 'Cài đặt', icon: 'settings', link: '/admin-settings' }
     ];
     user_name = user ? user.fullName : 'Admin Panel';
@@ -146,6 +144,7 @@ export default function Sidebar() {
     if (item.link === '#') return false;
     if (path === item.link) return true;
     if (item.label === 'Tìm Freelancer' && (path === '/freelancers' || path.startsWith('/profile/') || path.startsWith('/freelancers/'))) return true;
+    if (item.label === 'Duyệt dự án' && (path === '/admin-project-approval')) return true;
     if (item.label === 'Báo cáo' && path.startsWith('/admin-report')) return true;
     if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested')) return true;
     if (item.label === 'Dự án của tôi' && (path === '/my-projects' || path.startsWith('/manage-proposals') || path.startsWith('/project-details') || path === '/post-project' || path.startsWith('/edit-project'))) return true;

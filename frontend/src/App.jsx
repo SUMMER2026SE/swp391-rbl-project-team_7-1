@@ -17,8 +17,8 @@ import AdminReportSuccess from './pages/Admin/ReportSuccess';
 import AdminSettings from './pages/Admin/Settings';
 import AdminUsers from './pages/Admin/Users';
 import ProposalModeration from './pages/Admin/ProposalModeration';
-import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 import ViolationHandling from './pages/Admin/ViolationHandling';
+import ProjectModeration from './pages/Admin/ProjectModeration';
 import AIChatPage from './pages/AI/AIChatPage';
 
 // Pages - Wallet & Payment (Iteration 2)
@@ -156,6 +156,7 @@ export default function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-users" element={<AdminUsers />} />
         <Route path="/admin-project-moderation" element={<ProposalModeration />} />
+        <Route path="/admin-project-approval" element={<ProjectModeration />} />
         <Route path="/admin-dispute-management" element={<DisputeManagement />} />
         <Route path="/admin-disputes" element={<AdminDisputes />} />
         <Route path="/admin-generate-report" element={<AdminGenerateReport />} />
@@ -164,7 +165,6 @@ export default function App() {
         <Route path="/admin-report-success" element={<AdminReportSuccess />} />
         <Route path="/admin-analytics" element={<AdminAnalytics />} />
         <Route path="/admin-settings" element={<AdminSettings />} />
-        <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
         <Route path="/admin-violations" element={<ViolationHandling />} />
         <Route path="/ai-chat" element={<AIChatPage />} />
       </Route>
