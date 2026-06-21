@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import AIAssistantWidget from '../components/AIAssistant/AIAssistantWidget';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -31,6 +32,9 @@ export default function DashboardLayout() {
         {/* Render child routes */}
         <Outlet />
       </div>
+
+      {/* Global AI Assistant Widget */}
+      <AIAssistantWidget />
     </div>
   );
 }
