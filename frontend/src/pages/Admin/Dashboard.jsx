@@ -216,9 +216,9 @@ export default function AdminDashboard() {
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Hợp đồng đang thực hiện</span>
                 <span className="text-2xl font-black text-slate-800 mt-2">{(dashboardData?.activeContracts || 0).toLocaleString('vi-VN')} hợp đồng</span>
               </div>
-              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50 flex flex-col justify-center">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Doanh thu giao dịch</span>
-                <span className="text-2xl font-black text-emerald-700 mt-2">{(dashboardData?.totalRevenue || 0).toLocaleString('vi-VN')} đ</span>
+              <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 flex flex-col justify-center">
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block">Lợi nhuận hệ thống (5%)</span>
+                <span className="text-2xl font-black text-emerald-700 mt-2">{(dashboardData?.totalSystemFees || 0).toLocaleString('vi-VN')} đ</span>
               </div>
             </div>
           </div>

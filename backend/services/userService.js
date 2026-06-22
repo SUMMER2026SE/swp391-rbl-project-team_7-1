@@ -129,6 +129,7 @@ export const getDashboardStats = async () => {
     pendingDisputesResult,
     pendingReportsResult,
     totalRevenueResult,
+    totalSystemFeesResult,
     pendingWithdrawalsResult,
     pendingProjectsResult,
     topFreelancersResult
@@ -139,6 +140,7 @@ export const getDashboardStats = async () => {
     pool.request().query("SELECT COUNT(*) as count FROM disputes WHERE status = 'OPEN'"),
     pool.request().query("SELECT COUNT(*) as count FROM violation_reports WHERE status = 'PENDING'"),
     pool.request().query("SELECT ISNULL(SUM(amount), 0) as total FROM payments WHERE payment_status = 'COMPLETED'"),
+    pool.request().query("SELECT ISNULL(SUM(amount), 0) as total FROM WalletTransaction WHERE transaction_type = 'SERVICE_FEE'"),
     pool.request().query("SELECT COUNT(*) as count FROM WithdrawalRequests WHERE status = 'PENDING'"),
     pool.request().query("SELECT COUNT(*) as count FROM projects WHERE status = 'CLOSED'"),
     pool.request().query(`
@@ -196,6 +198,7 @@ export const getDashboardStats = async () => {
     pendingDisputes: pendingDisputesResult.recordset[0]?.count || 0,
     pendingReports: pendingReportsResult.recordset[0]?.count || 0,
     totalRevenue: totalRevenueResult.recordset[0]?.total || 0,
+    totalSystemFees: totalSystemFeesResult.recordset[0]?.total || 0,
     pendingWithdrawals: pendingWithdrawalsResult.recordset[0]?.count || 0,
     pendingProjects: pendingProjectsResult.recordset[0]?.count || 0,
     latestProjects: latestProjectsRes.recordset || [],

@@ -230,9 +230,9 @@ export default function AdminAnalytics() {
       gradient: 'from-purple-500 to-pink-400'
     },
     { 
-      title: 'Tổng doanh thu', 
-      value: formatRevenue(overview.totalRevenue), 
-      subtitle: 'Doanh thu giao dịch qua ví an toàn', 
+      title: 'Lợi nhuận từ phí (5%)', 
+      value: formatRevenue(overview.totalSystemFees), 
+      subtitle: 'Phí dịch vụ thu từ dự án hoàn thành', 
       icon: 'monetization_on',
       gradient: 'from-amber-500 to-orange-400'
     },

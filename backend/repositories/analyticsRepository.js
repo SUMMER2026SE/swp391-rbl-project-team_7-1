@@ -15,6 +15,7 @@ export const getOverviewStats = async () => {
     pool.request().query(`SELECT COUNT(*) as count FROM disputes WHERE status = 'OPEN'`),
     pool.request().query(`SELECT COUNT(*) as count FROM violation_reports WHERE status = 'PENDING'`),
     pool.request().query(`SELECT ISNULL(SUM(amount), 0) as total FROM payments WHERE payment_status = 'COMPLETED'`),
+    pool.request().query(`SELECT ISNULL(SUM(amount), 0) as total FROM WalletTransaction WHERE transaction_type = 'SERVICE_FEE'`),
   ];
 
   const results = await Promise.all(queries);
@@ -31,6 +32,7 @@ export const getOverviewStats = async () => {
     pendingDisputes: results[8].recordset[0]?.count || 0,
     pendingReports: results[9].recordset[0]?.count || 0,
     totalRevenue: results[10].recordset[0]?.total || 0,
+    totalSystemFees: results[11].recordset[0]?.total || 0,
   };
 };
 
@@ -40,8 +42,8 @@ export const getMonthlyRevenue = async () => {
     SELECT 
       FORMAT(created_at, 'yyyy-MM') as month,
       ISNULL(SUM(amount), 0) as amount
-    FROM payments
-    WHERE payment_status = 'COMPLETED'
+    FROM WalletTransaction
+    WHERE transaction_type = 'SERVICE_FEE'
       AND created_at >= DATEADD(MONTH, -12, GETDATE())
     GROUP BY FORMAT(created_at, 'yyyy-MM')
     ORDER BY month ASC

@@ -266,19 +266,31 @@ export const approveSubmission = async (req, res) => {
           walletId = walletRes.recordset[0].wallet_id;
         }
 
-        // Add funds to Freelancer Wallet
+        const escrowAmountNum = Number(escrow.amount);
+        const serviceFee = escrowAmountNum * 0.05;
+        const releaseAmount = escrowAmountNum - serviceFee;
+
+        // Add funds to Freelancer Wallet (95%)
         await tx.request()
           .input('walletId', sql.Int, walletId)
-          .input('amount', sql.Decimal(18, 2), escrow.amount)
+          .input('amount', sql.Decimal(18, 2), releaseAmount)
           .query("UPDATE Wallet SET balance = balance + @amount, updated_at = GETDATE() WHERE wallet_id = @walletId");
 
-        // Insert WalletTransaction record
+        // Insert WalletTransaction record for Freelancer (95%)
         await tx.request()
           .input('walletId', sql.Int, walletId)
-          .input('amount', sql.Decimal(18, 2), escrow.amount)
-          .input('desc', sql.NVarChar(255), `Nhận thanh toán nghiệm thu hợp đồng: ${sub.contract_title}`)
+          .input('amount', sql.Decimal(18, 2), releaseAmount)
+          .input('desc', sql.NVarChar(255), `Nhận thanh toán nghiệm thu hợp đồng (đã trừ 5% phí): ${sub.contract_title}`)
           .input('escrowId', sql.Int, escrow.escrow_id)
           .query("INSERT INTO WalletTransaction (wallet_id, transaction_type, amount, description, related_escrow_id, status) VALUES (@walletId, 'ESCROW_RELEASE', @amount, @desc, @escrowId, 'COMPLETED')");
+
+        // Insert WalletTransaction record for Platform Service Fee (5%)
+        await tx.request()
+          .input('walletId', sql.Int, walletId)
+          .input('feeAmount', sql.Decimal(18, 2), serviceFee)
+          .input('descFee', sql.NVarChar(255), `Phí dịch vụ nền tảng (5%): ${sub.contract_title}`)
+          .input('escrowId', sql.Int, escrow.escrow_id)
+          .query("INSERT INTO WalletTransaction (wallet_id, transaction_type, amount, description, related_escrow_id, status) VALUES (@walletId, 'SERVICE_FEE', @feeAmount, @descFee, @escrowId, 'COMPLETED')");
       }
 
       await tx.commit();
