@@ -257,6 +257,7 @@ export const approveSubmission = async (req, res) => {
 
         let walletId;
         if (walletRes.recordset.length === 0) {
+          // Create Wallet if not exists
           const newWalletRes = await tx.request()
             .input('freelancerId', sql.Int, sub.freelancer_id)
             .query("INSERT INTO Wallet (user_id, balance, created_at, updated_at) VALUES (@freelancerId, 0, GETDATE(), GETDATE()); SELECT SCOPE_IDENTITY() as wallet_id;");
