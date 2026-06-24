@@ -519,9 +519,12 @@ export const getMyPortfolios = async (req, res) => {
   }
 };
 
-export const getFreelancerPortfolios = async (req, res) => {
+export const getFreelancerPortfolios = async (req, res, next) => {
   try {
     const { freelancerId } = req.params;
+    if (isNaN(parseInt(freelancerId, 10))) {
+      return next();
+    }
     const pool = await poolPromise;
     const result = await pool.request()
       .input('freelancerId', sql.Int, freelancerId)
@@ -639,11 +642,11 @@ export const deletePortfolio = async (req, res) => {
   }
 };
 
-export const getPublicProfile = async (req, res) => {
+export const getPublicProfile = async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);
     if (isNaN(userId)) {
-      return res.status(400).json({ message: 'ID người dùng không hợp lệ.' });
+      return next();
     }
 
     const pool = await poolPromise;
@@ -769,9 +772,12 @@ export const getAllFreelancers = async (req, res) => {
   }
 };
 
-export const getFreelancerReviews = async (req, res) => {
+export const getFreelancerReviews = async (req, res, next) => {
   try {
     const { freelancerId } = req.params;
+    if (isNaN(parseInt(freelancerId, 10))) {
+      return next();
+    }
     const pool = await poolPromise;
 
     const result = await pool.request()
@@ -779,8 +785,8 @@ export const getFreelancerReviews = async (req, res) => {
       .query(`
         SELECT r.*, u.full_name as reviewer_name, u.avatar_url as reviewer_avatar
         FROM reviews r
-        JOIN users u ON r.reviewer_id = u.user_id
-        WHERE r.reviewee_id = @freelancerId
+        JOIN users u ON r.from_user_id = u.user_id
+        WHERE r.to_user_id = @freelancerId
         ORDER BY r.created_at DESC
       `);
 

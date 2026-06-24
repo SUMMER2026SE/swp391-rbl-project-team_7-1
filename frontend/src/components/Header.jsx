@@ -51,27 +51,13 @@ export default function Header({ layout = 'dashboard' }) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setDropdownOpen(false);
-    navigate('/');
+    window.location.href = '/';
   };
 
   // Helper to determine the opposite dashboard role when clicking "Switch Role"
   const handleSwitchRole = () => {
-    let currentRole = 'freelancer';
-    if (
-      path.includes('employer') ||
-      path.startsWith('/manage-proposals') ||
-      path === '/review-submission' ||
-      path === '/revision-requested' ||
-      path.startsWith('/project-details') ||
-      path === '/post-project' ||
-      path.startsWith('/edit-project') ||
-      path === '/my-projects' ||
-      path === '/escrow-checkout'
-    ) {
-      currentRole = 'employer';
-    } else if (path.startsWith('/admin')) {
-      currentRole = 'admin';
-    }
+    const activeRole = localStorage.getItem('active_role');
+    const currentRole = activeRole || user?.roleDefault?.toLowerCase() || 'freelancer';
 
     if (currentRole === 'freelancer') {
       localStorage.setItem('active_role', 'employer');

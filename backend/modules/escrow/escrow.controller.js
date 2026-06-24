@@ -84,6 +84,9 @@ export const depositEscrow = async (req, res) => {
           
         // Update project status to IN_PROGRESS
         await request.query("UPDATE projects SET status = 'IN_PROGRESS' WHERE project_id = @project_id");
+        
+        // Delete all other proposals for this project
+        await request.query("DELETE FROM proposals WHERE project_id = @project_id AND status <> 'ACCEPTED'");
       }
 
       await transaction.commit();

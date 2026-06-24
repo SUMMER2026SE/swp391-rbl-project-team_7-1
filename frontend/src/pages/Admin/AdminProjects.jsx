@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 const API = 'http://localhost:5000/api/admin/projects';
 
-export default function ProjectModeration() {
+export default function AdminProjects() {
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') || '';
+
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ type: '', msg: '' });
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -30,10 +35,12 @@ export default function ProjectModeration() {
       const q = new URLSearchParams();
       const p = opts.page || page;
       if (search) q.set('q', search);
+      const sf = opts.status !== undefined ? opts.status : statusFilter;
+      if (sf) q.set('status', sf);
       q.set('page', p);
       q.set('limit', '10');
 
-      const res = await fetch(`${API}/pending?${q.toString()}`, {
+      const res = await fetch(`${API}/all?${q.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -53,9 +60,21 @@ export default function ProjectModeration() {
   };
 
   useEffect(() => {
-    fetchProjects({ page: 1 });
+    fetchProjects({ page: 1, status: initialStatus });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialStatus]);
+
+  const handleSearchSubmit = () => {
+    setPage(1);
+    fetchProjects({ page: 1 });
+  };
+
+  const handleReset = () => {
+    setSearch('');
+    setStatusFilter('');
+    setPage(1);
+    fetchProjects({ page: 1, status: '' });
+  };
 
   const handleApprove = async (projectId) => {
     if (!window.confirm('Bạn có chắc muốn duyệt dự án này?')) return;
@@ -121,38 +140,93 @@ export default function ProjectModeration() {
     return (min || 0).toLocaleString('vi-VN') + ' đ';
   };
 
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'OPEN':
+        return (
+          <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+            Đang tuyển
+          </span>
+        );
+      case 'CLOSED':
+        return (
+          <span className="bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+            Chờ duyệt
+          </span>
+        );
+      case 'REJECTED':
+        return (
+          <span className="bg-rose-50 text-rose-700 border border-rose-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+            Từ chối duyệt
+          </span>
+        );
+      case 'COMPLETED':
+        return (
+          <span className="bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+            Đã hoàn thành
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-slate-50 text-slate-500 border border-slate-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+            {status}
+          </span>
+        );
+    }
+  };
+
   return (
     <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 pb-12">
         
         {/* Header */}
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Duyệt tin dự án</h1>
-          <p className="text-sm text-slate-500 font-medium">Kiểm duyệt các dự án mới đăng từ nhà tuyển dụng trước khi cho phép hiển thị công khai trên sàn giao dịch.</p>
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Tổng dự án hệ thống</h1>
+          <p className="text-sm text-slate-500 font-medium">Theo dõi, kiểm tra chi tiết và quản lý toàn bộ tin đăng dự án của Nhà tuyển dụng trên toàn hệ thống.</p>
         </div>
 
-        {/* Sync Search bar */}
-        <div className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full sm:max-w-md">
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1); fetchProjects({ page: 1 }); } }}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all duration-200"
-              placeholder="Tìm kiếm dự án cần duyệt..."
-              type="text"
-            />
+        {/* Sync Search & Filter Bar */}
+        <div className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:max-w-2xl">
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSearchSubmit(); }}
+                className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all duration-200"
+                placeholder="Tìm kiếm theo tiêu đề dự án hoặc tên nhà tuyển dụng..."
+                type="text"
+              />
+            </div>
+            <div className="relative w-full sm:w-60">
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                  fetchProjects({ page: 1, status: e.target.value });
+                }}
+                className="w-full px-4 py-2.5 bg-slate-50/50 border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all duration-200 appearance-none cursor-pointer"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="CLOSED">Chờ duyệt</option>
+                <option value="REJECTED">Từ chối duyệt</option>
+                <option value="OPEN">Đang tuyển dụng</option>
+                <option value="COMPLETED">Đã hoàn thành</option>
+              </select>
+              <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">unfold_more</span>
+            </div>
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-3 w-full lg:w-auto justify-end border-t lg:border-t-0 pt-4 lg:pt-0">
             <button 
-              onClick={() => { setPage(1); fetchProjects({ page: 1 }); }} 
+              onClick={handleSearchSubmit} 
               className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-sm font-bold shadow-[0_4px_12px_rgba(15,118,110,0.15)] hover:bg-[#0d5e58] hover:shadow-[0_4px_16px_rgba(15,118,110,0.25)] transition-all cursor-pointer"
             >
               Tìm kiếm
             </button>
             <button 
-              onClick={() => { setSearch(''); setPage(1); fetchProjects({ page: 1 }); }} 
+              onClick={handleReset} 
               className="px-5 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
             >
               Đặt lại
@@ -204,7 +278,7 @@ export default function ProjectModeration() {
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Số lượng cần tuyển</label>
-                    <p className="text-slate-850 font-bold text-sm mt-0.5">{selectedProject.required_freelancer_count || 1} người</p>
+                    <p className="text-slate-800 font-bold text-sm mt-0.5">{selectedProject.required_freelancer_count || 1} người</p>
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Nhà tuyển dụng đăng tin</label>
@@ -213,6 +287,10 @@ export default function ProjectModeration() {
                   <div>
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Hạn nhận hồ sơ</label>
                     <p className="text-slate-800 font-bold text-sm mt-0.5">{selectedProject.deadline ? new Date(selectedProject.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}</p>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Trạng thái dự án</label>
+                    <div className="mt-1">{getStatusBadge(selectedProject.status)}</div>
                   </div>
                 </div>
                 {selectedProject.skills && selectedProject.skills.length > 0 && (
@@ -225,14 +303,16 @@ export default function ProjectModeration() {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center gap-3 pt-5 border-t border-slate-100 justify-end">
-                  <button onClick={() => handleApprove(selectedProject.project_id)} className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-xs font-bold shadow-md hover:bg-[#0d5e58] hover:shadow-lg transition-all cursor-pointer">
-                    Duyệt dự án
-                  </button>
-                  <button onClick={() => handleReject(selectedProject.project_id)} className="px-5 py-2.5 bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl text-xs font-bold hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
-                    Từ chối duyệt
-                  </button>
-                </div>
+                {selectedProject.status === 'CLOSED' && (
+                  <div className="flex items-center gap-3 pt-5 border-t border-slate-100 justify-end">
+                    <button onClick={() => handleApprove(selectedProject.project_id)} className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-xs font-bold shadow-md hover:bg-[#0d5e58] hover:shadow-lg transition-all cursor-pointer">
+                      Duyệt dự án
+                    </button>
+                    <button onClick={() => handleReject(selectedProject.project_id)} className="px-5 py-2.5 bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl text-xs font-bold hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                      Từ chối duyệt
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -244,29 +324,30 @@ export default function ProjectModeration() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-[#E2E8F0]">
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Tiêu đề tin tuyển dụng</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Tiêu đề dự án</th>
                   <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Nhà tuyển dụng</th>
                   <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Lĩnh vực</th>
                   <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngân sách</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Số lượng</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngày gửi duyệt</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider text-right">Hành động</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Số lượng tuyển</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Trạng thái</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngày tạo</th>
+                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="py-16 text-center">
+                    <td colSpan="8" className="py-16 text-center">
                       <div className="flex flex-col items-center justify-center space-y-3">
                         <div className="w-8 h-8 border-3 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
-                        <p className="text-xs font-semibold text-slate-400">Đang tải danh sách chờ duyệt...</p>
+                        <p className="text-xs font-semibold text-slate-400">Đang tải danh sách dự án...</p>
                       </div>
                     </td>
                   </tr>
                 ) : projects.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="py-16 text-center text-slate-400 font-semibold text-sm">
-                      Không có tin đăng dự án nào đang chờ xét duyệt.
+                    <td colSpan="8" className="py-16 text-center text-slate-400 font-semibold text-sm">
+                      Không tìm thấy dự án nào phù hợp.
                     </td>
                   </tr>
                 ) : (
@@ -285,18 +366,25 @@ export default function ProjectModeration() {
                       <td className="py-4 px-6 text-sm font-bold text-slate-700">
                         {project.required_freelancer_count || 1} người
                       </td>
+                      <td className="py-4 px-6">
+                        {getStatusBadge(project.status)}
+                      </td>
                       <td className="py-4 px-6 text-sm text-slate-500 font-semibold">{new Date(project.created_at).toLocaleDateString('vi-VN', { dateStyle: 'short' })}</td>
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => viewDetail(project.project_id)} className="px-3.5 py-1.5 rounded-xl border border-[#E2E8F0] bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all cursor-pointer">
                             Chi tiết
                           </button>
-                          <button onClick={() => handleApprove(project.project_id)} className="px-3.5 py-1.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#0d5e58] text-xs font-bold transition-all cursor-pointer">
-                            Duyệt
-                          </button>
-                          <button onClick={() => handleReject(project.project_id)} className="px-3.5 py-1.5 rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white text-xs font-bold transition-all cursor-pointer">
-                            Từ chối
-                          </button>
+                          {project.status === 'CLOSED' && (
+                            <>
+                              <button onClick={() => handleApprove(project.project_id)} className="px-3.5 py-1.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#0d5e58] text-xs font-bold transition-all cursor-pointer">
+                                Duyệt
+                              </button>
+                              <button onClick={() => handleReject(project.project_id)} className="px-3.5 py-1.5 rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white text-xs font-bold transition-all cursor-pointer">
+                                Từ chối
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -309,7 +397,7 @@ export default function ProjectModeration() {
           {/* Pagination */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 border-t border-slate-100 bg-slate-50/50">
             <div className="text-xs font-semibold text-slate-500">
-              Hiển thị {projects.length} trên tổng số {total} tin đăng chờ duyệt.
+              Hiển thị {projects.length} trên tổng số {total} dự án.
             </div>
             <div className="flex items-center gap-2.5">
               <button

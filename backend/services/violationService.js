@@ -115,3 +115,19 @@ export const dismissViolation = async (id) => {
   await violationRepository.updateViolationStatus(id, 'DISMISSED');
   return { success: true };
 };
+
+export const createViolationReport = async ({ reporterId, reportedUserId, projectId, messageId, reviewId, reportType, reason }) => {
+  if (!reporterId || !reportedUserId || !reportType || !reason) {
+    throw new Error('MISSING_FIELDS');
+  }
+  await violationRepository.createViolationReport({
+    reporterId,
+    reportedUserId,
+    projectId,
+    messageId,
+    reviewId,
+    reportType,
+    reason
+  });
+  return { success: true };
+};

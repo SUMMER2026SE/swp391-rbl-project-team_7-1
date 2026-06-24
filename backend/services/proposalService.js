@@ -87,6 +87,12 @@ export const acceptProposalAndCreateContract = async (proposalId, userId, role, 
 
     await updateProposalStatus(normalizedId, 'ACCEPTED', tx);
 
+    // Delete all other proposals for this project as requested
+    await tx.request()
+      .input('projectId', sql.Int, proposal.project_id)
+      .input('proposalId', sql.Int, normalizedId)
+      .query('DELETE FROM proposals WHERE project_id = @projectId AND proposal_id <> @proposalId');
+
     await tx.commit();
     return { status: 201, data: contract };
   } catch (error) {

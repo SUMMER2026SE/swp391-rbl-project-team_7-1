@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { aiChatService } from '../../services/aiChatService';
 
 export default function AIChatPage() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -147,6 +149,38 @@ export default function AIChatPage() {
     return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const handleLinkClick = (e) => {
+    const target = e.target.closest('a');
+    if (target && target.classList.contains('ai-msg-link')) {
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('/')) {
+        e.preventDefault();
+        navigate(href);
+      }
+    }
+  };
+
+  const renderMessageContent = (content) => {
+    const lines = content.split('\n');
+    return lines.map((line, i) => {
+      let processed = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      processed = processed.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="ai-msg-link text-teal-600 hover:text-teal-700 underline font-bold">$1</a>');
+      
+      if (processed.trim().startsWith('- ') || processed.trim().startsWith('• ')) {
+        const text = processed.trim().substring(2);
+        return <li key={i} className="ml-4 list-disc text-sm text-[#334155] mb-1" dangerouslySetInnerHTML={{ __html: text }} />;
+      }
+      if (/^\d+\.\s/.test(processed.trim())) {
+        const text = processed.trim().replace(/^\d+\.\s/, '');
+        return <li key={i} className="ml-4 list-decimal text-sm text-[#334155] mb-1" dangerouslySetInnerHTML={{ __html: text }} />;
+      }
+      if (processed.trim() === '') {
+        return <br key={i} />;
+      }
+      return <p key={i} className="text-sm text-[#334155] mb-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: processed }} />;
+    });
+  };
+
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-slate-50">
       {/* Sidebar */}
@@ -224,7 +258,7 @@ export default function AIChatPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4" onClick={handleLinkClick}>
               {error && (
                 <div className="bg-red-50 border border-red-100 rounded-lg p-3 text-sm text-red-700">{error}</div>
               )}
@@ -247,7 +281,13 @@ export default function AIChatPage() {
                           : 'bg-white border border-[#E2E8F0] text-[#334155] rounded-bl-md'
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      {msg.role === 'user' ? (
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      ) : (
+                        <div className="text-sm">
+                          {renderMessageContent(msg.content)}
+                        </div>
+                      )}
                       <p className={`text-[11px] mt-1 ${msg.role === 'user' ? 'text-teal-100' : 'text-[#94a3b8]'}`}>
                         {formatTime(msg.created_at)}
                       </p>

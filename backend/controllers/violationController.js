@@ -143,3 +143,38 @@ export const dismissViolation = async (req, res) => {
     });
   }
 };
+
+export const createViolationReport = async (req, res) => {
+  try {
+    const reporterId = req.user.id;
+    const { reportedUserId, projectId, messageId, reviewId, reportType, reason } = req.body;
+
+    if (!reportedUserId || !reportType || !reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng cung cấp đầy đủ thông tin báo cáo (người bị báo cáo, loại vi phạm và lý do).'
+      });
+    }
+
+    await violationService.createViolationReport({
+      reporterId,
+      reportedUserId,
+      projectId,
+      messageId,
+      reviewId,
+      reportType,
+      reason
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Gửi báo cáo vi phạm thành công. Admin sẽ xem xét và xử lý.'
+    });
+  } catch (error) {
+    console.error('Error creating violation report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi hệ thống khi gửi báo cáo vi phạm.'
+    });
+  }
+};

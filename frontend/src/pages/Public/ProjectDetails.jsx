@@ -41,7 +41,8 @@ export default function ProjectDetails() {
     );
   }
 
-  const isOwner = currentUser && project && currentUser.user_id === project.employer_id;
+  const currentUserId = currentUser?.userId || currentUser?.user_id || currentUser?.id;
+  const isOwner = !!(currentUserId && project && currentUserId === project.employer_id);
 
   // Status mapping
   const getStatusBadge = (status) => {
@@ -65,6 +66,20 @@ export default function ProjectDetails() {
           <span className="bg-teal-50 text-teal-700 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold border border-teal-200">
             <span className="w-2 h-2 rounded-full bg-teal-500"></span>
             Đã Hoàn Thành
+          </span>
+        );
+      case 'CLOSED':
+        return (
+          <span className="bg-amber-50 text-amber-700 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold border border-amber-200">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            Chờ duyệt
+          </span>
+        );
+      case 'REJECTED':
+        return (
+          <span className="bg-rose-50 text-rose-700 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold border border-rose-200">
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+            Từ chối duyệt
           </span>
         );
       default:

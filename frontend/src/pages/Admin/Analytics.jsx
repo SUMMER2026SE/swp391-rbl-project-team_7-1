@@ -9,48 +9,46 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
 } from 'recharts';
 
 const API = 'http://localhost:5000/api';
 
-function StatCard({ title, value, subtitle, icon }) {
+function StatCard({ title, value, subtitle, icon, gradient }) {
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-      <div className="flex items-center justify-between gap-3 mb-5">
-        <div>
-          <p className="text-[13px] font-semibold text-[#475569] uppercase tracking-[0.15em]">{title}</p>
-        </div>
-        <div className="w-11 h-11 rounded-2xl bg-[#ecfdf5] text-[#0f766e] grid place-items-center">
-          <span className="material-symbols-outlined text-[22px]">{icon}</span>
+    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)] relative overflow-hidden group">
+      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient}`} />
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <p className="text-[13px] font-bold text-[#64748b] uppercase tracking-wider">{title}</p>
+        <div className="w-10 h-10 rounded-xl bg-slate-50 text-[#0F766E] border border-slate-100 flex items-center justify-center transition-colors group-hover:bg-[#EFCE4B]/10 group-hover:text-[#D97706]">
+          <span className="material-symbols-outlined text-[20px]">{icon}</span>
         </div>
       </div>
-      <p className="text-[32px] font-semibold text-[#0f172a] leading-none">{value}</p>
-      <p className="mt-3 text-sm text-[#64748b]">{subtitle}</p>
+      <p className="text-3xl font-extrabold text-[#0f172a] tracking-tight">{value}</p>
+      <p className="mt-2 text-xs text-[#64748b] font-medium">{subtitle}</p>
     </div>
   );
 }
 
 function SectionHeader({ title, subtitle }) {
   return (
-    <div className="flex flex-col gap-1 mb-6">
-      <h2 className="font-headline-2xl text-headline-2xl text-[#334155]">{title}</h2>
-      <p className="text-body-base text-body-base text-[#475569]">{subtitle}</p>
+    <div className="flex flex-col gap-1.5 mb-8">
+      <h1 className="text-3xl font-black text-slate-800 tracking-tight">{title}</h1>
+      <p className="text-sm text-slate-500 font-medium">{subtitle}</p>
     </div>
   );
 }
 
 function ChartCard({ title, subtitle, period, children }) {
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition-all duration-300">
       <div className="flex items-center justify-between gap-3 mb-6">
         <div>
-          <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">{title}</p>
-          <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">{subtitle}</h3>
+          <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider">{title}</p>
+          <h3 className="text-lg font-extrabold text-[#0f172a] mt-1">{subtitle}</h3>
         </div>
-        {period && <span className="text-sm text-[#64748b]">{period}</span>}
+        {period && <span className="text-xs font-semibold px-2.5 py-1 bg-teal-50 text-[#0f766e] rounded-full border border-teal-100/50">{period}</span>}
       </div>
-      <div className="h-[300px]">
+      <div className="h-[280px]">
         {children}
       </div>
     </div>
@@ -58,13 +56,32 @@ function ChartCard({ title, subtitle, period, children }) {
 }
 
 function StatusBadge({ label, count, color }) {
+  const getStatusLabelVi = (status) => {
+    const labels = {
+      OPEN: 'Đang mở tuyển',
+      ACTIVE: 'Đang hoạt động',
+      CLOSED: 'Đã đóng',
+      COMPLETED: 'Đã hoàn thành',
+      PENDING_APPROVAL: 'Chờ duyệt',
+      APPROVED: 'Đã phê duyệt',
+      PENDING: 'Đang chờ xử lý',
+      RESOLVED: 'Đã giải quyết',
+      DISMISSED: 'Đã bác bỏ',
+      CANCELLED: 'Đã hủy',
+      REJECTED: 'Đã từ chối',
+      SUBMITTED: 'Đã nộp bài',
+      WITHDRAWN: 'Đã rút lại'
+    };
+    return labels[status] || status;
+  };
+
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl">
-      <div className="flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
-        <span className="text-sm font-medium text-[#334155]">{label}</span>
+    <div className="flex items-center justify-between px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl hover:border-slate-300 transition-colors">
+      <div className="flex items-center gap-2.5">
+        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }}></span>
+        <span className="text-sm font-semibold text-slate-700">{getStatusLabelVi(label)}</span>
       </div>
-      <span className="text-sm font-semibold text-[#0f172a]">{count}</span>
+      <span className="text-sm font-black text-slate-800 bg-white px-2.5 py-0.5 rounded-lg border border-slate-100">{count}</span>
     </div>
   );
 }
@@ -140,24 +157,18 @@ export default function AdminAnalytics() {
     return colors[status] || '#94a3b8';
   };
 
-  const abbreviateMonth = (monthStr) => {
-    if (!monthStr) return '';
-    const parts = monthStr.split('-');
-    if (parts.length !== 2) return monthStr;
-    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const m = parseInt(parts[1], 10);
-    return months[m] || monthStr;
-  };
-
   if (loading) {
     return (
-      <main className="flex-1 overflow-y-auto p-margin-desktop">
-        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+      <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
           <SectionHeader
-            title="Admin Analytics"
-            subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+            title="Thống kê hệ thống"
+            subtitle="Số liệu phân tích nền tảng, KPI hiệu suất và biểu đồ trực quan hóa thời gian thực."
           />
-          <div className="text-center text-[#64748b]">Đang tải dữ liệu...</div>
+          <div className="flex flex-col items-center justify-center py-32 space-y-4">
+            <div className="w-12 h-12 border-4 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-slate-500 font-medium text-sm">Đang phân tích dữ liệu...</p>
+          </div>
         </div>
       </main>
     );
@@ -165,13 +176,16 @@ export default function AdminAnalytics() {
 
   if (error) {
     return (
-      <main className="flex-1 overflow-y-auto p-margin-desktop">
-        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+      <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
           <SectionHeader
-            title="Admin Analytics"
-            subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+            title="Thống kê hệ thống"
+            subtitle="Số liệu phân tích nền tảng, KPI hiệu suất và biểu đồ trực quan hóa thời gian thực."
           />
-          <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-red-700">{error}</div>
+          <div className="bg-rose-50 border border-rose-100 rounded-3xl p-6 text-rose-700 flex items-center gap-3">
+            <span className="material-symbols-outlined">error</span>
+            <span className="font-semibold">{error}</span>
+          </div>
         </div>
       </main>
     );
@@ -179,112 +193,104 @@ export default function AdminAnalytics() {
 
   if (!analyticsData) {
     return (
-      <main className="flex-1 overflow-y-auto p-margin-desktop">
-        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+      <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
           <SectionHeader
-            title="Admin Analytics"
-            subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+            title="Thống kê hệ thống"
+            subtitle="Số liệu phân tích nền tảng, KPI hiệu suất và biểu đồ trực quan hóa thời gian thực."
           />
-          <div className="text-center text-[#64748b]">Không có dữ liệu thống kê.</div>
+          <div className="text-center text-[#64748b] py-20 font-medium">Không có dữ liệu thống kê.</div>
         </div>
       </main>
     );
   }
 
-  const { overview, monthlyRevenue, monthlyProjects, monthlyUsers, projectStatusDistribution, contractStatusDistribution, topCategories, topSkills } = analyticsData;
+  const { overview, monthlyRevenue, monthlyProjects, monthlyUsers, projectStatusDistribution, contractStatusDistribution } = analyticsData;
 
   const KPI_CARDS = [
-    { title: 'Total Users', value: (overview.totalUsers || 0).toLocaleString('vi-VN'), subtitle: 'All platform users', icon: 'person' },
-    { title: 'Freelancers', value: (overview.totalFreelancers || 0).toLocaleString('vi-VN'), subtitle: 'Freelance members', icon: 'workspace_premium' },
-    { title: 'Employers', value: (overview.totalEmployers || 0).toLocaleString('vi-VN'), subtitle: 'Project owners', icon: 'business_center' },
-    { title: 'Total Projects', value: (overview.totalProjects || 0).toLocaleString('vi-VN'), subtitle: 'Projects created', icon: 'work_outline' },
-    { title: 'Active Contracts', value: (overview.activeContracts || 0).toLocaleString('vi-VN'), subtitle: 'Active agreements', icon: 'description' },
-    { title: 'Total Revenue', value: formatRevenue(overview.totalRevenue), subtitle: 'Gross platform revenue', icon: 'payments' },
+    { 
+      title: 'Tổng người dùng', 
+      value: (overview.totalUsers || 0).toLocaleString('vi-VN'), 
+      subtitle: 'Tài khoản hoạt động trên nền tảng', 
+      icon: 'group',
+      gradient: 'from-teal-500 to-emerald-400'
+    },
+    { 
+      title: 'Tổng số dự án', 
+      value: (overview.totalProjects || 0).toLocaleString('vi-VN'), 
+      subtitle: 'Tổng số tin tuyển dụng đã đăng', 
+      icon: 'work',
+      gradient: 'from-blue-500 to-indigo-400'
+    },
+    { 
+      title: 'Hợp đồng đang chạy', 
+      value: (overview.activeContracts || 0).toLocaleString('vi-VN'), 
+      subtitle: 'Hợp đồng freelancer đang thực thi', 
+      icon: 'assignment_turned_in',
+      gradient: 'from-purple-500 to-pink-400'
+    },
+    { 
+      title: 'Lợi nhuận từ phí (5%)', 
+      value: formatRevenue(overview.totalSystemFees), 
+      subtitle: 'Phí dịch vụ thu từ dự án hoàn thành', 
+      icon: 'monetization_on',
+      gradient: 'from-amber-500 to-orange-400'
+    },
   ];
 
-  const chartRevenueData = (monthlyRevenue || []).map(item => ({
-    ...item,
-    monthLabel: abbreviateMonth(item.month)
-  }));
-
-  const chartProjectsData = (monthlyProjects || []).map(item => ({
-    ...item,
-    monthLabel: abbreviateMonth(item.month)
-  }));
-
-  const chartUsersData = (monthlyUsers || []).map(item => ({
-    ...item,
-    monthLabel: abbreviateMonth(item.month)
-  }));
-
   return (
-    <main className="flex-1 overflow-y-auto p-margin-desktop">
-      <div className="max-w-container-max mx-auto space-y-10 pb-12">
+    <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+      <div className="max-w-7xl mx-auto space-y-8 pb-12">
         <SectionHeader
-          title="Admin Analytics"
-          subtitle="Real-time platform analytics, KPIs, and trend visualizations."
+          title="Thống kê hệ thống"
+          subtitle="Số liệu phân tích nền tảng, KPI hiệu suất và biểu đồ trực quan hóa thời gian thực."
         />
 
         {/* Section 1: Overview KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {KPI_CARDS.map(item => (
             <StatCard key={item.title} {...item} />
           ))}
         </div>
 
         {/* Section 2: Revenue Trend */}
-        <ChartCard title="Revenue Trend" subtitle="Monthly platform revenue" period="Last 12 months">
+        <ChartCard title="Doanh thu" subtitle="Biểu đồ tăng trưởng dòng tiền" period="12 tháng qua">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartRevenueData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-              <XAxis dataKey="monthLabel" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} tickFormatter={value => `${(value / 1000000).toFixed(1)}M`} />
+            <LineChart data={monthlyRevenue} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={value => `${(value / 1000000).toFixed(1)}M`} />
               <Tooltip
-                formatter={value => `${Number(value).toLocaleString('vi-VN')} đ`}
-                labelFormatter={label => {
-                  const item = chartRevenueData.find(d => d.monthLabel === label);
-                  return item ? item.month : label;
-                }}
+                contentStyle={{ background: '#0f172a', border: 'none', borderRadius: '12px', color: '#fff' }}
+                formatter={value => [`${Number(value).toLocaleString('vi-VN')} đ`, 'Doanh thu']}
               />
-              <Legend />
-              <Line type="monotone" dataKey="amount" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} name="Revenue" />
+              <Line type="monotone" dataKey="amount" stroke="#0f766e" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} name="Doanh thu" />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* Section 3: Projects & Users side by side */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <ChartCard title="Projects Trend" subtitle="Monthly projects created" period="Last 12 months">
+          <ChartCard title="Dự án mới" subtitle="Số lượng dự án đăng ký mới hàng tháng" period="12 tháng qua">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartProjectsData} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
-                <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                <XAxis dataKey="monthLabel" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} />
-                <Tooltip
-                  labelFormatter={label => {
-                    const item = chartProjectsData.find(d => d.monthLabel === label);
-                    return item ? item.month : label;
-                  }}
-                />
-                <Bar dataKey="count" fill="#0f766e" radius={[8, 8, 0, 0]} name="Projects" />
+              <BarChart data={monthlyProjects} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#0f172a', border: 'none', borderRadius: '12px', color: '#fff' }} />
+                <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} name="Dự án" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="User Growth" subtitle="Monthly user registrations" period="Last 12 months">
+          <ChartCard title="Thành viên mới" subtitle="Tài khoản đăng ký mới" period="12 tháng qua">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartUsersData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                <XAxis dataKey="monthLabel" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} />
-                <Tooltip
-                  labelFormatter={label => {
-                    const item = chartUsersData.find(d => d.monthLabel === label);
-                    return item ? item.month : label;
-                  }}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="count" stroke="#0284c7" strokeWidth={3} dot={{ r: 5 }} name="Users" />
+              <LineChart data={monthlyUsers} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#0f172a', border: 'none', borderRadius: '12px', color: '#fff' }} />
+                <Line type="monotone" dataKey="count" stroke="#06b6d4" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} name="Thành viên" />
               </LineChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -292,14 +298,14 @@ export default function AdminAnalytics() {
 
         {/* Section 5 & 6: Status Distributions */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)]">
             <div className="mb-6">
-              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Project Status</p>
-              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Distribution</h3>
+              <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider">Trạng thái công việc</p>
+              <h3 className="text-lg font-extrabold text-[#0f172a] mt-0.5">Phân bổ trạng thái dự án</h3>
             </div>
             <div className="space-y-3">
               {(projectStatusDistribution || []).length === 0 ? (
-                <p className="text-sm text-[#64748b] text-center py-8">No project data</p>
+                <p className="text-sm text-[#64748b] text-center py-8">Chưa có dữ liệu</p>
               ) : (
                 (projectStatusDistribution || []).map((item, idx) => (
                   <StatusBadge
@@ -313,14 +319,14 @@ export default function AdminAnalytics() {
             </div>
           </div>
 
-          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)]">
             <div className="mb-6">
-              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Contract Status</p>
-              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Distribution</h3>
+              <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider">Trạng thái hợp đồng</p>
+              <h3 className="text-lg font-extrabold text-[#0f172a] mt-0.5">Phân bổ trạng thái hợp đồng</h3>
             </div>
             <div className="space-y-3">
               {(contractStatusDistribution || []).length === 0 ? (
-                <p className="text-sm text-[#64748b] text-center py-8">No contract data</p>
+                <p className="text-sm text-[#64748b] text-center py-8">Chưa có dữ liệu</p>
               ) : (
                 (contractStatusDistribution || []).map((item, idx) => (
                   <StatusBadge
@@ -335,56 +341,6 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Section 7 & 8: Top Categories & Skills */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
-            <div className="mb-6">
-              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Top Categories</p>
-              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Most popular project categories</h3>
-            </div>
-            <div className="space-y-3">
-              {(topCategories || []).length === 0 ? (
-                <p className="text-sm text-[#64748b] text-center py-8">No category data</p>
-              ) : (
-                (topCategories || []).map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-lg bg-[#ecfdf5] text-[#0f766e] text-xs font-bold grid place-items-center">
-                        {idx + 1}
-                      </span>
-                      <span className="text-sm font-medium text-[#334155]">{item.category || 'Uncategorized'}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#0f172a]">{item.count}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
-            <div className="mb-6">
-              <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Top Skills</p>
-              <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Most requested skills</h3>
-            </div>
-            <div className="space-y-3">
-              {(topSkills || []).length === 0 ? (
-                <p className="text-sm text-[#64748b] text-center py-8">No skill data</p>
-              ) : (
-                (topSkills || []).map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between px-4 py-3 bg-white border border-[#E2E8F0] rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-lg bg-[#ecfdf5] text-[#0f766e] text-xs font-bold grid place-items-center">
-                        {idx + 1}
-                      </span>
-                      <span className="text-sm font-medium text-[#334155]">{item.skill}</span>
-                    </div>
-                    <span className="text-sm font-semibold text-[#0f172a]">{item.count}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   );

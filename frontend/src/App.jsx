@@ -8,17 +8,12 @@ import PublicLayout from './layouts/PublicLayout';
 // Pages - Admin
 import AdminAnalytics from './pages/Admin/Analytics';
 import AdminDashboard from './pages/Admin/Dashboard';
-import AdminDisputes from './pages/Admin/Disputes';
 import DisputeManagement from './pages/Admin/DisputeManagement';
-import AdminGenerateReport from './pages/Admin/GenerateReport';
-import AdminReportHistory from './pages/Admin/ReportHistory';
-import AdminReportManagement from './pages/Admin/ReportManagement';
-import AdminReportSuccess from './pages/Admin/ReportSuccess';
-import AdminSettings from './pages/Admin/Settings';
+import AdminProjects from './pages/Admin/AdminProjects';
 import AdminUsers from './pages/Admin/Users';
 import ProposalModeration from './pages/Admin/ProposalModeration';
 import ViolationHandling from './pages/Admin/ViolationHandling';
-import ProjectModeration from './pages/Admin/ProjectModeration';
+import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
 import AIChatPage from './pages/AI/AIChatPage';
 
 // Pages - Wallet & Payment (Iteration 2)
@@ -69,7 +64,7 @@ import { useAuth } from './hooks/useAuth';
 
 export default function App() {
   const { user, loading } = useAuth();
-  const token = !!user; // Use user context to determine if logged in
+  const isLoggedIn = !!user;
 
   if (loading) {
     return (
@@ -81,12 +76,15 @@ export default function App() {
 
   return (
     <Routes>
-      {/* --- Public Pages with PublicLayout (Header & Footer) --- */}
+      {/* ─────────────────────────────────────────────────────────
+          PUBLIC LAYOUT (header + footer, no sidebar)
+          Accessible by everyone (logged in or not)
+         ───────────────────────────────────────────────────────── */}
       <Route element={<PublicLayout />}>
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
-            token ? (
+            isLoggedIn ? (
               user?.roleDefault === 'ADMIN' ? (
                 <Navigate to="/admin-dashboard" replace />
               ) : user?.roleDefault === 'EMPLOYER' ? (
@@ -97,24 +95,36 @@ export default function App() {
             ) : (
               <LandingPage />
             )
-          } 
+          }
         />
         <Route path="/help-center" element={<HelpCenter />} />
         <Route path="/article-vnpay-escrow" element={<ArticleVNPayEscrow />} />
-        <Route path="/freelancers" element={<BrowseFreelancers />} />
-        <Route path="/profile/:id" element={<Profile />} />
-        <Route path="/freelancers/:id" element={<Profile />} />
-        {!token && (
+        
+        {/* Render on Public Layout ONLY when user is NOT logged in */}
+        {!isLoggedIn && (
           <>
             <Route path="/browse-projects" element={<BrowseProjects />} />
-            <Route path="/project-details/:id" element={<ProjectDetails />} />
+            <Route path="/freelancers" element={<BrowseFreelancers />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/freelancers/:id" element={<Profile />} />
           </>
         )}
       </Route>
 
-      {/* --- Dashboard Pages with DashboardLayout (Sidebar & DashboardHeader) --- */}
+      {/* ─────────────────────────────────────────────────────────
+          DASHBOARD LAYOUT (sidebar + header) — requires auth
+          project-details is here so logged-in users get sidebar
+         ───────────────────────────────────────────────────────── */}
       <Route element={<DashboardLayout />}>
+        {/* Project details — accessible to all logged-in users regardless of role */}
+        <Route path="/project-details/:id" element={<ProjectDetails />} />
+        <Route path="/browse-projects" element={<BrowseProjects />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/freelancers" element={<BrowseFreelancers />} />
+        <Route path="/freelancers/:id" element={<Profile />} />
+
         {/* Freelancer Dashboard Paths */}
         <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
         <Route path="/freelancer-wallet" element={<FreelancerWallet />} />
@@ -122,26 +132,15 @@ export default function App() {
         <Route path="/submit-work/:contractId" element={<SubmitWork />} />
         <Route path="/submit-proposal/:projectId" element={<SubmitProposal />} />
         <Route path="/edit-proposal/:proposalId" element={<EditProposal />} />
-        {/* Profile is always accessible when logged in (DashboardLayout handles auth) */}
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/:id" element={<Profile />} />
-        <Route path="/freelancers/:id" element={<Profile />} />
-        <Route path="/freelancers" element={<BrowseFreelancers />} />
-        {token && (
-          <>
-            <Route path="/browse-projects" element={<BrowseProjects />} />
-            <Route path="/project-details/:id" element={<ProjectDetails />} />
-            
-            {/* Wallet / Payment / Project Routes */}
-            <Route path="/wallet/transactions" element={<TransactionHistoryPage />} />
-            <Route path="/vnpay-return" element={<VNPayReturnPage />} />
-            <Route path="/project/:projectId/fund" element={<EscrowDepositPage />} />
-            <Route path="/withdraw" element={<WithdrawFunds />} />
-          </>
-        )}
+
+        {/* Wallet / Payment / Project Routes */}
+        <Route path="/wallet/transactions" element={<TransactionHistoryPage />} />
+        <Route path="/vnpay-return" element={<VNPayReturnPage />} />
+        <Route path="/project/:projectId/fund" element={<EscrowDepositPage />} />
+        <Route path="/withdraw" element={<WithdrawFunds />} />
 
         {/* Employer Dashboard Paths */}
-         <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+        <Route path="/employer-dashboard" element={<EmployerDashboard />} />
         <Route path="/my-projects" element={<MyProjects />} />
         <Route path="/employer-wallet" element={<EmployerWallet />} />
         <Route path="/messages-employer" element={<MessagesEmployer />} />
@@ -156,20 +155,17 @@ export default function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-users" element={<AdminUsers />} />
         <Route path="/admin-project-moderation" element={<ProposalModeration />} />
-        <Route path="/admin-project-approval" element={<ProjectModeration />} />
-        <Route path="/admin-dispute-management" element={<DisputeManagement />} />
-        <Route path="/admin-disputes" element={<AdminDisputes />} />
-        <Route path="/admin-generate-report" element={<AdminGenerateReport />} />
-        <Route path="/admin-report-history" element={<AdminReportHistory />} />
-        <Route path="/admin-report-management" element={<AdminReportManagement />} />
-        <Route path="/admin-report-success" element={<AdminReportSuccess />} />
+        <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
+        <Route path="/admin-disputes" element={<DisputeManagement />} />
         <Route path="/admin-analytics" element={<AdminAnalytics />} />
-        <Route path="/admin-settings" element={<AdminSettings />} />
+        <Route path="/admin-projects" element={<AdminProjects />} />
         <Route path="/admin-violations" element={<ViolationHandling />} />
         <Route path="/ai-chat" element={<AIChatPage />} />
       </Route>
 
-      {/* --- Standalone Pages (No Shared Layout) --- */}
+      {/* ─────────────────────────────────────────────────────────
+          STANDALONE PAGES (No Shared Layout)
+         ───────────────────────────────────────────────────────── */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
@@ -178,10 +174,15 @@ export default function App() {
       <Route path="/payment-failed" element={<PaymentFailed />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/projects" element={<Projects />} />
+      {/* Project details for non-logged-in users (public fallback with public layout) */}
+      {!isLoggedIn && (
+        <Route element={<PublicLayout />}>
+          <Route path="/project-details/:id" element={<ProjectDetails />} />
+        </Route>
+      )}
 
-      {/* --- Fallback Redirects --- */}
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
-

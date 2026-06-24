@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { aiChatService } from '../../services/aiChatService';
 import './AIAssistantWidget.css';
 
-const TYPING_SPEED_MIN = 20;
-const TYPING_SPEED_MAX = 40;
+const TYPING_SPEED_MIN = 15;
+const TYPING_SPEED_MAX = 30;
 
 export default function AIAssistantWidget() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [sessions, setSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingText, setTypingText] = useState('');
-  const [fullResponse, setFullResponse] = useState('');
-  const [showSidebar, setShowSidebar] = useState(false);
   const [error, setError] = useState(null);
+  
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -41,23 +41,6 @@ export default function AIAssistantWidget() {
     }
   }, [isOpen, activeSessionId]);
 
-  const fetchSessions = useCallback(async () => {
-    try {
-      const res = await aiChatService.getSessions();
-      if (res.success) {
-        setSessions(res.data || []);
-      }
-    } catch (err) {
-      console.error('Failed to load sessions:', err);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchSessions();
-    }
-  }, [isOpen, fetchSessions]);
-
   const fetchMessages = useCallback(async (sessionId) => {
     setError(null);
     try {
@@ -67,61 +50,62 @@ export default function AIAssistantWidget() {
       }
     } catch (err) {
       console.error('Failed to load messages:', err);
-      setError('Failed to load messages.');
+      setError('Không thể tải lịch sử trò chuyện.');
     }
   }, []);
 
-  const handleSelectSession = (sessionId) => {
-    setActiveSessionId(sessionId);
-    setMessages([]);
-    setTypingText('');
-    setFullResponse('');
-    setIsTyping(false);
-    fetchMessages(sessionId);
-    setShowSidebar(false);
-  };
+  // Initialize and select or create session when chat is opened
+  useEffect(() => {
+    if (isOpen) {
+      const initChat = async () => {
+        setError(null);
+        try {
+          const res = await aiChatService.getSessions();
+          if (res.success && res.data && res.data.length > 0) {
+            // Select the most recent session
+            const lastSession = res.data[0];
+            setActiveSessionId(lastSession.session_id);
+            fetchMessages(lastSession.session_id);
+          } else {
+            // No sessions exist, auto-create one
+            const createRes = await aiChatService.createSession();
+            if (createRes.success && createRes.data) {
+              setActiveSessionId(createRes.data.session_id);
+              setMessages([]);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to initialize AI Chat session:', err);
+          setError('Không thể kết nối với dịch vụ Trợ lý AI.');
+        }
+      };
+      initChat();
+    }
+  }, [isOpen, fetchMessages]);
 
-  const handleNewSession = async () => {
+  const handleResetChat = async () => {
+    if (sending || isTyping) return;
+    if (!window.confirm('Bạn có muốn làm mới cuộc trò chuyện và xóa lịch sử chat này không?')) return;
+    
+    setError(null);
+    setSending(true);
     try {
+      if (activeSessionId) {
+        await aiChatService.deleteSession(activeSessionId);
+      }
+      
       const res = await aiChatService.createSession();
       if (res.success && res.data) {
-        const newSession = {
-          session_id: res.data.session_id,
-          title: res.data.title,
-          user_id: res.data.user_id
-        };
-        setSessions(prev => [newSession, ...prev]);
-        setActiveSessionId(newSession.session_id);
+        setActiveSessionId(res.data.session_id);
         setMessages([]);
         setTypingText('');
-        setFullResponse('');
         setIsTyping(false);
-        setError(null);
-        setShowSidebar(false);
       }
     } catch (err) {
-      console.error('Failed to create session:', err);
-      setError('Failed to create new chat.');
-    }
-  };
-
-  const handleDeleteSession = async (e, sessionId) => {
-    e.stopPropagation();
-    try {
-      const res = await aiChatService.deleteSession(sessionId);
-      if (res.success) {
-        setSessions(prev => prev.filter(s => s.session_id !== sessionId));
-        if (activeSessionId === sessionId) {
-          setActiveSessionId(null);
-          setMessages([]);
-          setTypingText('');
-          setFullResponse('');
-          setIsTyping(false);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to delete session:', err);
-      setError('Failed to delete chat.');
+      console.error('Failed to reset chat session:', err);
+      setError('Lỗi khi làm mới cuộc trò chuyện.');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -131,7 +115,6 @@ export default function AIAssistantWidget() {
     }
     
     setIsTyping(true);
-    setFullResponse(text);
     setTypingText('');
     charIndexRef.current = 0;
     
@@ -183,17 +166,14 @@ export default function AIAssistantWidget() {
         
         // Start typing effect
         typeResponse(aiResponse);
-
-        // Refresh sessions to get potential new title
-        fetchSessions();
       } else {
-        setError('Failed to send message.');
+        setError('Không gửi được tin nhắn.');
         setMessages(prev => prev.filter(m => m._id !== tempUserMsg._id));
       }
     } catch (err) {
       console.error('Failed to send message:', err);
       setMessages(prev => prev.filter(m => m._id !== tempUserMsg._id));
-      setError('Connection error. Please try again.');
+      setError('Lỗi kết nối. Vui lòng thử lại sau.');
     } finally {
       setSending(false);
     }
@@ -206,32 +186,27 @@ export default function AIAssistantWidget() {
     }
   };
 
-  const formatTime = (dateStr) => {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - d;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const handleLinkClick = (e) => {
+    const target = e.target.closest('a');
+    if (target && target.classList.contains('ai-msg-link')) {
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('/')) {
+        e.preventDefault();
+        navigate(href);
+      }
+    }
   };
 
   const renderMessageContent = (content) => {
-    // Simple markdown-like rendering
     const lines = content.split('\n');
     return lines.map((line, i) => {
-      // Bold
       let processed = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      // Bullet points
+      processed = processed.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="ai-msg-link">$1</a>');
+      
       if (processed.trim().startsWith('- ') || processed.trim().startsWith('• ')) {
         const text = processed.trim().substring(2);
         return <li key={i} className="ai-msg-li" dangerouslySetInnerHTML={{ __html: text }} />;
       }
-      // Numbered lists
       if (/^\d+\.\s/.test(processed.trim())) {
         const text = processed.trim().replace(/^\d+\.\s/, '');
         return <li key={i} className="ai-msg-li" dangerouslySetInnerHTML={{ __html: text }} />;
@@ -243,32 +218,21 @@ export default function AIAssistantWidget() {
     });
   };
 
-  const getCurrentSessionTitle = () => {
-    if (!activeSessionId) return 'AI Assistant';
-    const session = sessions.find(s => s.session_id === activeSessionId);
-    return session?.title || 'AI Assistant';
-  };
-
   return (
     <div className="ai-assistant-container">
       {/* Floating Button */}
       <button
         className={`ai-fab ${isOpen ? 'ai-fab-open' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle AI Assistant"
+        aria-label="Hỏi Trợ lý AI"
       >
         {isOpen ? (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <span className="material-symbols-outlined text-white text-[24px]">close</span>
         ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
-            <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"></path>
-            <circle cx="9" cy="10" r="1" fill="currentColor"></circle>
-            <circle cx="15" cy="10" r="1" fill="currentColor"></circle>
-          </svg>
+          <div className="ai-fab-content">
+            <span className="material-symbols-outlined text-white text-[26px]">smart_toy</span>
+            <span className="ai-fab-badge">AI</span>
+          </div>
         )}
       </button>
 
@@ -278,216 +242,112 @@ export default function AIAssistantWidget() {
         <div className="ai-chat-header">
           <div className="ai-header-left">
             <div className="ai-header-avatar">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
-                <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"></path>
-              </svg>
+              <span className="material-symbols-outlined text-[20px] text-white">smart_toy</span>
             </div>
             <div className="ai-header-info">
-              <h3 className="ai-header-title">AI Assistant</h3>
+              <h3 className="ai-header-title">Trợ lý ảo FJMS</h3>
               <p className="ai-header-status">
-                {isTyping ? 'Typing...' : 'Online'}
+                {isTyping ? 'Đang soạn câu trả lời...' : 'Sẵn sàng hỗ trợ'}
               </p>
             </div>
           </div>
           <div className="ai-header-actions">
             <button
               className="ai-header-btn"
-              onClick={() => setShowSidebar(!showSidebar)}
-              title="Chat history"
+              onClick={handleResetChat}
+              title="Làm mới đoạn chat"
+              disabled={sending || isTyping}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
-            <button
-              className="ai-header-btn"
-              onClick={handleNewSession}
-              title="New chat"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
+              <span className="material-symbols-outlined text-[20px]">refresh</span>
             </button>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="ai-chat-body">
-          {/* Sidebar */}
-          {showSidebar && (
-            <div className="ai-sidebar">
-              <div className="ai-sidebar-header">
-                <span className="ai-sidebar-title">Chat History</span>
-                <button
-                  className="ai-sidebar-close"
-                  onClick={() => setShowSidebar(false)}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-              <div className="ai-sidebar-list">
-                {sessions.length === 0 ? (
-                  <div className="ai-sidebar-empty">No conversations yet</div>
-                ) : (
-                  sessions.map(session => (
-                    <div
-                      key={session.session_id}
-                      className={`ai-sidebar-item ${activeSessionId === session.session_id ? 'active' : ''}`}
-                      onClick={() => handleSelectSession(session.session_id)}
-                    >
-                      <div className="ai-sidebar-item-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                      </div>
-                      <div className="ai-sidebar-item-content">
-                        <span className="ai-sidebar-item-title">{session.title || 'New Chat'}</span>
-                        <span className="ai-sidebar-item-time">{formatTime(session.updated_at)}</span>
-                      </div>
-                      <button
-                        className="ai-sidebar-item-delete"
-                        onClick={(e) => handleDeleteSession(e, session.session_id)}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
+        {/* Messages */}
+        <div className="ai-messages-area">
+          {error && (
+            <div className="ai-error">
+              <span className="material-symbols-outlined text-[16px]">error</span>
+              <span>{error}</span>
             </div>
           )}
-
-          {/* Messages */}
-          <div className="ai-messages-area">
-            {!activeSessionId ? (
-              <div className="ai-welcome">
-                <div className="ai-welcome-icon">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
-                    <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"></path>
-                    <circle cx="9" cy="10" r="1" fill="currentColor"></circle>
-                    <circle cx="15" cy="10" r="1" fill="currentColor"></circle>
-                  </svg>
-                </div>
-                <h2 className="ai-welcome-title">FJMS AI Assistant</h2>
-                <p className="ai-welcome-text">
-                  I'm here to help you with projects, proposals, contracts, escrow, and more!
-                </p>
-                <button className="ai-welcome-btn" onClick={handleNewSession}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  Start New Chat
-                </button>
+          
+          <div className="ai-messages-list" onClick={handleLinkClick}>
+            {messages.length === 0 && !sending ? (
+              <div className="ai-welcome-box">
+                <span className="material-symbols-outlined ai-welcome-icon">chat_bubble</span>
+                <p className="ai-welcome-title">Chào bạn! Mình có thể giúp gì?</p>
+                <p className="ai-welcome-desc">Hãy hỏi mình về dự án phù hợp, cách nạp/rút tiền, ký quỹ VNPay Escrow hoặc tranh chấp nhé!</p>
               </div>
             ) : (
-              <>
-                {error && (
-                  <div className="ai-error">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="12" y1="8" x2="12" y2="12"></line>
-                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    {error}
-                  </div>
-                )}
-                <div className="ai-messages-list">
-                  {messages.map((msg, idx) => (
-                    <div
-                      key={msg._id || idx}
-                      className={`ai-message ${msg.role === 'user' ? 'ai-message-user' : 'ai-message-ai'}`}
-                    >
-                      {msg.role === 'assistant' && (
-                        <div className="ai-message-avatar">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
-                            <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"></path>
-                          </svg>
-                        </div>
-                      )}
-                      <div className={`ai-message-content ${msg.role === 'user' ? 'ai-msg-user-bubble' : 'ai-msg-ai-bubble'}`}>
-                        {msg.role === 'assistant' && idx === messages.length - 1 && isTyping ? (
-                          <div className="ai-typing-content">
-                            {renderMessageContent(typingText)}
-                            <span className="ai-typing-cursor">|</span>
-                          </div>
-                        ) : (
-                          <div className="ai-msg-text">
-                            {renderMessageContent(msg.content)}
-                          </div>
-                        )}
-                        <div className={`ai-msg-time ${msg.role === 'user' ? 'ai-msg-time-user' : 'ai-msg-time-ai'}`}>
-                          {formatTime(msg.created_at)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Sending indicator */}
-                  {sending && !isTyping && (
-                    <div className="ai-message ai-message-ai">
-                      <div className="ai-message-avatar">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"></path>
-                          <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z"></path>
-                        </svg>
-                      </div>
-                      <div className="ai-message-content">
-                        <div className="ai-typing-indicator">
-                          <span className="ai-typing-dot"></span>
-                          <span className="ai-typing-dot"></span>
-                          <span className="ai-typing-dot"></span>
-                        </div>
-                      </div>
+              messages.map((msg, idx) => (
+                <div
+                  key={msg._id || idx}
+                  className={`ai-message ${msg.role === 'user' ? 'ai-message-user' : 'ai-message-ai'}`}
+                >
+                  {msg.role === 'assistant' && (
+                    <div className="ai-message-avatar">
+                      <span className="material-symbols-outlined text-[14px]">smart_toy</span>
                     </div>
                   )}
-                  
-                  <div ref={messagesEndRef} />
+                  <div className={`ai-message-content ${msg.role === 'user' ? 'ai-msg-user-bubble' : 'ai-msg-ai-bubble'}`}>
+                    {msg.role === 'assistant' && idx === messages.length - 1 && isTyping ? (
+                      <div className="ai-typing-content">
+                        {renderMessageContent(typingText)}
+                        <span className="ai-typing-cursor">|</span>
+                      </div>
+                    ) : (
+                      <div className="ai-msg-text">
+                        {renderMessageContent(msg.content)}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </>
+              ))
             )}
+            
+            {/* Sending indicator */}
+            {sending && !isTyping && (
+              <div className="ai-message ai-message-ai">
+                <div className="ai-message-avatar">
+                  <span className="material-symbols-outlined text-[14px]">smart_toy</span>
+                </div>
+                <div className="ai-message-content">
+                  <div className="ai-typing-indicator">
+                    <span className="ai-typing-dot"></span>
+                    <span className="ai-typing-dot"></span>
+                    <span className="ai-typing-dot"></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {/* Footer */}
-        {activeSessionId && (
-          <div className="ai-chat-footer">
-            <div className="ai-input-wrapper">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about FJMS..."
-                disabled={sending || isTyping}
-                className="ai-input"
-              />
-              <button
-                className="ai-send-btn"
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || sending || isTyping}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-              </button>
-            </div>
+        {/* Footer / Input */}
+        <div className="ai-chat-footer">
+          <div className="ai-input-wrapper">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Nhập câu hỏi tại đây..."
+              disabled={sending || isTyping}
+              className="ai-input"
+            />
+            <button
+              className="ai-send-btn"
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || sending || isTyping}
+            >
+              <span className="material-symbols-outlined text-[18px]">send</span>
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

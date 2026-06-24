@@ -1,31 +1,16 @@
 import * as aiChatRepository from '../repositories/aiChatRepository.js';
 import { sql, poolPromise } from '../config/db.js';
 
-const SYSTEM_PROMPT = `You are FJMS AI Assistant, a helpful and knowledgeable assistant for the Freelance Job Management System (FJMS) platform.
+const SYSTEM_PROMPT = `You are FJMS AI Assistant, a helpful, direct, and concise virtual assistant for the Freelance Job Management System (FJMS).
 
-You help users with:
-- Projects (posting, browsing, managing)
-- Proposals (submitting, reviewing, accepting/rejecting)
-- Contracts (creation, statuses: PENDING_APPROVAL, ACTIVE, COMPLETED)
-- Escrow (secure payment system, funding, releasing funds)
-- Wallet (balance, transactions, deposits, withdrawals)
-- Payments (VNPay, bank transfers, escrow releases)
-- Reviews and ratings
-- Disputes (opening, resolution process)
-- Freelancer workflow (proposals, work submission, getting paid)
-- Employer workflow (posting projects, hiring, escrow, reviewing work)
-- Platform support and guidance
-- Violations and reports
-- Account management and profile settings
-
-Guidelines:
-1. Answer naturally and conversationally - do NOT sound robotic or scripted
-2. Explain concepts step-by-step when needed
-3. Use markdown formatting for clarity (bullet points, bold, short paragraphs)
-4. Be concise but thorough
-5. If a question is completely unrelated to FJMS platform, respond politely: "I can help with FJMS platform related questions. Feel free to ask about projects, proposals, contracts, escrow, payments, or any other FJMS features!"
-
-Remember previous context from the conversation history. Be consistent and reference earlier messages when relevant.`;
+Guidelines for your response:
+1. Be extremely brief, concise, and to-the-point. Avoid long introductory/concluding remarks. Keep answers within 2-3 short paragraphs or clean bullet points.
+2. ALWAYS respond in Vietnamese.
+3. If "Live Open Projects" or "Live Active Freelancers" data is provided in the prompt context:
+   - Prioritize showing these recommendations IMMEDIATELY at the beginning of your response.
+   - Format them clearly with details like title, budget, company/name, and the exact markdown link (e.g. "[Xem chi tiết & ứng tuyển](/project-details/[id])" or "[Xem hồ sơ](/profile/[id])").
+   - Do NOT give generic instructions on how to browse projects/freelancers if live matches are present. Highlight these live matching options directly.
+4. If a question is completely unrelated to FJMS platform, respond politely in Vietnamese: "Mình là trợ lý hỗ trợ riêng cho hệ thống FJMS. Bạn có câu hỏi nào về dự án, ví tiền, nạp/rút hay ký quỹ trên hệ thống không, cứ hỏi mình nhé!"`;
 
 const ROLE_CONTEXT = {
   FREELANCER: `The user is a FREELANCER on FJMS. Prioritize guidance on:
@@ -73,12 +58,12 @@ const isUnrelated = (message) => {
     'start', 'begin', 'finish', 'complete', 'done', 'working', 'work', 'job',
     'hire', 'hiring', 'apply', 'applied', 'submit', 'submitted', 'status',
     'pending', 'active', 'completed', 'cancelled', 'money', 'fund', 'funding',
-    'balance', 'transaction', 'transfer', 'bank', 'vnpay', 'payment method'
+    'balance', 'transaction', 'transfer', 'bank', 'vnpay', 'payment method',
+    'dự án', 'freelancer', 'hợp đồng', 'ví', 'nạp', 'rút', 'tranh chấp', 'khiếu nại',
+    'thanh toán', 'phí', 'đề xuất'
   ];
-  // Allow conversational starters and greetings
-  const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
+  const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'chào', 'xin chào', 'alo'];
   if (greetings.some(g => lower.includes(g))) return false;
-  // If message is very short, allow it
   if (lower.split(' ').length <= 3) return false;
   return !fmsKeywords.some(kw => lower.includes(kw));
 };
@@ -89,7 +74,6 @@ const buildConversationPrompt = (messages, userRole, currentMessage) => {
   let prompt = `${SYSTEM_PROMPT}\n\n${roleContext}\n\n`;
   prompt += `## Conversation History\n`;
   
-  // Add previous messages for context (limit to last 10 for token efficiency)
   const recentMessages = messages.slice(-10);
   for (const msg of recentMessages) {
     const role = msg.role === 'user' ? 'User' : 'Assistant';
@@ -101,8 +85,138 @@ const buildConversationPrompt = (messages, userRole, currentMessage) => {
   return prompt;
 };
 
-const generateAIResponse = async (prompt) => {
-  // Check if OpenAI/Gemini API key is configured
+// Query active, open projects matching keywords and user skills
+const queryMatchingProjects = async (userId, keyword = '') => {
+  try {
+    const pool = await poolPromise;
+    
+    // Fetch freelancer skills
+    const skillsRes = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query(`
+        SELECT s.skill_name 
+        FROM freelancer_skills fs
+        JOIN skills s ON fs.skill_id = s.skill_id
+        WHERE fs.freelancer_id = @userId
+      `);
+    const userSkills = skillsRes.recordset.map(r => r.skill_name.toLowerCase());
+    
+    // Fetch open projects
+    const projectsRes = await pool.request().query(`
+      SELECT TOP 10 p.project_id, p.title, p.description, p.budget_min, p.budget_max, p.budget_type, pc.category_name, u.full_name as company_name
+      FROM projects p
+      LEFT JOIN project_categories pc ON p.category_id = pc.category_id
+      LEFT JOIN users u ON p.employer_id = u.user_id
+      WHERE p.status = 'OPEN'
+      ORDER BY p.created_at DESC
+    `);
+    const allProjects = projectsRes.recordset;
+    
+    for (let project of allProjects) {
+      const skillsResult = await pool.request()
+        .input('projectId', sql.Int, project.project_id)
+        .query(`
+          SELECT s.skill_name 
+          FROM project_skills ps
+          JOIN skills s ON ps.skill_id = s.skill_id
+          WHERE ps.project_id = @projectId
+        `);
+      project.skills = skillsResult.recordset.map(r => r.skill_name.toLowerCase());
+    }
+    
+    const ranked = allProjects.map(project => {
+      let score = 0;
+      const reasons = [];
+      
+      const matchingSkills = project.skills.filter(ps => userSkills.includes(ps));
+      if (matchingSkills.length > 0) {
+        score += matchingSkills.length * 20;
+        reasons.push(`đúng thế mạnh ${matchingSkills.join(', ')} của bạn`);
+      }
+      
+      if (keyword) {
+        const kw = keyword.toLowerCase();
+        if (project.title.toLowerCase().includes(kw) || project.description.toLowerCase().includes(kw)) {
+          score += 35;
+          reasons.push('trùng với từ khóa tìm kiếm');
+        }
+        
+        const kwMatches = project.skills.filter(ps => ps.includes(kw));
+        if (kwMatches.length > 0) {
+          score += 15;
+          reasons.push(`yêu cầu kỹ năng ${kwMatches.join(', ')}`);
+        }
+      }
+      
+      return { ...project, score, reasons };
+    });
+    
+    return ranked
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  } catch (err) {
+    console.error('Error querying matching projects:', err);
+    return [];
+  }
+};
+
+// Query active freelancers matching keywords
+const queryMatchingFreelancers = async (keyword = '') => {
+  try {
+    const pool = await poolPromise;
+    const freelancersRes = await pool.request().query(`
+      SELECT TOP 10 u.user_id, u.full_name, u.avatar_url, fp.headline, fp.rating_average, fp.experience_years, fp.hourly_rate
+      FROM users u
+      JOIN freelancer_profiles fp ON u.user_id = fp.freelancer_id
+      WHERE u.role_default = 'FREELANCER' AND u.status = 'ACTIVE'
+    `);
+    const allFreelancers = freelancersRes.recordset;
+    
+    for (let fl of allFreelancers) {
+      const skillsResult = await pool.request()
+        .input('freelancerId', sql.Int, fl.user_id)
+        .query(`
+          SELECT s.skill_name 
+          FROM freelancer_skills fs
+          JOIN skills s ON fs.skill_id = s.skill_id
+          WHERE fs.freelancer_id = @freelancerId
+        `);
+      fl.skills = skillsResult.recordset.map(r => r.skill_name.toLowerCase());
+    }
+    
+    const ranked = allFreelancers.map(fl => {
+      let score = 0;
+      const reasons = [];
+      
+      if (keyword) {
+        const kw = keyword.toLowerCase();
+        if (fl.full_name.toLowerCase().includes(kw) || (fl.headline && fl.headline.toLowerCase().includes(kw))) {
+          score += 30;
+          reasons.push('phù hợp chuyên môn');
+        }
+        
+        const skillMatches = fl.skills.filter(s => s.includes(kw));
+        if (skillMatches.length > 0) {
+          score += 20;
+          reasons.push(`sở hữu kỹ năng: ${skillMatches.join(', ')}`);
+        }
+      } else {
+        score = (fl.rating_average || 0) * 10;
+      }
+      
+      return { ...fl, score, reasons };
+    });
+    
+    return ranked
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  } catch (err) {
+    console.error('Error querying matching freelancers:', err);
+    return [];
+  }
+};
+
+const generateAIResponse = async (prompt, originalMessage, userRole, userId, previousMessages = [], liveDataContext = '') => {
   const openaiKey = process.env.OPENAI_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
   
@@ -136,18 +250,47 @@ const generateAIResponse = async (prompt) => {
   
   if (geminiKey) {
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`, {
+      const systemInstructionText = `${SYSTEM_PROMPT}\n\n${ROLE_CONTEXT[userRole] || ROLE_CONTEXT.FREELANCER}${liveDataContext ? '\n\n' + liveDataContext : ''}`;
+      
+      const contents = [];
+      const recentMessages = previousMessages.slice(-10);
+      for (const msg of recentMessages) {
+        const role = msg.role === 'user' ? 'user' : 'model';
+        contents.push({
+          role: role,
+          parts: [{ text: msg.content }]
+        });
+      }
+      
+      // Ensure the current user message is appended if not present
+      const lastMsg = contents[contents.length - 1];
+      if (!lastMsg || lastMsg.role !== 'user' || lastMsg.parts[0].text !== originalMessage) {
+        contents.push({
+          role: 'user',
+          parts: [{ text: originalMessage }]
+        });
+      }
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 500, temperature: 0.7 }
+          systemInstruction: {
+            parts: [{ text: systemInstructionText }]
+          },
+          contents: contents,
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
         })
       });
       
       if (response.ok) {
         const data = await response.json();
-        return data.candidates[0].content.parts[0].text.trim();
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+          return data.candidates[0].content.parts[0].text.trim();
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Gemini API response error status:', response.status, errorText);
       }
     } catch (err) {
       console.error('Gemini API error:', err);
@@ -155,74 +298,144 @@ const generateAIResponse = async (prompt) => {
   }
   
   // Fallback: Generate contextual response using knowledge base
-  return generateFallbackResponse(prompt);
+  return generateFallbackResponse(prompt, originalMessage, userRole, userId);
 };
 
-const generateFallbackResponse = (prompt) => {
-  const lowerPrompt = prompt.toLowerCase();
+const generateFallbackResponse = async (prompt, originalMessage = '', userRole = 'FREELANCER', userId = null) => {
+  const lowerMsg = originalMessage.toLowerCase();
   
   // Check if unrelated
-  const userMsg = prompt.split('User: ').pop()?.split('\n\nAssistant:')[0] || '';
-  if (isUnrelated(userMsg) && userMsg.split(' ').length > 3) {
-    return "I can help with FJMS platform related questions. Feel free to ask about projects, proposals, contracts, escrow, payments, or any other FJMS features!";
+  if (isUnrelated(originalMessage) && originalMessage.split(' ').length > 3) {
+    return "Hihi, mình là trợ lý AI hỗ trợ riêng cho nền tảng FJMS nè. Bạn có câu hỏi nào về các tính năng như tìm dự án, nạp tiền, rút tiền, ký quỹ hay hợp đồng không? Cứ hỏi mình nhé, mình giải đáp liền! 😉";
   }
   
-  // Greeting detection
-  if (/^(hi|hello|hey|good\s*(morning|afternoon|evening))/.test(userMsg.toLowerCase().trim())) {
-    const role = prompt.includes('FREELANCER') ? 'freelancer' : 
-                 prompt.includes('EMPLOYER') ? 'employer' : 'admin';
-    return `Hello! 👋 I'm your FJMS AI Assistant. I'm here to help you with anything related to the platform. As a ${role}, you can ask me about:\n\n- Managing your projects and proposals\n- Understanding contracts and escrow\n- Payment and wallet questions\n- Platform features and best practices\n\nWhat can I help you with today?`;
+  // 1. PROJECT / FREELANCER RECOMMENDATIONS
+  if (userRole === 'FREELANCER' && (lowerMsg.includes('dự án') || lowerMsg.includes('project') || lowerMsg.includes('việc làm') || lowerMsg.includes('tìm việc') || lowerMsg.includes('gợi ý'))) {
+    const projects = await queryMatchingProjects(userId, originalMessage);
+    if (projects.length > 0) {
+      let reply = `Chào bạn nhé! Mình vừa quét nhanh qua hệ thống và tìm thấy một số dự án cực kỳ tiềm năng và phù hợp với hồ sơ của bạn đây: 🥳\n\n`;
+      projects.forEach((p, index) => {
+        const budget = p.budget_max ? `${Math.round(p.budget_max).toLocaleString('vi-VN')} đ` : 'thỏa thuận';
+        const reasonStr = p.reasons && p.reasons.length > 0 ? ` (được đề xuất vì: *${p.reasons.join(', ')}*)` : '';
+        
+        reply += `✨ **${index + 1}. ${p.title}**\n`;
+        reply += `   - **Doanh nghiệp đăng:** ${p.company_name || 'Đối tác ẩn danh'}\n`;
+        reply += `   - **Lĩnh vực:** ${p.category_name || 'N/A'}\n`;
+        reply += `   - **Mức thù lao:** **${budget}** (${p.budget_type === 'FIXED' ? 'Trọn gói' : 'Theo giờ'})${reasonStr}\n`;
+        reply += `   - 👉 **[Xem chi tiết & Nộp Proposal ngay](/project-details/${p.project_id})**\n\n`;
+      });
+      reply += `Bạn thấy các dự án này thế nào? Bạn chỉ cần nhấn vào liên kết **[Xem chi tiết & Nộp Proposal ngay]** ở trên là có thể xem yêu cầu cụ thể và gửi hồ sơ ứng tuyển trực tiếp luôn đó. Chúc bạn sớm nhận được dự án nhé! 🚀`;
+      return reply;
+    } else {
+      return `Mình vừa tìm quanh hệ thống nhưng chưa thấy dự án nào khớp trực tiếp với yêu cầu này của bạn cả. 🥺 Đừng nản lòng nhé! Bạn có thể ghé qua trang **[Tìm kiếm công việc](/browse-projects)** để chủ động tìm và lọc thêm nhiều công việc hấp dẫn khác nha!`;
+    }
   }
   
-  // Thank you detection
-  if (/thanks|thank you|appreciate/i.test(userMsg)) {
-    return "You're welcome! 😊 If you have any more questions about FJMS, feel free to ask. I'm here to help!";
+  if (userRole === 'EMPLOYER' && (lowerMsg.includes('freelancer') || lowerMsg.includes('nhân sự') || lowerMsg.includes('ứng viên') || lowerMsg.includes('gợi ý'))) {
+    const freelancers = await queryMatchingFreelancers(originalMessage);
+    if (freelancers.length > 0) {
+      let reply = `Chào bạn! Mình đã quét qua danh sách freelancer đang hoạt động trên FJMS và chọn lọc ra một vài gương mặt nổi bật nhất cho bạn đây: 🌟\n\n`;
+      freelancers.forEach((f, index) => {
+        const rate = f.hourly_rate ? `${Math.round(f.hourly_rate).toLocaleString('vi-VN')} đ/giờ` : 'Thỏa thuận';
+        const reasonStr = f.reasons && f.reasons.length > 0 ? ` (*${f.reasons.join(', ')}*)` : '';
+        
+        reply += `👤 **${index + 1}. ${f.full_name}** ${reasonStr}\n`;
+        reply += `   - **Chuyên môn:** ${f.headline || 'Chuyên gia Freelancer'}\n`;
+        reply += `   - **Đánh giá:** ⭐ **${f.rating_average ? Number(f.rating_average).toFixed(1) : 'Chưa có đánh giá'}** (${f.experience_years || 0} năm kinh nghiệm)\n`;
+        reply += `   - **Chi phí mong muốn:** ${rate}\n`;
+        reply += `   - 👉 **[Xem hồ sơ năng lực](/profile/${f.user_id})**\n\n`;
+      });
+      reply += `Bạn có thể bấm vào **[Xem hồ sơ năng lực]** để xem chi tiết các sản phẩm họ từng làm (Portfolio) và gửi tin nhắn mời họ hợp tác ngay lập tức nhé!`;
+      return reply;
+    } else {
+      return `Hiện tại mình chưa tìm thấy ứng viên nào khớp hoàn toàn với mô tả của bạn trên hệ thống. Bạn thử ghé trang **[Danh sách Freelancer](/freelancers)** để tự tay lọc các hồ sơ chi tiết hơn xem sao nha!`;
+    }
   }
-  
-  // Context-aware responses based on keywords
-  const hasEscrow = /escrow|fund|deposit|release/i.test(lowerPrompt);
-  const hasContract = /contract|hire|hiring|agreement/i.test(lowerPrompt);
-  const hasProposal = /proposal|apply|bid|offer/i.test(lowerPrompt);
-  const hasDispute = /dispute|conflict|issue|problem/i.test(lowerPrompt);
-  const hasPayment = /payment|pay|paid|withdraw|withdrawal|money|wallet|balance/i.test(lowerPrompt);
-  const hasProject = /project|job|work|task|gig/i.test(lowerPrompt);
-  const hasProfile = /profile|account|setting|password|email/i.test(lowerPrompt);
-  const hasReview = /review|rating|rate|feedback/i.test(lowerPrompt);
-  
-  if (hasEscrow) {
-    return `**Escrow System on FJMS** 🔒\n\nEscrow is a secure payment method that protects both employers and freelancers:\n\n1. **How it works:** When a contract starts, the employer deposits funds into an escrow account\n2. **Work submission:** The freelancer completes and submits the work\n3. **Approval:** The employer reviews and approves the work\n4. **Release:** Funds are released to the freelancer upon approval\n\n**Key benefits:**\n- Employers: Funds are safe until work is approved\n- Freelancers: Payment is guaranteed once work is accepted\n- Disputes: If issues arise, an admin can review and decide\n\nWould you like to know more about funding escrow or the dispute resolution process?`;
+
+  // 2. SYSTEM SERVICE FAQS
+  const isGreeting = /^(hi|hello|hey|chào|alo|xin chào)/.test(lowerMsg.trim());
+  if (isGreeting) {
+    const roleText = userRole === 'FREELANCER' ? 'Freelancer chuyên nghiệp' : 'Nhà tuyển dụng';
+    return `Chào bạn nha! Rất vui được trò chuyện với bạn. 🥰 Mình là **Trợ lý Ảo FJMS AI**, đồng hành cùng bạn dưới vai trò **${roleText}**.\n\nHôm nay bạn cần mình hỗ trợ gì nè? Mình rành nhất là giải đáp mấy mục này đó:\n- **Ký quỹ VNPay Escrow:** Cơ chế thanh toán an toàn 🔒\n- **Nạp/Rút tiền & Ví:** Cách giao dịch tài chính nhanh gọn 💰\n- **Quy trình hợp đồng & Nghiệm thu:** Cách làm việc và nhận tiền 📋\n- **Xử lý tranh chấp (Dispute):** Cách phân xử khi có bất đồng ⚖️\n- **Gợi ý công việc:** Tìm việc ngon/freelancer xịn 🚀\n\nCứ thoải mái chat cho mình biết nha!`;
   }
-  
-  if (hasContract) {
-    return `**Contracts on FJMS** 📋\n\nA contract is created when an employer hires a freelancer:\n\n**Contract Statuses:**\n- **PENDING_APPROVAL** - Waiting for both parties to confirm\n- **ACTIVE** - Escrow has been funded, work in progress\n- **COMPLETED** - Work approved, payment released\n- **CANCELLED** - Contract terminated\n\n**What's included:**\n- Project scope and deliverables\n- Budget and payment terms\n- Timeline and milestones\n\nNeed help with a specific contract status or action?`;
+
+  if (/thanks|thank you|cảm ơn|thank/i.test(lowerMsg)) {
+    return "Dạ không có chi nè! 🥰 Được hỗ trợ bạn là niềm vui của mình. Nếu sau này có bất kỳ thắc mắc nào khác về FJMS, bạn cứ nhắn mình nhé. Chúc bạn có những trải nghiệm tuyệt vời trên hệ thống!";
   }
-  
-  if (hasProposal) {
-    return `**Proposals on FJMS** 📝\n\n**For Freelancers:**\n- Browse open projects that match your skills\n- Submit a proposal with your price, timeline, and cover letter\n- Employers can ACCEPT, REJECT, or SHORTLIST your proposal\n\n**For Employers:**\n- Review proposals from interested freelancers\n- Compare prices, timelines, and experience\n- Accept the best fit to start a contract\n\n**Tips:**\n- Be specific about your approach and experience\n- Set a competitive but fair price\n- Respond to employer questions promptly\n\nWould you like guidance on writing a strong proposal?`;
+
+  if (lowerMsg.includes('escrow') || lowerMsg.includes('ký quỹ') || lowerMsg.includes('thanh toán an toàn')) {
+    return `### 🔒 Cơ chế Ký quỹ VNPay Escrow bảo mật thế nào?
+Để mình giải thích thật ngắn gọn và dễ hiểu cho bạn nhé! Tính năng này hoạt động giống như một **"người trung gian uy tín"** giữ tiền hộ hai bên:
+
+1. **Doanh nghiệp nạp tiền trước:** Ngay khi chốt thuê Freelancer, Doanh nghiệp (Employer) sẽ nạp tiền và **ký quỹ 100% giá trị hợp đồng** vào FJMS qua cổng VNPay.
+2. **Tiền được giữ an toàn:** Số tiền này được hệ thống khóa lại, Freelancer nhìn thấy tiền đã được ký quỹ thì sẽ an tâm tập trung làm việc hết sức mình. Doanh nghiệp cũng yên tâm vì tiền chưa hề chuyển đi.
+3. **Nghiệm thu & Tự động trả tiền:** Khi Freelancer nộp bài hoàn tất và Doanh nghiệp bấm duyệt **Nghiệm thu (Approve)**, hệ thống sẽ tự động chuyển tiền ký quỹ vào ví của Freelancer.
+4. **Phân xử khi có sự cố:** Nếu có mâu thuẫn (trễ hạn, làm sai yêu cầu), Admin hệ thống sẽ đứng ra làm trọng tài kiểm tra bằng chứng và quyết định hoàn tiền hoặc giải ngân theo tỷ lệ xứng đáng.
+
+*Bạn thấy cơ chế này siêu an toàn và công bằng cho cả hai bên đúng không nào!*`;
   }
-  
-  if (hasDispute) {
-    return `**Dispute Resolution on FJMS** ⚖️\n\nIf a conflict arises between employer and freelancer:\n\n1. **Open a dispute** from the contract page\n2. **Provide evidence** - screenshots, messages, work samples\n3. **Admin review** - A platform admin reviews the case\n4. **Resolution options:**\n   - **REFUND_EMPLOYER** - Return funds to employer\n   - **PAY_FREELANCER** - Release payment to freelancer\n   - **SPLIT_PAYMENT** - Divide funds between both parties\n\n**Before opening a dispute:**\n- Try to communicate and resolve issues directly\n- Document all communication\n- Review the contract terms\n\nNeed help opening or managing a dispute?`;
+
+  if (lowerMsg.includes('rút tiền') || lowerMsg.includes('withdraw') || lowerMsg.includes('rút')) {
+    return `### 💰 Rút tiền về tài khoản ngân hàng như thế nào?
+Rút tiền trên FJMS thì siêu dễ dàng luôn nha bạn ơi! Để mình chỉ bạn cách làm nè:
+
+1. Đầu tiên, bạn vô trang **[Ví tiền của mình](/freelancer-wallet)** (nếu là Freelancer) hoặc **[Ví của tôi](/employer-wallet)** (nếu là Employer) nha.
+2. Nhớ **thêm tài khoản ngân hàng liên kết** trước nhé (nhập đúng Tên ngân hàng, Số tài khoản và Tên chủ thẻ viết hoa không dấu nha).
+3. Tiếp theo, nhấn nút **Rút tiền**, điền số tiền bạn mong muốn rút rồi gửi yêu cầu.
+4. Để đảm bảo an toàn tuyệt đối, tránh các trường hợp hack tài khoản hoặc gian lận, Admin sẽ duyệt thủ công yêu cầu của bạn trong vòng tối đa 24 giờ làm việc. Tiền duyệt xong sẽ ting ting về tài khoản ngân hàng của bạn ngay!`;
   }
-  
-  if (hasPayment) {
-    return `**Payments & Wallet on FJMS** 💰\n\n**Wallet Features:**\n- View your balance and transaction history\n- Deposit funds via VNPay or bank transfer\n- Withdraw earnings to your bank account\n\n**Payment Flow:**\n1. Employer funds escrow when hiring\n2. Freelancer submits work\n3. Employer approves → payment released\n4. Freelancer can withdraw funds\n\n**Supported Methods:**\n- VNPay (instant deposits)\n- Bank transfers\n- Escrow (secure contract payments)\n\nWould you like help with a specific payment or wallet action?`;
+
+  if (lowerMsg.includes('nạp tiền') || lowerMsg.includes('deposit') || lowerMsg.includes('nạp')) {
+    return `### 💳 Cách nạp tiền vào ví đơn giản nhất
+Để nạp tiền vào số dư ví chuẩn bị ký quỹ cho các hợp đồng, bạn làm theo hướng dẫn này của mình nha:
+
+1. Bạn truy cập vào trang **[Ví & Giao dịch](/employer-wallet)**.
+2. Bấm vào nút **Nạp tiền** ở góc trên.
+3. Nhập số tiền bạn muốn nạp rồi nhấn xác nhận. Hệ thống sẽ kết nối trực tiếp đưa bạn sang cổng thanh toán **VNPay**.
+4. Bạn chỉ cần mở app Ngân hàng quét mã QR hoặc nhập thẻ ATM nội địa để thanh toán. Giao dịch thành công là ví của bạn sẽ được cộng tiền ngay lập tức luôn đó!`;
   }
-  
-  if (hasProject) {
-    return `**Projects on FJMS** 🚀\n\n**For Employers:**\n- Post projects with clear requirements and budget\n- Set categories and skills needed\n- Review proposals and hire the best freelancer\n\n**For Freelancers:**\n- Browse projects by category and skills\n- Filter by budget, timeline, and experience level\n- Submit proposals to projects you're interested in\n\n**Project Tips:**\n- Be detailed in your project description\n- Set realistic budgets and timelines\n- Communicate clearly with your partner\n\nWould you like to know more about posting or finding projects?`;
+
+  if (lowerMsg.includes('tranh chấp') || lowerMsg.includes('dispute') || lowerMsg.includes('khiếu nại') || lowerMsg.includes('phân xử')) {
+    return `### ⚖️ Lỡ xảy ra bất đồng thì giải quyết tranh chấp (Dispute) thế nào?
+Đừng lo lắng nhé! Nếu trong quá trình làm việc giữa Freelancer và Employer xảy ra mâu thuẫn không thể tự thỏa thuận:
+
+1. Bất kỳ bên nào cũng có thể nhấn nút **Mở tranh chấp (Open Dispute)** trực tiếp ngay tại trang quản lý hợp đồng đó.
+2. Hệ thống sẽ yêu cầu cả hai bên cung cấp thông tin và tải lên các bằng chứng (tệp đính kèm, ảnh chụp màn hình tin nhắn, file sản phẩm làm dở,...).
+3. Ban quản trị (Admin) của FJMS sẽ nhảy vào làm trọng tài, đọc kỹ yêu cầu ban đầu của dự án và đối chiếu sản phẩm thực tế để phân xử cực kỳ công tâm.
+4. **Admin sẽ đưa ra quyết định phân xử theo 3 hướng:**
+   - **Hoàn trả cho Employer (Refund Employer):** Nếu Freelancer làm sai hoàn toàn hoặc biến mất không lý do.
+   - **Thanh toán cho Freelancer (Pay Freelancer):** Nếu sản phẩm đạt chuẩn đúng giao kèo nhưng Employer cố tình không chịu nghiệm thu.
+   - **Chia sẻ tỷ lệ (Split Payment):** Chia đôi tiền ký quỹ theo tỷ lệ phần trăm khối lượng công việc thực tế mà Freelancer đã hoàn thành được.`;
   }
-  
-  if (hasProfile) {
-    return `**Account Management on FJMS** 👤\n\nYou can manage your account from your profile settings:\n\n- **Update profile** - Name, bio, skills, portfolio\n- **Change password** - Keep your account secure\n- **Email settings** - Update notification preferences\n- **Account status** - View your verification and standing\n\n**For Freelancers:**\n- Showcase your skills and experience\n- Add portfolio items and certifications\n\n**For Employers:**\n- Company information\n- Past project history\n\nNeed help with a specific account setting?`;
+
+  if (lowerMsg.includes('phí') || lowerMsg.includes('fee') || lowerMsg.includes('chi phí')) {
+    return `### 📊 Phí dịch vụ trên FJMS tính thế nào?
+FJMS luôn áp dụng chính sách phí dịch vụ cực kỳ rõ ràng và minh bạch luôn nè:
+- **Phí đăng tuyển dự án:** Doanh nghiệp (Employer) được đăng tin tìm người hoàn toàn **miễn phí 100%**.
+- **Phí hoa hồng nền tảng (Platform Commission):** Hệ thống chỉ thu **5% - 10%** trên tổng giá trị hợp đồng khi giao dịch giải ngân thành công (phí này sẽ trừ trực tiếp vào số tiền Freelancer nhận được khi kết thúc hợp đồng).
+- **Phí nạp tiền:** Hoàn toàn miễn phí khi thanh toán qua VNPay.
+- **Phí rút tiền:** Tùy thuộc vào quy định chuyển khoản liên ngân hàng của phía ngân hàng (nếu có).`;
   }
-  
-  if (hasReview) {
-    return `**Reviews & Ratings on FJMS** ⭐\n\nAfter a contract is completed:\n\n- **Employers** can rate freelancers on quality, communication, and timeliness\n- **Freelancers** can rate employers on clarity, communication, and fairness\n\n**Why reviews matter:**\n- Build trust in the community\n- Help freelancers get more projects\n- Help employers find reliable talent\n- Maintain platform quality\n\nBoth parties are encouraged to leave honest, constructive feedback!`;
+
+  if (lowerMsg.includes('hợp đồng') || lowerMsg.includes('contract') || lowerMsg.includes('nghiệm thu')) {
+    return `### 📋 Vòng đời của một hợp đồng trên FJMS
+Mỗi hợp tác trên hệ thống sẽ đi qua 5 trạng thái chuyên nghiệp này nè:
+1. **PENDING_APPROVAL (Chờ duyệt):** Hợp đồng vừa tạo khi Employer chấp nhận đề xuất, chờ hai bên bấm nút xác nhận đồng ý điều khoản.
+2. **ACTIVE (Đang thực hiện):** Employer đã nạp tiền ký quỹ thành công. Lúc này Freelancer mới bắt đầu làm việc nhé!
+3. **SUBMITTED WORK (Bàn giao bài):** Freelancer hoàn thành sản phẩm và gửi báo cáo đính kèm lên hệ thống.
+4. **COMPLETED (Hoàn tất):** Employer bấm duyệt nghiệm thu sản phẩm. Tiền ký quỹ lập tức được giải ngân tự động về ví của Freelancer.
+5. **CANCELLED (Đã hủy):** Hợp đồng bị hủy do tranh chấp hoặc thỏa thuận chung của hai bên.`;
   }
-  
-  // Default contextual response
-  return `I understand you're asking about FJMS platform features. Let me help you with that!\n\nHere are some topics I can assist with:\n\n- **Projects** - Posting, browsing, and managing\n- **Proposals** - Submitting and reviewing\n- **Contracts** - Statuses and management\n- **Escrow** - Secure payments\n- **Wallet** - Balance and transactions\n- **Disputes** - Resolution process\n\nCould you provide more details about what you'd like to know? I'm here to help! 😊`;
+
+  // General Fallback
+  return `Mình hiểu là bạn đang muốn tìm hiểu về hệ thống **FJMS** đúng không nè. 
+
+Để mình hỗ trợ bạn nhanh và chuẩn xác nhất, bạn có thể thử hỏi mình những câu như:
+- **"Gợi ý cho mình vài dự án phù hợp đi"** (nếu bạn muốn tìm việc làm)
+- **"Đề xuất cho mình vài freelancer giỏi"** (nếu bạn muốn tuyển người làm việc)
+- Hoặc hỏi mình về **thanh toán ký quỹ VNPay**, cách **nạp tiền / rút tiền**, hay quy trình **phân xử tranh chấp (dispute)** nha.
+
+*Mình luôn ở đây chờ tin nhắn từ bạn! 🥰*`;
 };
 
 export const getSessions = async (userId) => {
@@ -244,7 +457,6 @@ export const getMessages = async (sessionId, userId) => {
 };
 
 export const processChatMessage = async (sessionId, message, userId, userRole) => {
-  // Validate session ownership
   const session = await aiChatRepository.getSessionById(sessionId, userId);
   if (!session) {
     throw new Error('SESSION_NOT_FOUND');
@@ -256,11 +468,54 @@ export const processChatMessage = async (sessionId, message, userId, userRole) =
   // Get conversation history for context
   const previousMessages = await aiChatRepository.getSessionMessages(sessionId);
   
+  // Check if user is asking for recommendations or searching projects/freelancers
+  let liveDataContext = '';
+  const lowerMsg = message.toLowerCase();
+  
+  if (userRole === 'FREELANCER' && (lowerMsg.includes('dự án') || lowerMsg.includes('project') || lowerMsg.includes('việc làm') || lowerMsg.includes('tìm việc') || lowerMsg.includes('gợi ý') || lowerMsg.includes('hỗ trợ') || lowerMsg.includes('giúp') || lowerMsg.includes('chào') || lowerMsg.includes('xin chào') || lowerMsg.includes('hi') || lowerMsg.includes('hello'))) {
+    const matchingProjects = await queryMatchingProjects(userId, message);
+    if (matchingProjects.length > 0) {
+      liveDataContext = `\n## Live Open Projects in FJMS Database:\n`;
+      matchingProjects.forEach(p => {
+        liveDataContext += `- Project ID: ${p.project_id}
+  Title: ${p.title}
+  Description: ${p.description.substring(0, 150)}...
+  Budget: ${p.budget_min ? p.budget_min.toLocaleString() : '0'} - ${p.budget_max ? p.budget_max.toLocaleString() : '0'} VNĐ (${p.budget_type})
+  Category: ${p.category_name}
+  Company: ${p.company_name}
+  Link: /project-details/${p.project_id}
+`;
+      });
+      liveDataContext += `\nInstructions to Assistant: Guide the user to these matching projects. Provide the markdown link "[Xem chi tiết](/project-details/[id])" so they can click and apply directly. Explain why they fit the user.\n`;
+    } else {
+      liveDataContext = `\n## Live Open Projects: No active projects matched the specific query, but encourage them to check the general Browse Projects page at /browse-projects.\n`;
+    }
+  } else if (userRole === 'EMPLOYER' && (lowerMsg.includes('freelancer') || lowerMsg.includes('nhân sự') || lowerMsg.includes('ứng viên') || lowerMsg.includes('gợi ý') || lowerMsg.includes('hỗ trợ') || lowerMsg.includes('giúp') || lowerMsg.includes('chào') || lowerMsg.includes('xin chào') || lowerMsg.includes('hi') || lowerMsg.includes('hello'))) {
+    const matchingFreelancers = await queryMatchingFreelancers(message);
+    if (matchingFreelancers.length > 0) {
+      liveDataContext = `\n## Live Active Freelancers in FJMS Database:\n`;
+      matchingFreelancers.forEach(f => {
+        liveDataContext += `- Freelancer ID: ${f.user_id}
+  Name: ${f.full_name}
+  Headline: ${f.headline || 'Professional Freelancer'}
+  Rating: ${f.rating_average || 'N/A'} (${f.experience_years || 0} years experience)
+  Hourly Rate: ${f.hourly_rate ? f.hourly_rate.toLocaleString() : '0'} VNĐ/hr
+  Skills: ${f.skills ? f.skills.join(', ') : ''}
+  Link: /profile/${f.user_id}
+`;
+      });
+      liveDataContext += `\nInstructions to Assistant: Suggest these freelancers to the employer. Provide the markdown link "[Xem hồ sơ](/profile/[id])" so they can click to view and invite them.\n`;
+    }
+  }
+
   // Build AI prompt with conversation memory
-  const prompt = buildConversationPrompt(previousMessages, userRole, message);
+  let prompt = buildConversationPrompt(previousMessages, userRole, message);
+  if (liveDataContext) {
+    prompt = prompt.replace('## Current User Message', `${liveDataContext}\n## Current User Message`);
+  }
   
   // Generate AI response
-  const reply = await generateAIResponse(prompt);
+  const reply = await generateAIResponse(prompt, message, userRole, userId, previousMessages, liveDataContext);
 
   // Save AI response
   await aiChatRepository.saveMessage(sessionId, 'assistant', reply);

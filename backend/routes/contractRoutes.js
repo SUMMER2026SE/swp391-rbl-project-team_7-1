@@ -5,6 +5,7 @@ import fs from 'fs';
 import { 
   getContractById, 
   getActiveContracts,
+  getContractByProjectId,
   submitWork, 
   getContractSubmissions, 
   approveSubmission, 
@@ -39,6 +40,7 @@ router.use(verifyToken);
 
 // Contract details
 router.get('/', getActiveContracts);
+router.get('/project/:projectId', getContractByProjectId);
 router.get('/:contractId', getContractById);
 
 // Submissions CRUD

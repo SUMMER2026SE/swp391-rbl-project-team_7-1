@@ -42,7 +42,10 @@ export default function FreelancerDashboard() {
         });
         const proposalData = await proposalRes.json();
         if (proposalRes.ok && proposalData.success) {
-          setProposals(proposalData.proposals || []);
+          const activeProposals = (proposalData.proposals || []).filter(
+            p => p.status !== 'ACCEPTED' && p.status !== 'APPROVED'
+          );
+          setProposals(activeProposals);
         }
       }
 
@@ -402,9 +405,19 @@ export default function FreelancerDashboard() {
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
                               contract.status === 'COMPLETED' 
                                 ? 'bg-slate-100 text-slate-500 border-slate-200'
-                                : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                : contract.latest_submission_status === 'SUBMITTED'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                  : contract.latest_submission_status === 'REVISION_REQUESTED'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                    : 'bg-emerald-50 text-emerald-700 border-emerald-100'
                             }`}>
-                              {contract.status === 'COMPLETED' ? 'Đã hoàn thành' : 'Đang thực hiện'}
+                              {contract.status === 'COMPLETED' 
+                                ? 'Đã hoàn thành' 
+                                : contract.latest_submission_status === 'SUBMITTED'
+                                  ? 'Chờ duyệt sản phẩm'
+                                  : contract.latest_submission_status === 'REVISION_REQUESTED'
+                                    ? 'Yêu cầu chỉnh sửa'
+                                    : 'Đang thực hiện'}
                             </span>
                             <span className="text-slate-400 text-xs font-semibold">
                               Mã HĐ: #{contract.contract_id}
@@ -422,6 +435,15 @@ export default function FreelancerDashboard() {
                             </span>
                             <span>•</span>
                             <span>Bắt đầu: {new Date(contract.created_at).toLocaleDateString('vi-VN')}</span>
+                            {contract.project_deadline && (
+                              <>
+                                <span>•</span>
+                                <span className="text-rose-600 font-bold flex items-center gap-0.5">
+                                  <span className="material-symbols-outlined text-[14px]">event_busy</span>
+                                  Hạn chót: {new Date(contract.project_deadline).toLocaleDateString('vi-VN')}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
 

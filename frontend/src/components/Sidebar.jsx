@@ -10,27 +10,17 @@ export default function Sidebar() {
   const path = location.pathname;
   const navigate = useNavigate();
 
-  let role = 'freelancer';
-  if (path.startsWith('/admin')) {
-    role = 'admin';
-  } else if (
-    path.includes('employer') ||
-    path.startsWith('/manage-proposals') ||
-    path === '/review-submission' ||
-    path === '/revision-requested' ||
-    path.startsWith('/project-details') ||
-    path === '/post-project' ||
-    path.startsWith('/edit-project') ||
-    path === '/my-projects' ||
-    path === '/escrow-checkout'
-  ) {
-    role = 'employer';
-  }
-
   const [localUser, setLocalUser] = React.useState(() => {
     const s = localStorage.getItem('user');
     return s ? JSON.parse(s) : null;
   });
+
+  const activeRole = localStorage.getItem('active_role');
+  let role = activeRole || localUser?.roleDefault?.toLowerCase() || 'freelancer';
+  
+  if (path.startsWith('/admin') || localUser?.roleDefault === 'ADMIN') {
+    role = 'admin';
+  }
 
   const [unreadCount, setUnreadCount] = React.useState(0);
 
@@ -85,7 +75,7 @@ export default function Sidebar() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   let items = [];
@@ -101,7 +91,6 @@ export default function Sidebar() {
       { label: 'Khám phá dự án', icon: 'work', link: '/browse-projects' },
       { label: 'Ví tiền', icon: 'payments', link: '/freelancer-wallet' },
       { label: 'Tin nhắn', icon: 'chat', link: '/messages-freelancer' },
-      { label: 'Trợ lý AI', icon: 'smart_toy', link: '/ai-chat' },
       { label: 'Hồ sơ', icon: 'account_circle', link: '/profile' },
     ];
     user_name = user ? user.fullName : 'Alexander';
@@ -115,7 +104,6 @@ export default function Sidebar() {
       { label: 'Dự án của tôi', icon: 'work', link: '/my-projects' },
       { label: 'Ví tiền', icon: 'payments', link: '/employer-wallet' },
       { label: 'Tin nhắn', icon: 'chat', link: '/messages-employer' },
-      { label: 'Trợ lý AI', icon: 'smart_toy', link: '/ai-chat' },
       { label: 'Hồ sơ', icon: 'account_circle', link: '/profile' },
     ];
     user_name = user ? user.fullName : 'TechCorp Inc.';
@@ -125,15 +113,13 @@ export default function Sidebar() {
     bottom_btn_link = '/post-project';
   } else if (role === 'admin') {
     items = [
-      { label: 'Trang chủ', icon: 'dashboard', link: '/admin-dashboard' },
+      { label: 'Bảng điều khiển', icon: 'dashboard', link: '/admin-dashboard' },
       { label: 'Người dùng', icon: 'group', link: '/admin-users' },
-      { label: 'Duyệt dự án', icon: 'fact_check', link: '/admin-project-approval' },
-      { label: 'Duyệt đề xuất', icon: 'assignment', link: '/admin-project-moderation' },
-      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-dispute-management' },
+      { label: 'Tổng dự án', icon: 'work', link: '/admin-projects' },
+      { label: 'Duyệt rút tiền', icon: 'payments', link: '/admin-withdrawals' },
+      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-disputes' },
       { label: 'Vi phạm', icon: 'warning', link: '/admin-violations' },
-      { label: 'Báo cáo', icon: 'summarize', link: '/admin-generate-report' },
-      { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' },
-      { label: 'Cài đặt', icon: 'settings', link: '/admin-settings' }
+      { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' }
     ];
     user_name = user ? user.fullName : 'Admin Panel';
     user_role = 'Quản trị viên';
@@ -144,7 +130,6 @@ export default function Sidebar() {
     if (item.link === '#') return false;
     if (path === item.link) return true;
     if (item.label === 'Tìm Freelancer' && (path === '/freelancers' || path.startsWith('/profile/') || path.startsWith('/freelancers/'))) return true;
-    if (item.label === 'Duyệt dự án' && (path === '/admin-project-approval')) return true;
     if (item.label === 'Báo cáo' && path.startsWith('/admin-report')) return true;
     if (item.label === 'Bảng điều khiển' && (path.endsWith('-dashboard') || path.startsWith('/review-submission') || path === '/revision-requested')) return true;
     if (item.label === 'Dự án của tôi' && (path === '/my-projects' || path.startsWith('/manage-proposals') || path.startsWith('/project-details') || path === '/post-project' || path.startsWith('/edit-project'))) return true;

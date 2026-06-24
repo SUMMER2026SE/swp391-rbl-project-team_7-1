@@ -1,41 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  BarChart,
-  Bar,
-} from 'recharts';
+import { Link } from 'react-router-dom';
 
 const API = 'http://localhost:5000/api';
 
-function StatCard({ title, value, subtitle, icon }) {
+function ActionCard({ title, value, subtitle, icon, link, topColor, iconBg, iconText, borderHover, bgHover, textHover }) {
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-      <div className="flex items-center justify-between gap-3 mb-5">
-        <div>
-          <p className="text-[13px] font-semibold text-[#475569] uppercase tracking-[0.15em]">{title}</p>
+    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)] hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+      <div className={`absolute top-0 left-0 right-0 h-1 ${topColor}`} />
+      <div>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{title}</p>
+          <div className={`w-10 h-10 rounded-2xl ${iconBg} ${iconText} flex items-center justify-center`}>
+            <span className="material-symbols-outlined text-[20px]">{icon}</span>
+          </div>
         </div>
-        <div className="w-11 h-11 rounded-2xl bg-[#ecfdf5] text-[#0f766e] grid place-items-center">
-          <span className="material-symbols-outlined text-[22px]">{icon}</span>
-        </div>
+        <p className="text-4xl font-black text-slate-800 tracking-tight leading-none">{value}</p>
+        <p className="mt-2 text-xs text-slate-500 font-semibold">{subtitle}</p>
       </div>
-      <p className="text-[32px] font-semibold text-[#0f172a] leading-none">{value}</p>
-      <p className="mt-3 text-sm text-[#64748b]">{subtitle}</p>
+      <div className="mt-6 pt-4 border-t border-slate-50">
+        <Link 
+          to={link} 
+          className={`w-full flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 text-slate-650 rounded-2xl text-xs font-extrabold transition-all border border-slate-100 ${bgHover} ${textHover} ${borderHover}`}
+        >
+          Xem chi tiết
+          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </Link>
+      </div>
     </div>
   );
 }
 
 function SectionHeader({ title, subtitle }) {
   return (
-    <div className="flex flex-col gap-1 mb-6">
-      <h2 className="font-headline-2xl text-headline-2xl text-[#334155]">{title}</h2>
-      <p className="text-body-base text-body-base text-[#475569]">{subtitle}</p>
+    <div className="flex flex-col gap-1.5 mb-8">
+      <h1 className="text-3xl font-black text-slate-800 tracking-tight">{title}</h1>
+      <p className="text-sm text-slate-500 font-semibold">{subtitle}</p>
     </div>
   );
 }
@@ -87,28 +86,18 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, [token]);
 
-  const formatRevenue = (value) => {
-    return (value || 0).toLocaleString('vi-VN') + ' đ';
-  };
-
-  const KPI_SUMMARY = dashboardData ? [
-    { title: 'Tổng người dùng', value: (dashboardData.totalUsers || 0).toLocaleString('vi-VN'), subtitle: 'Người dùng toàn nền tảng', icon: 'person' },
-    { title: 'Freelancer', value: (dashboardData.totalFreelancers || 0).toLocaleString('vi-VN'), subtitle: 'Freelancer đang hoạt động', icon: 'workspace_premium' },
-    { title: 'Nhà tuyển dụng', value: (dashboardData.totalEmployers || 0).toLocaleString('vi-VN'), subtitle: 'Chủ dự án', icon: 'business_center' },
-    { title: 'Dự án', value: (dashboardData.totalProjects || 0).toLocaleString('vi-VN'), subtitle: 'Dự án đã tạo', icon: 'work_outline' },
-    { title: 'Hợp đồng', value: (dashboardData.activeContracts || 0).toLocaleString('vi-VN'), subtitle: 'Hợp đồng đang hoạt động', icon: 'task_alt' },
-    { title: 'Doanh thu', value: formatRevenue(dashboardData.totalRevenue), subtitle: 'Tổng doanh thu nền tảng', icon: 'payments' },
-  ] : [];
-
   if (loading) {
     return (
-      <main className="flex-1 overflow-y-auto p-margin-desktop">
-        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+      <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
           <SectionHeader
-            title="Trang chủ Admin"
-            subtitle="Tổng quan về người dùng, dự án, hợp đồng và hiệu suất nền tảng."
+            title="Tổng quan quản trị"
+            subtitle="Trung tâm điều hành và xử lý tác vụ thời gian thực của quản trị viên."
           />
-          <div className="text-center text-[#64748b]">Đang tải dữ liệu...</div>
+          <div className="flex flex-col items-center justify-center py-32 space-y-4">
+            <div className="w-12 h-12 border-4 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-slate-500 font-medium text-sm">Đang tải dữ liệu...</p>
+          </div>
         </div>
       </main>
     );
@@ -116,186 +105,200 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <main className="flex-1 overflow-y-auto p-margin-desktop">
-        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+      <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+        <div className="max-w-7xl mx-auto space-y-8">
           <SectionHeader
-            title="Trang chủ Admin"
-            subtitle="Tổng quan về người dùng, dự án, hợp đồng và hiệu suất nền tảng."
+            title="Tổng quan quản trị"
+            subtitle="Trung tâm điều hành và xử lý tác vụ thời gian thực của quản trị viên."
           />
-          <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-red-700">{error}</div>
+          <div className="bg-rose-50 border border-rose-100 rounded-3xl p-6 text-rose-700 flex items-center gap-3">
+            <span className="material-symbols-outlined">error</span>
+            <span className="font-semibold">{error}</span>
+          </div>
         </div>
       </main>
     );
   }
 
+  const PENDING_ACTIONS = [
+    {
+      title: "Tin tuyển dụng chờ duyệt",
+      value: dashboardData?.pendingProjects || 0,
+      subtitle: "Dự án mới cần duyệt nội dung",
+      icon: "fact_check",
+      link: "/admin-projects?status=CLOSED",
+      topColor: "bg-teal-500",
+      iconBg: "bg-teal-50",
+      iconText: "text-teal-600",
+      borderHover: "hover:border-teal-100",
+      bgHover: "hover:bg-teal-50",
+      textHover: "hover:text-teal-700"
+    },
+    {
+      title: "Yêu cầu rút tiền chờ xử lý",
+      value: dashboardData?.pendingWithdrawals || 0,
+      subtitle: "Các giao dịch rút tiền cần phê duyệt",
+      icon: "payments",
+      link: "/admin-withdrawals",
+      topColor: "bg-indigo-500",
+      iconBg: "bg-indigo-50",
+      iconText: "text-indigo-600",
+      borderHover: "hover:border-indigo-100",
+      bgHover: "hover:bg-indigo-50",
+      textHover: "hover:text-indigo-700"
+    },
+    {
+      title: "Tranh chấp cần phán quyết",
+      value: dashboardData?.pendingDisputes || 0,
+      subtitle: "Hợp đồng bị khiếu nại chưa giải quyết",
+      icon: "gavel",
+      link: "/admin-disputes",
+      topColor: "bg-amber-500",
+      iconBg: "bg-amber-50",
+      iconText: "text-amber-600",
+      borderHover: "hover:border-amber-100",
+      bgHover: "hover:bg-amber-50",
+      textHover: "hover:text-amber-700"
+    },
+    {
+      title: "Báo cáo vi phạm mới",
+      value: dashboardData?.pendingReports || 0,
+      subtitle: "Tài khoản bị báo cáo vi phạm",
+      icon: "warning",
+      link: "/admin-violations",
+      topColor: "bg-rose-500",
+      iconBg: "bg-rose-50",
+      iconText: "text-rose-600",
+      borderHover: "hover:border-rose-100",
+      bgHover: "hover:bg-rose-50",
+      textHover: "hover:text-rose-700"
+    }
+  ];
+
   return (
-    <main className="flex-1 overflow-y-auto p-margin-desktop">
-      <div className="max-w-container-max mx-auto space-y-10 pb-12">
-        <SectionHeader
-          title="Trang chủ Admin"
-          subtitle="Tổng quan về người dùng, dự án, hợp đồng và hiệu suất nền tảng."
-        />
+    <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+      <div className="max-w-7xl mx-auto space-y-8 pb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <SectionHeader
+            title="Tổng quan quản trị"
+            subtitle="Trung tâm điều hành - Quản lý tác vụ chờ duyệt và thống kê hoạt động."
+          />
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {KPI_SUMMARY.slice(0, 3).map(item => (
-            <StatCard key={item.title} {...item} />
+        {/* Actionable KPIs - Pending Items */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {PENDING_ACTIONS.map((action, idx) => (
+            <ActionCard key={idx} {...action} />
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {KPI_SUMMARY.slice(3).map(item => (
-            <StatCard key={item.title} {...item} />
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+        {/* Quick Platform Metrics */}
+        <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)] flex flex-col justify-between">
+          <div>
             <div className="flex items-center justify-between gap-3 mb-6">
               <div>
-                <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Người dùng đăng ký</p>
-                <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Theo tháng</h3>
+                <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-semibold">Quy mô thời gian thực</p>
+                <h3 className="text-base font-extrabold text-[#0f172a] mt-0.5">Thống kê quy mô nền tảng</h3>
               </div>
-              <span className="text-sm text-[#64748b]">6 tháng gần nhất</span>
+              <Link to="/admin-analytics" className="text-xs font-bold text-[#0F766E] hover:underline">Xem chi tiết biểu đồ &gt;</Link>
             </div>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[
-                  { month: 'T1', users: 410 },
-                  { month: 'T2', users: 520 },
-                  { month: 'T3', users: 610 },
-                  { month: 'T4', users: 560 },
-                  { month: 'T5', users: 680 },
-                  { month: 'T6', users: 720 },
-                ]} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="users" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
-          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
-            <div className="flex items-center justify-between gap-3 mb-6">
-              <div>
-                <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Dự án</p>
-                <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Theo tháng</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50 flex flex-col justify-center">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Tổng số người dùng</span>
+                <span className="text-2xl font-black text-slate-800 mt-2">{(dashboardData?.totalUsers || 0).toLocaleString('vi-VN')} tài khoản</span>
               </div>
-              <span className="text-sm text-[#64748b]">6 tháng gần nhất</span>
-            </div>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[
-                  { month: 'T1', projects: 290 },
-                  { month: 'T2', projects: 330 },
-                  { month: 'T3', projects: 410 },
-                  { month: 'T4', projects: 385 },
-                  { month: 'T5', projects: 455 },
-                  { month: 'T6', projects: 492 },
-                ]} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
-                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Bar dataKey="projects" fill="#0f766e" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50 flex flex-col justify-center">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Tổng dự án đã tạo</span>
+                <span className="text-2xl font-black text-slate-800 mt-2">{(dashboardData?.totalProjects || 0).toLocaleString('vi-VN')} tin đăng</span>
+              </div>
+              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100/50 flex flex-col justify-center">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Hợp đồng đang thực hiện</span>
+                <span className="text-2xl font-black text-slate-800 mt-2">{(dashboardData?.activeContracts || 0).toLocaleString('vi-VN')} hợp đồng</span>
+              </div>
+              <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 flex flex-col justify-center">
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block">Lợi nhuận hệ thống (5%)</span>
+                <span className="text-2xl font-black text-emerald-700 mt-2">{(dashboardData?.totalSystemFees || 0).toLocaleString('vi-VN')} đ</span>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Real-time lists */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+          {/* Top Earning Freelancers Leaderboard */}
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)]">
             <div className="flex items-center justify-between gap-3 mb-6">
               <div>
-                <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Doanh thu</p>
-                <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">Theo tháng</h3>
+                <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-semibold">Freelancer nổi bật</p>
+                <h3 className="text-lg font-extrabold text-[#0f172a] mt-0.5">Top thu nhập hệ thống</h3>
               </div>
-              <span className="text-sm text-[#64748b]">6 tháng gần nhất</span>
+              <span className="text-xs text-slate-500 font-semibold">Bảng xếp hạng</span>
             </div>
-            <div className="h-[320px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[
-                  { month: 'T1', revenue: 12800 },
-                  { month: 'T2', revenue: 14850 },
-                  { month: 'T3', revenue: 16200 },
-                  { month: 'T4', revenue: 15300 },
-                  { month: 'T5', revenue: 17950 },
-                  { month: 'T6', revenue: 19100 },
-                ]} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
-                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} tickFormatter={value => `${value / 1000}k`} />
-                  <Tooltip formatter={value => `${value.toLocaleString('vi-VN')} đ`} />
-                  <Legend />
-                  <Line type="monotone" dataKey="revenue" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="space-y-4">
+              {(!dashboardData?.topFreelancers || dashboardData.topFreelancers.length === 0) ? (
+                <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 text-sm font-medium">Chưa ghi nhận thu nhập hoàn thành hợp đồng nào.</div>
+              ) : (
+                dashboardData.topFreelancers.map((freelancer, idx) => (
+                  <div key={freelancer.user_id} className="rounded-2xl border border-[#E2E8F0] p-4 hover:border-[#0f766e] transition-all bg-[#F8FAFC] flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <img 
+                          alt={freelancer.full_name} 
+                          className="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm"
+                          src={freelancer.avatar_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuCioT3d29HAboKCh5FtH6yfJpreH6DQUNNdw8JVFoWTx6CMJJV0VXmJh5I4syj9A0nIm_Gn_kL4WN6hfVI3NVC1kL3X5kfRJVJyhppVo7GXsDb968rw3xdoxDmwSwigUm0d5Kj5VgB_1-w1p2eLFKTMOkAjmBe5lwKPjINix_mvuV2Cs99sGXjriNMQP2UhQRV6Xn1lM9CDkekRwQrNn2cP4aNr1sPsokHcK5zgQ6pdDtwQYOddnNJI8opkRkmtbH-OjupriQb1o5g"} 
+                        />
+                        <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-[#0F766E] text-white text-[10px] font-black flex items-center justify-center border border-white">
+                          {idx + 1}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-[#0f172a] text-sm leading-tight">{freelancer.full_name}</p>
+                        <p className="text-xs text-slate-400 font-semibold mt-0.5">{freelancer.email}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-100/50 px-2.5 py-1 rounded-lg">
+                        {(freelancer.total_earned || 0).toLocaleString('vi-VN')} đ
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
-              <div className="flex items-center justify-between gap-3 mb-6">
-                <div>
-                  <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Dự án mới nhất</p>
-                  <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">5 mới nhất</h3>
-                </div>
-                <span className="text-sm text-[#64748b]">Cập nhật gần đây</span>
+          {/* Latest Payments */}
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_4px_20px_rgba(15,23,42,0.03)]">
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <div>
+                <p className="text-[11px] font-bold text-[#64748b] uppercase tracking-wider font-semibold">Theo dõi ví</p>
+                <h3 className="text-lg font-extrabold text-[#0f172a] mt-0.5">Giao dịch thanh toán gần đây</h3>
               </div>
-              <div className="space-y-4">
-                {[
-                  { id: 'P-8792', title: 'Mobile App redesign', owner: 'TechCorp', status: 'Đang tiến hành', value: '85,000,000 đ' },
-                  { id: 'P-8745', title: 'E-commerce backend', owner: 'ShopEase', status: 'Chờ duyệt', value: '130,000,000 đ' },
-                  { id: 'P-8690', title: 'Brand identity package', owner: 'Luma Studio', status: 'Hoàn thành', value: '24,500,000 đ' },
-                  { id: 'P-8614', title: 'Marketing automation', owner: 'BeeDigital', status: 'Đang xem xét', value: '52,200,000 đ' },
-                  { id: 'P-8591', title: 'Landing page build', owner: 'Fresh Foods', status: 'Đang tiến hành', value: '17,800,000 đ' },
-                ].map(project => (
-                  <div key={project.id} className="rounded-3xl border border-[#E2E8F0] p-4 hover:border-[#0f766e] transition-colors">
-                    <div className="flex items-center justify-between gap-4 mb-2">
-                      <div>
-                        <p className="font-semibold text-[#0f172a]">{project.title}</p>
-                        <p className="text-sm text-[#64748b]">{project.owner}</p>
-                      </div>
-                      <span className="text-sm font-semibold text-[#0f766e]">{project.value}</span>
-                    </div>
-                    <p className="text-sm text-[#475569]">{project.id} • {project.status}</p>
-                  </div>
-                ))}
-              </div>
+              <span className="text-xs text-slate-500 font-semibold">Lịch sử giao dịch</span>
             </div>
-
-            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
-              <div className="flex items-center justify-between gap-3 mb-6">
-                <div>
-                  <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Thanh toán gần đây</p>
-                  <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">5 mới nhất</h3>
-                </div>
-                <span className="text-sm text-[#64748b]">Đã hoàn tất</span>
-              </div>
-              <div className="space-y-4">
-                {[
-                  { id: 'PMT-9821', project: 'Mobile App redesign', user: 'TechCorp', amount: '12,500,000 đ', method: 'VNPay', date: '2026-06-11' },
-                  { id: 'PMT-9790', project: 'E-commerce backend', user: 'ShopEase', amount: '35,000,000 đ', method: 'Thẻ', date: '2026-06-10' },
-                  { id: 'PMT-9742', project: 'Brand identity package', user: 'Luma Studio', amount: '24,500,000 đ', method: 'VNPay', date: '2026-06-09' },
-                  { id: 'PMT-9688', project: 'Marketing automation', user: 'BeeDigital', amount: '18,750,000 đ', method: 'Thẻ', date: '2026-06-08' },
-                  { id: 'PMT-9650', project: 'Landing page build', user: 'Fresh Foods', amount: '17,800,000 đ', method: 'VNPay', date: '2026-06-07' },
-                ].map(payment => (
-                  <div key={payment.id} className="rounded-3xl border border-[#E2E8F0] p-4 hover:border-[#0f766e] transition-colors">
-                    <div className="flex items-center justify-between gap-4 mb-2">
+            <div className="space-y-4">
+              {(!dashboardData?.latestPayments || dashboardData.latestPayments.length === 0) ? (
+                <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 text-sm font-medium">Chưa phát sinh giao dịch thanh toán nào.</div>
+              ) : (
+                dashboardData.latestPayments.map(payment => (
+                  <div key={payment.payment_id} className="rounded-2xl border border-[#E2E8F0] p-4 hover:border-[#0f766e] transition-all bg-[#F8FAFC] flex flex-col justify-between gap-2">
+                    <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="font-semibold text-[#0f172a]">{payment.project}</p>
-                        <p className="text-sm text-[#64748b]">{payment.user}</p>
+                        <p className="font-extrabold text-[#0f172a] text-sm line-clamp-1">{payment.project_title || 'Nạp tiền vào tài khoản'}</p>
+                        <p className="text-xs text-[#64748b] mt-1 font-medium">Đối tác giao dịch: <span className="text-slate-800 font-bold">{payment.payer_name || 'Khách hàng'}</span></p>
                       </div>
-                      <span className="text-sm font-semibold text-[#0f766e]">{payment.amount}</span>
+                      <span className="text-sm font-black text-emerald-700 whitespace-nowrap bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100/50">
+                        +{(payment.amount || 0).toLocaleString('vi-VN')} đ
+                      </span>
                     </div>
-                    <p className="text-sm text-[#475569]">{payment.id} • {payment.method} • {payment.date}</p>
+                    <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 text-[11px]">
+                      <span className="text-slate-400 font-medium">Mã giao dịch: #{payment.payment_id} • Cổng: {payment.payment_method || 'VNPay'}</span>
+                      <span className="text-slate-500 font-medium">{new Date(payment.paid_at || payment.created_at).toLocaleDateString('vi-VN')}</span>
+                    </div>
                   </div>
-                ))}
-              </div>
+                ))
+              )}
             </div>
           </div>
         </div>

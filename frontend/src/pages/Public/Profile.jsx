@@ -348,7 +348,7 @@ export default function Profile() {
     setDeleting(true);
     try {
       await userService.deleteAccount(delPwd);
-      localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/login';
+      localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/';
     } catch (err) { setAlert({ type:'error', msg: err.response?.data?.message || 'Xóa tài khoản thất bại.' }); setShowDel(false); }
     finally { setDeleting(false); }
   };
@@ -1315,7 +1315,7 @@ export default function Profile() {
                 <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
                   <h3 className="font-bold text-[#334155] mb-1">Phiên đăng nhập</h3>
                   <p className="text-[13px] text-[#94A3B8] mb-4">Đăng xuất khỏi thiết bị này.</p>
-                  <button onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/login'; }}
+                  <button onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href='/'; }}
                     className="flex items-center gap-2 px-4 py-2 border border-[#E2E8F0] rounded-lg text-[13px] font-semibold text-[#475569] hover:bg-[#F8FAFC] hover:border-[#CBD5E1] transition-all">
                     <span className="material-symbols-outlined text-[17px]">logout</span>Đăng xuất
                   </button>
