@@ -1,4 +1,4 @@
-import { listReports, getReportDetails, resolveReport, dismissReport } from '../services/reportService.js';
+import { listReports, getReportDetails, resolveReport, dismissReport, createNewReport } from '../services/reportService.js';
 
 export const getReports = async (req, res) => {
   try {
@@ -56,5 +56,34 @@ export const patchDismissReport = async (req, res) => {
   } catch (error) {
     console.error('Error dismissing report:', error);
     return res.status(500).json({ message: 'Failed to dismiss report.' });
+  }
+};
+
+export const createReport = async (req, res) => {
+  try {
+    const reporterId = req.user.id;
+    const { targetUserId, reportType, reason, description } = req.body;
+
+    const result = await createNewReport({
+      reporterId,
+      targetUserId,
+      reportType,
+      reason,
+      description
+    });
+
+    if (result.error) {
+      return res.status(result.status).json({ message: result.error });
+    }
+
+    return res.status(201).json({
+      success: true,
+      reportId: result.data.reportId,
+      status: result.data.status,
+      message: 'Report submitted successfully.'
+    });
+  } catch (error) {
+    console.error('Error creating report:', error);
+    return res.status(500).json({ message: 'Failed to submit report.' });
   }
 };

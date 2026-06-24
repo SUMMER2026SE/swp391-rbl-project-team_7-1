@@ -14,5 +14,10 @@ export const reportService = {
   dismissReport: async (reportId) => {
     const response = await api.patch(`/reports/${reportId}/dismiss`);
     return response.data;
+  },
+
+  submitReport: async ({ targetUserId, reportType, reason, description }) => {
+    const response = await api.post('/reports', { targetUserId, reportType, reason, description });
+    return response.data;
   }
 };

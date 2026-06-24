@@ -132,3 +132,35 @@ export const updateReportStatus = async (reportId, status) => {
       WHERE report_id = @reportId
     `);
 };
+
+export const createReport = async ({ reporterId, targetUserId, reportType, reason, description }) => {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('reporterId', sql.Int, reporterId)
+    .input('targetUserId', sql.Int, targetUserId)
+    .input('reportType', sql.VarChar(100), reportType)
+    .input('reason', sql.NVarChar, reason || null)
+    .input('description', sql.NVarChar, description || null)
+    .input('status', sql.VarChar(50), 'PENDING')
+    .query(`
+      INSERT INTO violation_reports (reporter_id, target_user_id, reported_user_id, report_type, reason, description, status, created_at)
+      VALUES (@reporterId, @targetUserId, @targetUserId, @reportType, @reason, @description, @status, SYSUTCDATETIME());
+      SELECT SCOPE_IDENTITY() AS report_id;
+    `);
+
+  return result.recordset[0]?.report_id;
+};
+
+export const findDuplicateReport = async ({ reporterId, targetUserId }) => {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('reporterId', sql.Int, reporterId)
+    .input('targetUserId', sql.Int, targetUserId)
+    .query(`
+      SELECT report_id FROM violation_reports
+      WHERE reporter_id = @reporterId
+        AND target_user_id = @targetUserId
+        AND status = 'PENDING'
+    `);
+  return result.recordset[0] || null;
+};
