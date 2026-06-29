@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   ResponsiveContainer,
   LineChart,
@@ -86,6 +86,86 @@ function StatusBadge({ label, count, color }) {
   );
 }
 
+const PERIOD_OPTIONS = [
+  { value: 'month', label: 'Tháng này' },
+  { value: 'quarter', label: 'Quý này' },
+  { value: 'year', label: 'Năm nay' },
+  { value: 'custom', label: 'Tùy chọn' },
+];
+
+function TimeFilter({ onFilterChange }) {
+  const [selectedPeriod, setSelectedPeriod] = useState('year');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const [showCustom, setShowCustom] = useState(false);
+
+  const handlePeriodClick = (value) => {
+    setSelectedPeriod(value);
+    if (value === 'custom') {
+      setShowCustom(true);
+    } else {
+      setShowCustom(false);
+      onFilterChange({ period: value });
+    }
+  };
+
+  const handleApplyCustom = () => {
+    if (customStart && customEnd) {
+      onFilterChange({ startDate: customStart, endDate: customEnd });
+    }
+  };
+
+  return (
+    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-4 shadow-[0_4px_20px_rgba(15,23,42,0.03)] flex flex-wrap items-center gap-3">
+      <span className="text-[13px] font-bold text-[#64748b] uppercase tracking-wider mr-1">Lọc theo thời gian:</span>
+      <div className="flex gap-1.5 flex-wrap">
+        {PERIOD_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => handlePeriodClick(opt.value)}
+            className={`px-4 py-1.5 text-sm font-semibold rounded-xl border transition-all ${
+              selectedPeriod === opt.value
+                ? 'bg-[#0F766E] text-white border-[#0F766E] shadow-sm'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {showCustom && (
+        <div className="flex items-center gap-2 ml-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-slate-500">Từ:</label>
+            <input
+              type="date"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className="px-2.5 py-1.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E]"
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-slate-500">Đến:</label>
+            <input
+              type="date"
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className="px-2.5 py-1.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E]"
+            />
+          </div>
+          <button
+            onClick={handleApplyCustom}
+            disabled={!customStart || !customEnd}
+            className="px-4 py-1.5 text-sm font-semibold rounded-xl bg-[#0F766E] text-white border border-[#0F766E] shadow-sm hover:bg-[#0D6B64] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Áp dụng
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminAnalytics() {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -96,43 +176,73 @@ export default function AdminAnalytics() {
     return raw && raw !== 'null' && raw !== 'undefined' ? raw : null;
   })();
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      setLoading(true);
-      setError(null);
+  const abortControllerRef = useRef(null);
 
-      if (!token) {
-        setError('Vui lòng đăng nhập để truy cập trang này.');
-        setLoading(false);
+  const fetchAnalytics = useCallback(async (filterParams = {}) => {
+    if (!token) {
+      setError('Vui lòng đăng nhập để truy cập trang này.');
+      setLoading(false);
+      return;
+    }
+
+    // Abort previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (filterParams.period) {
+        queryParams.set('period', filterParams.period);
+      } else if (filterParams.startDate && filterParams.endDate) {
+        queryParams.set('startDate', filterParams.startDate);
+        queryParams.set('endDate', filterParams.endDate);
+      }
+      const queryStr = queryParams.toString();
+      const url = `${API}/admin/analytics${queryStr ? `?${queryStr}` : ''}`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal
+      });
+      const responseData = await res.json();
+
+      if (!res.ok) {
+        setError(responseData.message || 'Không thể tải dữ liệu thống kê.');
         return;
       }
 
-      try {
-        const res = await fetch(`${API}/admin/analytics`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const responseData = await res.json();
+      if (responseData.success && responseData.data) {
+        setAnalyticsData(responseData.data);
+      } else {
+        setError('Định dạng dữ liệu không hợp lệ.');
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      setError('Lỗi kết nối máy chủ. Vui lòng thử lại sau.');
+      console.error('Analytics fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
-        if (!res.ok) {
-          setError(responseData.message || 'Không thể tải dữ liệu thống kê.');
-          return;
-        }
-
-        if (responseData.success && responseData.data) {
-          setAnalyticsData(responseData.data);
-        } else {
-          setError('Định dạng dữ liệu không hợp lệ.');
-        }
-      } catch (err) {
-        setError('Lỗi kết nối máy chủ. Vui lòng thử lại sau.');
-        console.error('Analytics fetch error:', err);
-      } finally {
-        setLoading(false);
+  useEffect(() => {
+    fetchAnalytics({ period: 'year' });
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
     };
+  }, [fetchAnalytics]);
 
-    fetchAnalytics();
-  }, [token]);
+  const handleFilterChange = (filterParams) => {
+    fetchAnalytics(filterParams);
+  };
 
   const formatRevenue = (value) => {
     return (value || 0).toLocaleString('vi-VN') + ' đ';
@@ -157,7 +267,7 @@ export default function AdminAnalytics() {
     return colors[status] || '#94a3b8';
   };
 
-  if (loading) {
+  if (loading && !analyticsData) {
     return (
       <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -174,7 +284,7 @@ export default function AdminAnalytics() {
     );
   }
 
-  if (error) {
+  if (error && !analyticsData) {
     return (
       <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -246,6 +356,9 @@ export default function AdminAnalytics() {
           subtitle="Số liệu phân tích nền tảng, KPI hiệu suất và biểu đồ trực quan hóa thời gian thực."
         />
 
+        {/* Time Filter */}
+        <TimeFilter onFilterChange={handleFilterChange} />
+
         {/* Section 1: Overview KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {KPI_CARDS.map(item => (
@@ -254,7 +367,7 @@ export default function AdminAnalytics() {
         </div>
 
         {/* Section 2: Revenue Trend */}
-        <ChartCard title="Doanh thu" subtitle="Biểu đồ tăng trưởng dòng tiền" period="12 tháng qua">
+        <ChartCard title="Doanh thu" subtitle="Biểu đồ tăng trưởng dòng tiền" period={monthlyRevenue.length > 0 ? `${monthlyRevenue[0]?.month} - ${monthlyRevenue[monthlyRevenue.length - 1]?.month}` : ''}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={monthlyRevenue} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
@@ -271,7 +384,7 @@ export default function AdminAnalytics() {
 
         {/* Section 3: Projects & Users side by side */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <ChartCard title="Dự án mới" subtitle="Số lượng dự án đăng ký mới hàng tháng" period="12 tháng qua">
+          <ChartCard title="Dự án mới" subtitle="Số lượng dự án đăng ký mới hàng tháng">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyProjects} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
@@ -283,7 +396,7 @@ export default function AdminAnalytics() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Thành viên mới" subtitle="Tài khoản đăng ký mới" period="12 tháng qua">
+          <ChartCard title="Thành viên mới" subtitle="Tài khoản đăng ký mới">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthlyUsers} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke="#F1F5F9" strokeDasharray="3 3" vertical={false} />
