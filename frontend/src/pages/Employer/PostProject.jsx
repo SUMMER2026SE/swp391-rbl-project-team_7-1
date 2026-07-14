@@ -162,14 +162,11 @@ export default function PostProject({ editMode = false }) {
 
       if (editMode) {
         await projectService.updateProject(id, formData);
-        setSuccessMsg('Cập nhật dự án thành công!');
+        navigate('/employer-dashboard', { state: { message: 'Cập nhật dự án thành công!' } });
       } else {
         await projectService.createProject(formData);
-        setSuccessMsg('Đăng dự án thành công!');
+        navigate('/employer-dashboard', { state: { message: 'Đăng dự án thành công, chờ duyệt' } });
       }
-      setTimeout(() => {
-        navigate('/employer-dashboard');
-      }, 1500);
     } catch (err) {
       setErrorMsg(err.response?.data?.message || err.message || 'Đã có lỗi xảy ra khi xử lý dự án.');
     } finally {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 
 const API = 'http://localhost:5000/api/admin/projects';
 
@@ -58,7 +59,17 @@ export default function ProjectModeration() {
   }, []);
 
   const handleApprove = async (projectId) => {
-    if (!window.confirm('Bạn có chắc muốn duyệt dự án này?')) return;
+    const result = await Swal.fire({
+      title: 'Duyệt dự án?',
+      text: 'Bạn có chắc chắn muốn duyệt dự án này?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: '#0F766E',
+      cancelButtonColor: '#94A3B8'
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await fetch(`${API}/${projectId}/approve`, {
         method: 'PATCH',
@@ -80,7 +91,17 @@ export default function ProjectModeration() {
   };
 
   const handleReject = async (projectId) => {
-    if (!window.confirm('Bạn có chắc muốn từ chối dự án này?')) return;
+    const result = await Swal.fire({
+      title: 'Từ chối dự án?',
+      text: 'Bạn có chắc chắn muốn từ chối dự án này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Từ chối',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: '#E11D48',
+      cancelButtonColor: '#94A3B8'
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await fetch(`${API}/${projectId}/reject`, {
         method: 'PATCH',

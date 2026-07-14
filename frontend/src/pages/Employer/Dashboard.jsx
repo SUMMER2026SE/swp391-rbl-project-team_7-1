@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
 
 export default function EmployerDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [projects, setProjects] = useState([]);
   const [contracts, setContracts] = useState([]);
@@ -16,6 +17,14 @@ export default function EmployerDashboard() {
   const [toastMsg, setToastMsg] = useState('');
 
   const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setToastMsg(location.state.message);
+      navigate(location.pathname, { replace: true });
+      setTimeout(() => setToastMsg(''), 4000);
+    }
+  }, [location, navigate]);
 
   useEffect(() => {
     if (!token) {
