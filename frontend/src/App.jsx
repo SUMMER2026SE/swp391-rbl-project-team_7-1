@@ -1,0 +1,188 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Layouts
+import DashboardLayout from './layouts/DashboardLayout';
+import PublicLayout from './layouts/PublicLayout';
+
+// Pages - Admin
+import AdminAnalytics from './pages/Admin/Analytics';
+import AdminDashboard from './pages/Admin/Dashboard';
+import DisputeManagement from './pages/Admin/DisputeManagement';
+import AdminProjects from './pages/Admin/AdminProjects';
+import AdminUsers from './pages/Admin/Users';
+import ProposalModeration from './pages/Admin/ProposalModeration';
+import ViolationHandling from './pages/Admin/ViolationHandling';
+import AdminWithdrawals from './pages/Admin/AdminWithdrawals';
+import AIChatPage from './pages/AI/AIChatPage';
+
+// Pages - Wallet & Payment (Iteration 2)
+import TransactionHistoryPage from './pages/Wallet/TransactionHistoryPage';
+import VNPayReturnPage from './pages/Wallet/VNPayReturnPage';
+import EscrowDepositPage from './pages/Project/EscrowDepositPage';
+import WithdrawFunds from './pages/Wallet/WithdrawFunds';
+
+// Pages - Employer
+import EmployerDashboard from './pages/Employer/Dashboard';
+import EmployerWallet from './pages/Employer/Wallet';
+import MyProjects from './pages/Employer/MyProjects';
+
+// Pages - Freelancer
+import FreelancerDashboard from './pages/Freelancer/Dashboard';
+import FreelancerWallet from './pages/Freelancer/Wallet';
+
+// Pages - Public
+import LandingPage from './pages/Public/LandingPage';
+import HelpCenter from './pages/Public/HelpCenter';
+import ArticleVNPayEscrow from './pages/Public/ArticleVNPayEscrow';
+import VNPayGateway from './pages/Payment/VNPayGateway';
+import PaymentFailed from './pages/Payment/PaymentFailed';
+import PaymentSuccess from './pages/Payment/PaymentSuccess';
+
+// Pages - Standalone/Auth/Other
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import VerifyEmail from './pages/Auth/VerifyEmail';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import EscrowCheckout from './pages/Employer/EscrowCheckout';
+import BrowseProjects from './pages/Freelancer/BrowseProjects';
+import ManageProposals from './pages/Employer/ManageProposals';
+import MessagesEmployer from './pages/Employer/MessagesEmployer';
+import MessagesFreelancer from './pages/Freelancer/MessagesFreelancer';
+import PostProject from './pages/Employer/PostProject';
+import ProjectDetails from './pages/Public/ProjectDetails';
+import ReviewSubmission from './pages/Employer/ReviewSubmission';
+import RevisionRequested from './pages/Employer/RevisionRequested';
+import SubmitProposal from './pages/Freelancer/SubmitProposal';
+import EditProposal from './pages/Freelancer/EditProposal';
+import SubmitWork from './pages/Freelancer/SubmitWork';
+import Projects from './pages/Public/Projects'; // Original projects list
+import Profile from './pages/Public/Profile'; // Public profile page
+import BrowseFreelancers from './pages/Public/BrowseFreelancers';
+
+import { useAuth } from './hooks/useAuth';
+
+export default function App() {
+  const { user, loading } = useAuth();
+  const isLoggedIn = !!user;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="w-10 h-10 border-4 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      {/* ─────────────────────────────────────────────────────────
+          PUBLIC LAYOUT (header + footer, no sidebar)
+          Accessible by everyone (logged in or not)
+         ───────────────────────────────────────────────────────── */}
+      <Route element={<PublicLayout />}>
+        <Route
+          path="/"
+          element={
+            isLoggedIn ? (
+              user?.roleDefault === 'ADMIN' ? (
+                <Navigate to="/admin-dashboard" replace />
+              ) : user?.roleDefault === 'EMPLOYER' ? (
+                <Navigate to="/employer-dashboard" replace />
+              ) : (
+                <Navigate to="/freelancer-dashboard" replace />
+              )
+            ) : (
+              <LandingPage />
+            )
+          }
+        />
+        <Route path="/help-center" element={<HelpCenter />} />
+        <Route path="/article-vnpay-escrow" element={<ArticleVNPayEscrow />} />
+        
+        {/* Render on Public Layout ONLY when user is NOT logged in */}
+        {!isLoggedIn && (
+          <>
+            <Route path="/browse-projects" element={<BrowseProjects />} />
+            <Route path="/freelancers" element={<BrowseFreelancers />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/freelancers/:id" element={<Profile />} />
+          </>
+        )}
+      </Route>
+
+      {/* ─────────────────────────────────────────────────────────
+          DASHBOARD LAYOUT (sidebar + header) — requires auth
+          project-details is here so logged-in users get sidebar
+         ───────────────────────────────────────────────────────── */}
+      <Route element={<DashboardLayout />}>
+        {/* Project details — accessible to all logged-in users regardless of role */}
+        <Route path="/project-details/:id" element={<ProjectDetails />} />
+        <Route path="/browse-projects" element={<BrowseProjects />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<Profile />} />
+        <Route path="/freelancers" element={<BrowseFreelancers />} />
+        <Route path="/freelancers/:id" element={<Profile />} />
+
+        {/* Freelancer Dashboard Paths */}
+        <Route path="/freelancer-dashboard" element={<FreelancerDashboard />} />
+        <Route path="/freelancer-wallet" element={<FreelancerWallet />} />
+        <Route path="/messages-freelancer" element={<MessagesFreelancer />} />
+        <Route path="/submit-work/:contractId" element={<SubmitWork />} />
+        <Route path="/submit-proposal/:projectId" element={<SubmitProposal />} />
+        <Route path="/edit-proposal/:proposalId" element={<EditProposal />} />
+
+        {/* Wallet / Payment / Project Routes */}
+        <Route path="/wallet/transactions" element={<TransactionHistoryPage />} />
+        <Route path="/vnpay-return" element={<VNPayReturnPage />} />
+        <Route path="/project/:projectId/fund" element={<EscrowDepositPage />} />
+        <Route path="/withdraw" element={<WithdrawFunds />} />
+
+        {/* Employer Dashboard Paths */}
+        <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+        <Route path="/my-projects" element={<MyProjects />} />
+        <Route path="/employer-wallet" element={<EmployerWallet />} />
+        <Route path="/messages-employer" element={<MessagesEmployer />} />
+        <Route path="/manage-proposals/:projectId" element={<ManageProposals />} />
+        <Route path="/review-submission/:contractId" element={<ReviewSubmission />} />
+        <Route path="/revision-requested" element={<RevisionRequested />} />
+        <Route path="/post-project" element={<PostProject />} />
+        <Route path="/edit-project/:id" element={<PostProject editMode={true} />} />
+        <Route path="/escrow-checkout" element={<EscrowCheckout />} />
+
+        {/* Admin Dashboard Paths */}
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-users" element={<AdminUsers />} />
+        <Route path="/admin-project-moderation" element={<ProposalModeration />} />
+        <Route path="/admin-withdrawals" element={<AdminWithdrawals />} />
+        <Route path="/admin-disputes" element={<DisputeManagement />} />
+        <Route path="/admin-analytics" element={<AdminAnalytics />} />
+        <Route path="/admin-projects" element={<AdminProjects />} />
+        <Route path="/admin-violations" element={<ViolationHandling />} />
+        <Route path="/ai-chat" element={<AIChatPage />} />
+      </Route>
+
+      {/* ─────────────────────────────────────────────────────────
+          STANDALONE PAGES (No Shared Layout)
+         ───────────────────────────────────────────────────────── */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/vnpay-gateway" element={<VNPayGateway />} />
+      <Route path="/payment-failed" element={<PaymentFailed />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/projects" element={<Projects />} />
+      {/* Project details for non-logged-in users (public fallback with public layout) */}
+      {!isLoggedIn && (
+        <Route element={<PublicLayout />}>
+          <Route path="/project-details/:id" element={<ProjectDetails />} />
+        </Route>
+      )}
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

@@ -14,3 +14,8 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# User uploads (Temporary CV/Images generated during testing)
+backend/uploads/
+frontend/dist/
+

@@ -1,163 +1,319 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+} from 'recharts';
+
+const API = 'http://localhost:5000/api';
+
+// Static chart data (can be extended with separate API endpoint later)
+const USER_REGISTRATIONS = [
+  { month: 'Jan', users: 410 },
+  { month: 'Feb', users: 520 },
+  { month: 'Mar', users: 610 },
+  { month: 'Apr', users: 560 },
+  { month: 'May', users: 680 },
+  { month: 'Jun', users: 720 },
+];
+
+const PROJECTS_BY_MONTH = [
+  { month: 'Jan', projects: 290 },
+  { month: 'Feb', projects: 330 },
+  { month: 'Mar', projects: 410 },
+  { month: 'Apr', projects: 385 },
+  { month: 'May', projects: 455 },
+  { month: 'Jun', projects: 492 },
+];
+
+const REVENUE_BY_MONTH = [
+  { month: 'Jan', revenue: 12800 },
+  { month: 'Feb', revenue: 14850 },
+  { month: 'Mar', revenue: 16200 },
+  { month: 'Apr', revenue: 15300 },
+  { month: 'May', revenue: 17950 },
+  { month: 'Jun', revenue: 19100 },
+];
+
+const LATEST_PROJECTS = [
+  { id: 'P-8792', title: 'Mobile App redesign', owner: 'TechCorp', status: 'In progress', value: '85,000,000 đ' },
+  { id: 'P-8745', title: 'E-commerce backend', owner: 'ShopEase', status: 'Pending', value: '130,000,000 đ' },
+  { id: 'P-8690', title: 'Brand identity package', owner: 'Luma Studio', status: 'Completed', value: '24,500,000 đ' },
+  { id: 'P-8614', title: 'Marketing automation', owner: 'BeeDigital', status: 'In review', value: '52,200,000 đ' },
+  { id: 'P-8591', title: 'Landing page build', owner: 'Fresh Foods', status: 'In progress', value: '17,800,000 đ' },
+];
+
+const LATEST_PAYMENTS = [
+  { id: 'PMT-9821', project: 'Mobile App redesign', user: 'TechCorp', amount: '12,500,000 đ', method: 'VNPay', date: '2026-06-11' },
+  { id: 'PMT-9790', project: 'E-commerce backend', user: 'ShopEase', amount: '35,000,000 đ', method: 'Card', date: '2026-06-10' },
+  { id: 'PMT-9742', project: 'Brand identity package', user: 'Luma Studio', amount: '24,500,000 đ', method: 'VNPay', date: '2026-06-09' },
+  { id: 'PMT-9688', project: 'Marketing automation', user: 'BeeDigital', amount: '18,750,000 đ', method: 'Card', date: '2026-06-08' },
+  { id: 'PMT-9650', project: 'Landing page build', user: 'Fresh Foods', amount: '17,800,000 đ', method: 'VNPay', date: '2026-06-07' },
+];
+
+function StatCard({ title, value, subtitle, icon }) {
+  return (
+    <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)] transition-all hover:shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div>
+          <p className="text-[13px] font-semibold text-[#475569] uppercase tracking-[0.15em]">{title}</p>
+        </div>
+        <div className="w-11 h-11 rounded-2xl bg-[#ecfdf5] text-[#0f766e] grid place-items-center">
+          <span className="material-symbols-outlined text-[22px]">{icon}</span>
+        </div>
+      </div>
+      <p className="text-[32px] font-semibold text-[#0f172a] leading-none">{value}</p>
+      <p className="mt-3 text-sm text-[#64748b]">{subtitle}</p>
+    </div>
+  );
+}
+
+function SectionHeader({ title, subtitle }) {
+  return (
+    <div className="flex flex-col gap-1 mb-6">
+      <h2 className="font-headline-2xl text-headline-2xl text-[#334155]">{title}</h2>
+      <p className="text-body-base text-body-base text-[#475569]">{subtitle}</p>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const token = (() => {
+    const raw = localStorage.getItem('token');
+    return raw && raw !== 'null' && raw !== 'undefined' ? raw : null;
+  })();
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      setError(null);
+
+      if (!token) {
+        setError('Vui lòng đăng nhập để truy cập trang này.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/user/admin/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const responseData = await res.json();
+
+        if (!res.ok) {
+          setError(responseData.message || 'Không thể tải dữ liệu dashboard.');
+          return;
+        }
+
+        if (responseData.success && responseData.data) {
+          setDashboardData(responseData.data);
+        } else {
+          setError('Định dạng dữ liệu không hợp lệ.');
+        }
+      } catch (err) {
+        setError('Lỗi kết nối máy chủ. Vui lòng thử lại sau.');
+        console.error('Dashboard fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [token]);
+
+  // Format revenue with currency
+  const formatRevenue = (value) => {
+    return (value || 0).toLocaleString('vi-VN') + ' đ';
+  };
+
+  // Build KPI_SUMMARY from fetched data or show loading skeletons
+  const KPI_SUMMARY = dashboardData ? [
+    { title: 'Total Users', value: (dashboardData.totalUsers || 0).toLocaleString('vi-VN'), subtitle: 'Overall platform users', icon: 'person' },
+    { title: 'Total Freelancers', value: (dashboardData.totalFreelancers || 0).toLocaleString('vi-VN'), subtitle: 'Active freelancers', icon: 'workspace_premium' },
+    { title: 'Total Employers', value: (dashboardData.totalEmployers || 0).toLocaleString('vi-VN'), subtitle: 'Project owners', icon: 'business_center' },
+    { title: 'Total Projects', value: (dashboardData.totalProjects || 0).toLocaleString('vi-VN'), subtitle: 'Projects created', icon: 'work_outline' },
+    { title: 'Total Contracts', value: (dashboardData.activeContracts || 0).toLocaleString('vi-VN'), subtitle: 'Active contracts', icon: 'task_alt' },
+    { title: 'Total Revenue', value: formatRevenue(dashboardData.totalRevenue), subtitle: 'Gross platform revenue', icon: 'payments' },
+  ] : [];
+
+  if (loading) {
+    return (
+      <main className="flex-1 overflow-y-auto p-margin-desktop">
+        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+          <SectionHeader
+            title="Admin Dashboard"
+            subtitle="Overview of users, projects, contracts and monthly platform performance."
+          />
+          <div className="text-center text-[#64748b]">Đang tải dữ liệu...</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex-1 overflow-y-auto p-margin-desktop">
+        <div className="max-w-container-max mx-auto space-y-10 pb-12">
+          <SectionHeader
+            title="Admin Dashboard"
+            subtitle="Overview of users, projects, contracts and monthly platform performance."
+          />
+          <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-red-700">{error}</div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="flex-1 overflow-y-auto p-margin-desktop">
-{/*  Page Header Section  */}
-<div className="flex justify-between items-end mb-8">
-<div>
-<h2 className="font-headline-2xl text-headline-2xl text-[#334155] mb-2">Tổng quan Bảng điều khiển</h2>
-<p className="font-body-base text-body-base text-[#475569]">Số liệu thời gian thực và các nhiệm vụ quan trọng của hệ thống.</p>
-</div>
-<div className="flex items-center gap-2 text-[#0F766E]">
-<span className="material-symbols-outlined" style={{ "fontVariationSettings": "'FILL' 1" }}>check_circle</span>
-<span className="font-body-sm text-body-sm font-semibold">Tất cả hệ thống hoạt động bình thường</span>
-</div>
-</div>
-{/*  KPIs Bento Grid  */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-gutter">
-{/*  KPI 1  */}
-<div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] ambient-shadow-hover transition-all duration-300">
-<div className="flex justify-between items-start mb-4">
-<span className="font-label-caps text-label-caps text-[#475569]">Tổng doanh thu</span>
-<span className="p-1.5 bg-[#F8FAFC] text-[#0F766E] rounded-md flex items-center justify-center">
-<span className="material-symbols-outlined text-[20px]">payments</span>
-</span>
-</div>
-<div className="font-headline-2xl text-headline-2xl text-[#334155] mb-1">60 Tỷ đ</div>
-<div className="flex items-center gap-1 text-[#0F766E]">
-<span className="material-symbols-outlined text-[16px]">trending_up</span>
-<span className="font-body-sm text-body-sm">+12.5% trong tháng này</span>
-</div>
-</div>
-{/*  KPI 2  */}
-<div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] ambient-shadow-hover transition-all duration-300">
-<div className="flex justify-between items-start mb-4">
-<span className="font-label-caps text-label-caps text-[#475569]">Khối lượng Ký quỹ</span>
-<span className="p-1.5 bg-[#F8FAFC] text-secondary rounded-md flex items-center justify-center">
-<span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
-</span>
-</div>
-<div className="font-headline-2xl text-headline-2xl text-[#334155] mb-1">21 Tỷ đ</div>
-<div className="flex items-center gap-1 text-[#475569]">
-<span className="font-body-sm text-body-sm">Trên 342 dự án đang hoạt động</span>
-</div>
-</div>
-{/*  KPI 3  */}
-<div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] ambient-shadow-hover transition-all duration-300">
-<div className="flex justify-between items-start mb-4">
-<span className="font-label-caps text-label-caps text-[#475569]">Người dùng mới (7 ngày)</span>
-<span className="p-1.5 bg-[#F8FAFC] text-tertiary-container rounded-md flex items-center justify-center">
-<span className="material-symbols-outlined text-[20px]">group_add</span>
-</span>
-</div>
-<div className="font-headline-2xl text-headline-2xl text-[#334155] mb-1">1.204</div>
-<div className="flex items-center gap-1 text-[#0F766E]">
-<span className="material-symbols-outlined text-[16px]">trending_up</span>
-<span className="font-body-sm text-body-sm">+4.2% so với tuần trước</span>
-</div>
-</div>
-{/*  KPI 4  */}
-<div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] ambient-shadow-hover transition-all duration-300">
-<div className="flex justify-between items-start mb-4">
-<span className="font-label-caps text-label-caps text-[#475569]">Tỷ lệ tranh chấp</span>
-<span className="p-1.5 bg-error-container text-on-error-container rounded-md flex items-center justify-center">
-<span className="material-symbols-outlined text-[20px]">gavel</span>
-</span>
-</div>
-<div className="font-headline-2xl text-headline-2xl text-[#334155] mb-1">1.2%</div>
-<div className="flex items-center gap-1 text-[#475569]">
-<span className="font-body-sm text-body-sm">Trong ngưỡng cho phép</span>
-</div>
-</div>
-</div>
-{/*  Main Content Area: Chart and Tasks  */}
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
-{/*  Chart Section (Spans 2 columns)  */}
-<div className="lg:col-span-2 bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] flex flex-col">
-<div className="flex justify-between items-center mb-6">
-<h3 className="font-headline-xl text-headline-xl text-[#334155] m-0">Khối lượng giao dịch</h3>
-<div className="flex gap-2">
-<button className="px-3 py-1 text-body-sm font-body-sm rounded-md bg-[#F8FAFC] text-[#475569] hover:bg-[#0F766E] hover:text-white transition-colors">7 ngày</button>
-<button className="px-3 py-1 text-body-sm font-body-sm rounded-md bg-gradient-to-b from-[#475569] to-[#526171] hover:to-[#0F766E] text-white font-medium">30 ngày</button>
-<button className="px-3 py-1 text-body-sm font-body-sm rounded-md bg-[#F8FAFC] text-[#475569] hover:bg-[#0F766E] hover:text-white transition-colors">Từ đầu năm</button>
-</div>
-</div>
-{/*  Chart Placeholder  */}
-<div className="flex-1 w-full min-h-[300px] bg-gradient-to-t from-[#F8FAFC] to-transparent rounded-lg border border-dashed border-[#E2E8F0] flex items-end p-4 relative">
-{/*  Abstract bars to simulate chart  */}
-<div className="w-full h-full flex items-end justify-between gap-2 opacity-60">
-<div className="w-1/12 bg-[#0F766E] h-1/3 rounded-t-sm"></div>
-<div className="w-1/12 bg-[#0F766E] h-1/2 rounded-t-sm"></div>
-<div className="w-1/12 bg-[#0F766E] h-2/5 rounded-t-sm"></div>
-<div className="w-1/12 bg-[#0F766E] h-3/5 rounded-t-sm"></div>
-<div className="w-1/12 bg-[#0F766E] h-1/2 rounded-t-sm"></div>
-<div className="w-1/12 bg-[#0F766E] h-4/5 rounded-t-sm"></div>
-<div className="w-1/12 bg-[#0F766E] h-2/3 rounded-t-sm"></div>
-</div>
-<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-<span className="font-label-caps text-label-caps text-[#475569] opacity-50">Khu vực biểu đồ tương tác</span>
-</div>
-</div>
-</div>
-{/*  Urgent Tasks Section  */}
-<div className="bg-[#FFFFFF] border border-[#E2E8F0] rounded-xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] flex flex-col">
-<div className="flex justify-between items-center mb-6">
-<h3 className="font-headline-xl text-headline-xl text-[#334155] m-0">Nhiệm vụ khẩn cấp</h3>
-<span className="bg-error text-on-error font-label-caps text-label-caps px-2 py-0.5 rounded-full">3</span>
-</div>
-<div className="flex flex-col gap-4">
-{/*  Task Item 1  */}
-<div className="p-4 border border-[#E2E8F0] rounded-lg hover:border-[#0F766E] transition-colors cursor-pointer group">
-<div className="flex justify-between items-start mb-2">
-<div className="flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-error"></span>
-<span className="font-label-caps text-label-caps text-error">Xem xét tranh chấp</span>
-</div>
-<span className="font-body-sm text-body-sm text-[#475569]">1 giờ trước</span>
-</div>
-<p className="font-body-sm text-body-sm text-[#334155] mb-2 font-medium">Dự án #8920: Khiếu nại không giao hàng</p>
-<div className="flex justify-between items-center">
-<span className="font-body-sm text-body-sm text-[#475569]">Giá trị: 112.500.000 đ</span>
-<span className="material-symbols-outlined text-[#475569] group-hover:text-[#0F766E] transition-colors text-[20px]">arrow_forward</span>
-</div>
-</div>
-{/*  Task Item 2  */}
-<div className="p-4 border border-[#E2E8F0] rounded-lg hover:border-[#0F766E] transition-colors cursor-pointer group">
-<div className="flex justify-between items-start mb-2">
-<div className="flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-tertiary-container"></span>
-<span className="font-label-caps text-label-caps text-tertiary-container">Ký quỹ giá trị cao</span>
-</div>
-<span className="font-body-sm text-body-sm text-[#475569]">3 giờ trước</span>
-</div>
-<p className="font-body-sm text-body-sm text-[#334155] mb-2 font-medium">Đang chờ xác nhận giải ngân</p>
-<div className="flex justify-between items-center">
-<span className="font-body-sm text-body-sm text-[#475569]">Giá trị: 300.000.000 đ</span>
-<span className="material-symbols-outlined text-[#475569] group-hover:text-[#0F766E] transition-colors text-[20px]">arrow_forward</span>
-</div>
-</div>
-{/*  Task Item 3  */}
-<div className="p-4 border border-[#E2E8F0] rounded-lg hover:border-[#0F766E] transition-colors cursor-pointer group">
-<div className="flex justify-between items-start mb-2">
-<div className="flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-[#0F766E]"></span>
-<span className="font-label-caps text-label-caps text-[#0F766E]">Cảnh báo hệ thống</span>
-</div>
-<span className="font-body-sm text-body-sm text-[#475569]">5 giờ trước</span>
-</div>
-<p className="font-body-sm text-body-sm text-[#334155] mb-2 font-medium">Xem xét KYC của doanh nghiệp mới</p>
-<div className="flex justify-between items-center">
-<span className="font-body-sm text-body-sm text-[#475569]">TechCorp Inc.</span>
-<span className="material-symbols-outlined text-[#475569] group-hover:text-[#0F766E] transition-colors text-[20px]">arrow_forward</span>
-</div>
-</div>
-</div>
-<button className="mt-auto pt-4 w-full text-center font-body-sm text-body-sm text-[#0F766E] hover:underline font-medium">
-                        Xem tất cả nhiệm vụ
-                    </button>
-</div>
-</div>
-</main>
+      <div className="max-w-container-max mx-auto space-y-10 pb-12">
+        <SectionHeader
+          title="Admin Dashboard"
+          subtitle="Overview of users, projects, contracts and monthly platform performance."
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {KPI_SUMMARY.slice(0, 3).map(item => (
+            <StatCard key={item.title} {...item} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {KPI_SUMMARY.slice(3).map(item => (
+            <StatCard key={item.title} {...item} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2 bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <div>
+                <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">User registrations</p>
+                <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">By month</h3>
+              </div>
+              <span className="text-sm text-[#64748b]">Last 6 months</span>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={USER_REGISTRATIONS} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="users" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <div>
+                <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Projects</p>
+                <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">By month</h3>
+              </div>
+              <span className="text-sm text-[#64748b]">Last 6 months</span>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={PROJECTS_BY_MONTH} margin={{ top: 10, right: 12, left: -10, bottom: 0 }}>
+                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip />
+                  <Bar dataKey="projects" fill="#0f766e" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <div>
+                <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Revenue</p>
+                <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">By month</h3>
+              </div>
+              <span className="text-sm text-[#64748b]">Last 6 months</span>
+            </div>
+            <div className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={REVENUE_BY_MONTH} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+                  <CartesianGrid stroke="#E2E8F0" strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} tickFormatter={value => `${value / 1000}k`} />
+                  <Tooltip formatter={value => `${value.toLocaleString('vi-VN')} đ`} />
+                  <Legend />
+                  <Line type="monotone" dataKey="revenue" stroke="#0f766e" strokeWidth={3} dot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div>
+                  <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Latest projects</p>
+                  <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">5 newest</h3>
+                </div>
+                <span className="text-sm text-[#64748b]">Updated now</span>
+              </div>
+              <div className="space-y-4">
+                {LATEST_PROJECTS.map(project => (
+                  <div key={project.id} className="rounded-3xl border border-[#E2E8F0] p-4 hover:border-[#0f766e] transition-colors">
+                    <div className="flex items-center justify-between gap-4 mb-2">
+                      <div>
+                        <p className="font-semibold text-[#0f172a]">{project.title}</p>
+                        <p className="text-sm text-[#64748b]">{project.owner}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-[#0f766e]">{project.value}</span>
+                    </div>
+                    <p className="text-sm text-[#475569]">{project.id} • {project.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-[0_2px_18px_rgba(15,23,42,0.06)]">
+              <div className="flex items-center justify-between gap-3 mb-6">
+                <div>
+                  <p className="text-sm font-semibold text-[#475569] uppercase tracking-[0.16em]">Latest payments</p>
+                  <h3 className="mt-2 text-headline-xl font-semibold text-[#0f172a]">5 newest</h3>
+                </div>
+                <span className="text-sm text-[#64748b]">Completed</span>
+              </div>
+              <div className="space-y-4">
+                {LATEST_PAYMENTS.map(payment => (
+                  <div key={payment.id} className="rounded-3xl border border-[#E2E8F0] p-4 hover:border-[#0f766e] transition-colors">
+                    <div className="flex items-center justify-between gap-4 mb-2">
+                      <div>
+                        <p className="font-semibold text-[#0f172a]">{payment.project}</p>
+                        <p className="text-sm text-[#64748b]">{payment.user}</p>
+                      </div>
+                      <span className="text-sm font-semibold text-[#0f766e]">{payment.amount}</span>
+                    </div>
+                    <p className="text-sm text-[#475569]">{payment.id} • {payment.method} • {payment.date}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
