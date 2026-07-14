@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { contractService } from '../../services/contractService';
+import VisualEscrowTimeline from '../../components/Project/VisualEscrowTimeline';
 
 const renderDescription = (desc) => {
   if (!desc) return null;
@@ -225,6 +226,9 @@ export default function ReviewSubmission() {
           </div>
         )}
       </div>
+      
+      {/* Visual Escrow Timeline */}
+      <VisualEscrowTimeline contract={contract} hasSubmissions={submissions.length > 0} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Submissions Content */}

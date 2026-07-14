@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { contractService } from '../../services/contractService';
+import VisualEscrowTimeline from '../../components/Project/VisualEscrowTimeline';
 
 export default function SubmitWork() {
   const { contractId } = useParams();
@@ -198,6 +199,9 @@ export default function SubmitWork() {
               </div>
             </div>
           )}
+
+          {/* Visual Escrow Timeline */}
+          <VisualEscrowTimeline contract={contract} hasSubmissions={submissions.length > 0} />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Main Form */}

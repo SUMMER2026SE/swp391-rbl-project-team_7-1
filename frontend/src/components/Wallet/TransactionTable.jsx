@@ -1,6 +1,41 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
+import InvoiceTemplate from './InvoiceTemplate';
+import html2pdf from 'html2pdf.js';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function TransactionTable({ transactions }) {
+  const { user } = useAuth();
+  const [selectedTx, setSelectedTx] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const invoiceRef = useRef(null);
+
+  const handleExport = (tx) => {
+    setSelectedTx(tx);
+    setIsExporting(true);
+    
+    // Allow state to update and render the template in DOM before capturing
+    setTimeout(() => {
+      if (!invoiceRef.current) {
+        setIsExporting(false);
+        return;
+      }
+      
+      const element = invoiceRef.current;
+      const opt = {
+        margin: 0,
+        filename: `Hoa_Don_FJMS_${tx.transaction_id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        setIsExporting(false);
+        setSelectedTx(null);
+      });
+    }, 500);
+  };
+
   if (!transactions || transactions.length === 0) {
     return (
       <div className="p-8 text-center text-[#475569]">
@@ -42,6 +77,7 @@ export default function TransactionTable({ transactions }) {
             <th className="p-4 font-semibold text-sm text-[#475569]">Số tiền</th>
             <th className="p-4 font-semibold text-sm text-[#475569]">Trạng thái</th>
             <th className="p-4 font-semibold text-sm text-[#475569]">Thời gian</th>
+            <th className="p-4 font-semibold text-sm text-[#475569] text-center">Hành động</th>
           </tr>
         </thead>
         <tbody>
@@ -55,10 +91,28 @@ export default function TransactionTable({ transactions }) {
               </td>
               <td className="p-4 text-sm">{getStatusBadge(tx.status)}</td>
               <td className="p-4 text-sm text-[#475569]">{formatDate(tx.created_at)}</td>
+              <td className="p-4 text-sm text-center">
+                <button
+                  onClick={() => handleExport(tx)}
+                  disabled={isExporting}
+                  className="px-3 py-1.5 bg-teal-50 text-[#0F766E] border border-teal-100 hover:bg-[#0F766E] hover:text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50 inline-flex items-center gap-1 cursor-pointer"
+                  title="Xuất PDF"
+                >
+                  <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                  Xuất
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* Hidden Invoice Template for PDF Export */}
+      {selectedTx && (
+        <div style={{ position: 'fixed', top: 0, left: '-100vw', opacity: 0, zIndex: -100, pointerEvents: 'none' }}>
+          <InvoiceTemplate ref={invoiceRef} transaction={selectedTx} user={user} />
+        </div>
+      )}
     </div>
   );
 }
