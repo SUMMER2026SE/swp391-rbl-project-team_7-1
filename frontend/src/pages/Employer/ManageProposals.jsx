@@ -1,6 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { proposalService } from '../../services/proposalService';
+import api from '../../services/api';
+import { invitationService } from '../../services/invitationService';
+
+function AIReviewCard({ aiEvaluationString }) {
+  if (!aiEvaluationString) return null;
+
+  let evalData;
+  try {
+    evalData = typeof aiEvaluationString === 'string' ? JSON.parse(aiEvaluationString) : aiEvaluationString;
+  } catch (e) {
+    return null;
+  }
+
+  const { matchScore, quickSummary, strengths, gaps } = evalData;
+
+  const scoreColor = matchScore >= 80 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' 
+                   : matchScore >= 50 ? 'text-amber-700 bg-amber-50 border-amber-200' 
+                   : 'text-rose-700 bg-rose-50 border-rose-200';
+
+  return (
+    <div className="mt-4 p-5 rounded-2xl border border-teal-100 bg-gradient-to-r from-teal-50/40 via-white to-white shadow-xs">
+      <div className="flex items-center justify-between mb-3 border-b border-teal-50 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-teal-600 text-[20px] animate-pulse">psychology</span>
+          <span className="text-xs font-bold text-teal-950 uppercase tracking-wide">Trợ lý AI Phân tích CV</span>
+        </div>
+        <div className={`px-3 py-1 rounded-full text-xs font-bold border ${scoreColor}`}>
+          Độ tương thích: {matchScore}%
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-600 italic leading-relaxed mb-4">
+        "{quickSummary}"
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100/50">
+        <div>
+          <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block mb-1.5">✓ Điểm mạnh nổi bật</span>
+          <ul className="space-y-1">
+            {(strengths || []).map((s, idx) => (
+              <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
+                <span className="text-emerald-500">•</span> {s}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block mb-1.5">⚠ Gaps / Hạn chế</span>
+          <ul className="space-y-1">
+            {(gaps || []).map((g, idx) => (
+              <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
+                <span className="text-rose-400">•</span> {g}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ManageProposals() {
   const { projectId } = useParams();
@@ -18,6 +79,93 @@ export default function ManageProposals() {
       ...prev,
       [id]: !prev[id]
     }));
+  };
+
+  const [activeTab, setActiveTab] = useState('proposals'); // 'proposals', 'recommendations'
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+
+  // States for sending invitation
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [targetFreelancer, setTargetFreelancer] = useState(null);
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [draftingAI, setDraftingAI] = useState(false);
+  const [inviteSuccessMsg, setInviteSuccessMsg] = useState('');
+  const [inviteErrorMsg, setInviteErrorMsg] = useState('');
+
+  const fetchRecommendations = async () => {
+    setLoadingRecs(true);
+    try {
+      const response = await api.get(`/recommendations/projects/${projectId}/recommendations`);
+      if (response.data.success) {
+        setRecommendations(response.data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'recommendations' && projectId) {
+      fetchRecommendations();
+    }
+  }, [activeTab, projectId]);
+
+  const handleOpenInvite = (freelancer) => {
+    setTargetFreelancer(freelancer);
+    setInviteMessage('');
+    setInviteSuccessMsg('');
+    setInviteErrorMsg('');
+    setShowInviteModal(true);
+  };
+
+  const handleSendInvite = async () => {
+    if (!targetFreelancer) return;
+    setSendingInvite(true);
+    setInviteErrorMsg('');
+    setInviteSuccessMsg('');
+    try {
+      const res = await invitationService.inviteFreelancer(projectId, targetFreelancer.userId, inviteMessage);
+      if (res.success) {
+        setInviteSuccessMsg('Đã gửi lời mời ứng tuyển thành công!');
+        setInviteMessage('');
+        setTimeout(() => {
+          setShowInviteModal(false);
+          setInviteSuccessMsg('');
+          // Refresh recommendations list to update statuses if needed
+          fetchRecommendations();
+        }, 1500);
+      } else {
+        setInviteErrorMsg(res.message || 'Lỗi khi gửi lời mời.');
+      }
+    } catch (err) {
+      console.error('Error sending invite:', err);
+      setInviteErrorMsg(err.response?.data?.message || 'Lỗi kết nối máy chủ.');
+    } finally {
+      setSendingInvite(false);
+    }
+  };
+
+  const handleAutoDraftMessage = async () => {
+    if (!targetFreelancer) return;
+    setDraftingAI(true);
+    setInviteErrorMsg('');
+    try {
+      const res = await invitationService.draftAIInvitation(projectId, targetFreelancer.userId);
+      if (res.success && res.draft) {
+        setInviteMessage(res.draft);
+      } else {
+        setInviteErrorMsg('Không thể tự động soạn thảo lời mời.');
+      }
+    } catch (err) {
+      console.error('Error drafting AI invitation:', err);
+      setInviteErrorMsg('Lỗi kết nối máy chủ khi gọi AI.');
+    } finally {
+      setDraftingAI(false);
+    }
   };
 
   const parseProposalCoverLetter = (text) => {
@@ -129,8 +277,31 @@ export default function ManageProposals() {
           </div>
         )}
 
-        {/* Filter Toolbar Card */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.015)] mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Tab Switcher */}
+        <div className="flex gap-4 border-b border-slate-200 mb-6">
+          <button
+            onClick={() => setActiveTab('proposals')}
+            className={`pb-3 text-sm font-bold transition-all border-b-2 px-1 cursor-pointer bg-transparent border-none ${
+              activeTab === 'proposals' ? 'border-[#0F766E] text-[#0F766E]' : 'border-transparent text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            Hồ sơ ứng tuyển ({proposals.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('recommendations')}
+            className={`pb-3 text-sm font-bold transition-all border-b-2 px-1 cursor-pointer bg-transparent border-none flex items-center gap-1 ${
+              activeTab === 'recommendations' ? 'border-[#0F766E] text-[#0F766E]' : 'border-transparent text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">psychology</span>
+            Đề cử ứng viên bằng AI
+          </button>
+        </div>
+
+        {activeTab === 'proposals' ? (
+          <>
+            {/* Filter Toolbar Card */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.015)] mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Hồ sơ ứng viên</h2>
             <p className="text-slate-500 text-xs mt-0.5 font-medium">Chọn lọc và sắp xếp danh sách các hồ sơ phù hợp.</p>
@@ -297,6 +468,10 @@ export default function ManageProposals() {
                         </a>
                       </div>
                     )}
+
+                    {proposal.ai_evaluation && (
+                      <AIReviewCard aiEvaluationString={proposal.ai_evaluation} />
+                    )}
                   </div>
 
                   {/* Right: Action Buttons */}
@@ -416,7 +591,196 @@ export default function ManageProposals() {
             })
           )}
         </div>
+      </>
+      ) : (
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.015)]">
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">AI Đề cử Freelancer phù hợp nhất</h2>
+            <p className="text-slate-500 text-xs mt-0.5 font-medium">Danh sách các chuyên gia tự do hàng đầu có bộ kỹ năng và lịch sử phù hợp nhất với dự án này do AI chấm điểm.</p>
+          </div>
+
+          {loadingRecs ? (
+            <div className="text-center py-24 text-slate-500 font-bold flex flex-col items-center justify-center gap-3 bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.02)]">
+              <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm">AI đang quét và chấm điểm hồ sơ tương thích...</span>
+            </div>
+          ) : recommendations.length === 0 ? (
+            <div className="text-center py-20 text-slate-400 flex flex-col items-center justify-center px-6 bg-white rounded-3xl border border-slate-100 shadow-[0_15px_40px_rgba(15,23,42,0.02)]">
+              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4 border border-slate-100">
+                <span className="material-symbols-outlined text-[36px]">psychology</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-1">Không có đề cử phù hợp</h3>
+              <p className="text-sm text-slate-500 max-w-sm">Không tìm thấy freelancer nào có kỹ năng phù hợp với dự án hiện tại.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {recommendations.map((fl) => {
+                const experienceLabel = fl.experienceYears <= 1 ? 'Mới vào nghề' : fl.experienceYears <= 3 ? 'Trung cấp' : 'Chuyên gia';
+                return (
+                  <article key={fl.userId} className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-4">
+                          <img src={fl.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuCioT3d29HAboKCh5FtH6yfJpreH6DQUNNdw8JVFoWTx6CMJJV0VXmJh5I4syj9A0nIm_Gn_kL4WN6hfVI3NVC1kL3X5hfRJVJyhppVo7GXsDb968rw3xdoxDmwSwigUm0d5Kj5VgB_1-w1p2eLFKTMOkAjmBe5lwKPjINix_mvuV2Cs99sGXjriNMQP2UhQRV6Xn1lM9CDkekRwQrNn2cP4aNr1sPsokHcK5zgQ6pdDtwQYOddnNJI8opkRkmtbH-OjupriQb1o5g"} className="w-12 h-12 rounded-2xl object-cover border border-slate-100" />
+                          <div>
+                            <Link to={`/profile/${fl.userId}`} className="hover:underline hover:text-[#0F766E]">
+                              <h4 className="font-bold text-slate-800 text-sm">{fl.fullName}</h4>
+                            </Link>
+                            <p className="text-xs text-teal-700 font-bold mt-0.5">{fl.headline || 'Freelancer tự do'}</p>
+                            <div className="flex items-center gap-1.5 mt-1 text-slate-400 text-[10px] font-semibold">
+                              <span>⭐ {fl.rating.toFixed(1)}</span>
+                              <span>•</span>
+                              <span>{experienceLabel} ({fl.experienceYears} năm)</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right flex flex-col items-end">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Điểm tương thích</span>
+                          <span className="text-sm font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg mt-0.5">
+                            {fl.recommendationScore}% Match
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Lý do AI chọn */}
+                      <div className="mt-4 pt-3 border-t border-slate-50">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-2">Đánh giá độ tương thích</span>
+                        <div className="space-y-1">
+                          {(fl.recommendationReasons || []).map((reason, rIdx) => (
+                            <div key={rIdx} className="text-xs text-slate-600 flex items-start gap-1">
+                              <span className="text-emerald-500 font-bold">•</span>
+                              <span>{reason}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* AI Personalized Comment */}
+                      {fl.aiComment && (
+                        <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-teal-50/60 via-white to-white border border-teal-100/60">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <span className="material-symbols-outlined text-teal-600 text-[14px]">psychology</span>
+                            <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wide">Nhận xét AI</span>
+                          </div>
+                          <p className="text-xs text-slate-600 italic leading-relaxed">"{fl.aiComment}"</p>
+                        </div>
+                      )}
+
+                      {/* CV Badge */}
+                      {fl.cvInsights && (
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-[10px] font-bold text-emerald-700 rounded-full border border-emerald-100">
+                            <span className="material-symbols-outlined text-[12px]">verified</span>
+                            Đã phân tích CV • Điểm: {fl.cvInsights.matchScore || 'N/A'}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-6 flex gap-3">
+                      <Link to={`/profile/${fl.userId}`} className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold text-center transition-all flex items-center justify-center gap-1.5">
+                        <span className="material-symbols-outlined text-[15px]">person</span>
+                        Xem profile
+                      </Link>
+                      <button
+                        onClick={() => handleOpenInvite(fl)}
+                        className="flex-grow flex-1 py-2 bg-[#0F766E] hover:bg-[#0D5E58] text-white rounded-xl text-xs font-bold transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">send</span>
+                        Mời ứng tuyển
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+
+    {/* ── Invite Freelancer Modal ── */}
+    {showInviteModal && targetFreelancer && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ animation: 'fadeScale .2s ease' }}>
+          <div className="px-6 py-5 border-b border-[#F1F5F9] flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 text-lg">
+              Mời {targetFreelancer.fullName} ứng tuyển
+            </h3>
+            <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            {inviteSuccessMsg && (
+              <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-fade-in">
+                <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                {inviteSuccessMsg}
+              </div>
+            )}
+            
+            {inviteErrorMsg && (
+              <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-fade-in">
+                <span className="material-symbols-outlined text-[16px]">error</span>
+                {inviteErrorMsg}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[13px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                Dự án mời
+              </label>
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 text-sm">
+                {projectTitle}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#334155]">
+                  Lời nhắn gửi Freelancer
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAutoDraftMessage}
+                  disabled={draftingAI}
+                  className="text-[11px] text-[#0F766E] font-bold hover:underline cursor-pointer border-none bg-transparent flex items-center gap-0.5 disabled:opacity-50"
+                >
+                  {draftingAI ? 'Đang viết...' : '✨ Tự soạn bằng AI'}
+                </button>
+              </div>
+              <textarea
+                value={inviteMessage}
+                onChange={e => setInviteMessage(e.target.value)}
+                rows="4"
+                placeholder="Ví dụ: Chào bạn, tôi rất ấn tượng với profile của bạn và muốn mời bạn ứng tuyển cho dự án của tôi..."
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowInviteModal(false)}
+              className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer bg-white"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleSendInvite}
+              disabled={sendingInvite}
+              className="flex-1 py-2.5 rounded-xl bg-[#0F766E] text-white text-sm font-bold hover:bg-[#0D5E58] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none"
+            >
+              {sendingInvite ? 'Đang gửi...' : 'Gửi lời mời'}
+            </button>
+          </div>
+        </div>
       </div>
-    </main>
+    )}
+  </main>
   );
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { userService } from '../../services/userService';
+import { projectService } from '../../services/projectService';
+import { invitationService } from '../../services/invitationService';
 
 
 /* ─── helpers ─── */
@@ -13,6 +15,65 @@ const fmtVND = (v) => {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace('.0', '')} triệu đ`;
   return `${n.toLocaleString('vi-VN')} đ`;
 };
+
+function AIReviewCard({ aiEvaluationString }) {
+  if (!aiEvaluationString) return null;
+
+  let evalData;
+  try {
+    evalData = typeof aiEvaluationString === 'string' ? JSON.parse(aiEvaluationString) : aiEvaluationString;
+  } catch (e) {
+    return null;
+  }
+
+  const { matchScore, quickSummary, strengths, gaps } = evalData;
+
+  const scoreColor = matchScore >= 80 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' 
+                   : matchScore >= 50 ? 'text-amber-700 bg-amber-50 border-amber-200' 
+                   : 'text-rose-700 bg-rose-50 border-rose-200';
+
+  return (
+    <div className="mt-4 p-5 rounded-2xl border border-teal-100 bg-gradient-to-r from-teal-50/40 via-white to-white shadow-xs">
+      <div className="flex items-center justify-between mb-3 border-b border-teal-50 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-teal-600 text-[20px] animate-pulse">psychology</span>
+          <span className="text-xs font-bold text-teal-950 uppercase tracking-wide">AI Nhận xét CV</span>
+        </div>
+        <div className={`px-3 py-1 rounded-full text-xs font-bold border ${scoreColor}`}>
+          Chất lượng: {matchScore}/100
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-600 italic leading-relaxed mb-4">
+        "{quickSummary}"
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100/50">
+        <div>
+          <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block mb-1.5">✓ Điểm mạnh nổi bật</span>
+          <ul className="space-y-1">
+            {(strengths || []).map((s, idx) => (
+              <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
+                <span className="text-emerald-500">•</span> {s}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block mb-1.5">⚠ Gaps / Hạn chế</span>
+          <ul className="space-y-1">
+            {(gaps || []).map((g, idx) => (
+              <li key={idx} className="text-xs text-slate-600 flex items-start gap-1">
+                <span className="text-rose-400">•</span> {g}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const SKILLS = [
   'React','Vue.js','Angular','Next.js','Node.js','Express','Django','Laravel','PHP',
@@ -158,6 +219,17 @@ export default function Profile() {
   const [deleting, setDeleting]   = useState(false);
   const [alert, setAlert]     = useState({ type: '', msg: '' });
 
+  /* states for inviting freelancer */
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [myProjects, setMyProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [draftingAI, setDraftingAI] = useState(false);
+  const [inviteSuccessMsg, setInviteSuccessMsg] = useState('');
+  const [inviteErrorMsg, setInviteErrorMsg] = useState('');
+
   /* portfolios state */
   const [portfolios, setPortfolios] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -218,10 +290,84 @@ export default function Profile() {
   const currentUserId = currentUser?.userId || currentUser?.id;
   const isPublicView = !!id && Number(id) !== Number(currentUserId);
 
+  useEffect(() => {
+    if (isPublicView && token && currentUser?.roleDefault === 'EMPLOYER' && showInviteModal) {
+      const fetchMyProjects = async () => {
+        setLoadingProjects(true);
+        try {
+          const res = await projectService.getEmployerProjects();
+          if (res.success) {
+            // Lọc ra các dự án còn OPEN
+            const openProjects = (res.projects || []).filter(p => p.status === 'OPEN');
+            setMyProjects(openProjects);
+          }
+        } catch (err) {
+          console.error('Error fetching employer projects:', err);
+        } finally {
+          setLoadingProjects(false);
+        }
+      };
+      fetchMyProjects();
+    }
+  }, [showInviteModal, isPublicView, token, currentUser?.roleDefault]);
+
   // We want to allow the user to manage both profiles regardless of their default role
   const isFL = true;
   const isEM = true;
   const activeRole = profile?.role_default || JSON.parse(localStorage.getItem('user') || '{}')?.roleDefault || 'FREELANCER';
+
+  const handleSendInvitation = async () => {
+    if (!selectedProjectId) {
+      setInviteErrorMsg('Vui lòng chọn một dự án.');
+      return;
+    }
+    setSendingInvite(true);
+    setInviteErrorMsg('');
+    setInviteSuccessMsg('');
+    try {
+      const freelancerId = id;
+      const res = await invitationService.inviteFreelancer(selectedProjectId, freelancerId, inviteMessage);
+      if (res.success) {
+        setInviteSuccessMsg('Đã gửi lời mời hợp tác thành công!');
+        setInviteMessage('');
+        setSelectedProjectId('');
+        setTimeout(() => {
+          setShowInviteModal(false);
+          setInviteSuccessMsg('');
+        }, 1500);
+      } else {
+        setInviteErrorMsg(res.message || 'Lỗi khi gửi lời mời.');
+      }
+    } catch (err) {
+      console.error('Error sending invitation:', err);
+      setInviteErrorMsg(err.response?.data?.message || 'Lỗi kết nối máy chủ.');
+    } finally {
+      setSendingInvite(false);
+    }
+  };
+
+  const handleAutoDraftMessage = async () => {
+    if (!selectedProjectId) {
+      setInviteErrorMsg('Vui lòng chọn một dự án để AI biết yêu cầu công việc.');
+      return;
+    }
+    setDraftingAI(true);
+    setInviteErrorMsg('');
+    try {
+      const freelancerId = id;
+      const res = await invitationService.draftAIInvitation(selectedProjectId, freelancerId);
+      if (res.success && res.draft) {
+        setInviteMessage(res.draft);
+      } else {
+        setInviteErrorMsg('Không thể tự động soạn thảo lời mời.');
+      }
+    } catch (err) {
+      console.error('Error drafting AI invitation:', err);
+      setInviteErrorMsg('Lỗi kết nối máy chủ khi gọi AI.');
+    } finally {
+      setDraftingAI(false);
+    }
+  };
 
   /* ── fetch ── */
   const load = async () => {
@@ -531,6 +677,20 @@ export default function Profile() {
                     <span>{eLocation}</span>
                   </div>
                 )}
+                {/* Nút Mời Ứng Tuyển cho Employer (Đã đăng nhập, không tự xem profile của mình, và đối tượng xem là Freelancer) */}
+                {isPublicView && token && currentUser?.roleDefault === 'EMPLOYER' && activeRole === 'FREELANCER' && (
+                  <button
+                    onClick={() => {
+                      setInviteErrorMsg('');
+                      setInviteSuccessMsg('');
+                      setShowInviteModal(true);
+                    }}
+                    className="w-full mt-4 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#0F766E] text-white text-xs font-bold rounded-xl hover:bg-[#0D5E58] shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer border-none"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">send</span>
+                    Mời ứng tuyển dự án
+                  </button>
+                )}
               </div>
 
               {/* Profile completion */}
@@ -673,6 +833,40 @@ export default function Profile() {
             {/* ── OVERVIEW ── */}
             {tab === 'overview' && (
               <div className="space-y-4">
+                {/* AI CV Analysis & CV File */}
+                {activeRole === 'FREELANCER' && (profile?.cv_url || profile?.cv_ai_evaluation) && (
+                  <div className="bg-white rounded-xl border border-teal-100 shadow-[0_4px_20px_rgba(15,118,110,0.03)] p-6 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 to-emerald-400"></div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center border border-teal-100/50">
+                          <span className="material-symbols-outlined text-teal-600 animate-pulse">psychology</span>
+                        </div>
+                        <div>
+                          <h4 className="font-extrabold text-slate-800 text-sm">Hồ sơ CV & Đánh giá của AI</h4>
+                          <p className="text-slate-400 text-xs mt-0.5">CV được tải lên bởi Freelancer và được nhận xét tự động bằng AI.</p>
+                        </div>
+                      </div>
+                      
+                      {profile?.cv_url && (
+                        <a
+                          href={profile.cv_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0F766E]/5 hover:bg-[#0F766E]/10 border border-[#0F766E]/20 text-[#0F766E] rounded-xl text-xs font-bold transition-all self-start sm:self-auto"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">file_open</span>
+                          Xem CV gốc đính kèm
+                        </a>
+                      )}
+                    </div>
+
+                    {profile?.cv_ai_evaluation && (
+                      <AIReviewCard aiEvaluationString={profile.cv_ai_evaluation} />
+                    )}
+                  </div>
+                )}
+
                 {/* About */}
                 <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -1203,6 +1397,71 @@ export default function Profile() {
                   )}
                 </div>
 
+                {/* Tải lên CV */}
+                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
+                  <h3 className="font-bold text-[#334155] mb-1">Tải lên hồ sơ CV của bạn</h3>
+                  <p className="text-[13px] text-[#94A3B8] mb-4">CV của bạn sẽ được AI tự động phân tích để đối chiếu và tăng khả năng gợi ý với nhà tuyển dụng.</p>
+                  
+                  <div className="flex flex-col gap-4">
+                    {profile?.cv_url && (
+                      <div className="flex items-center justify-between p-3.5 bg-teal-50/60 border border-teal-100 rounded-xl">
+                        <div className="flex items-center gap-2.5">
+                          <span className="material-symbols-outlined text-[#0F766E]">picture_as_pdf</span>
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">CV hiện tại đã được tải lên</p>
+                            <a href={profile.cv_url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#0F766E] hover:underline font-semibold flex items-center gap-0.5">
+                              Mở tệp CV <span className="material-symbols-outlined text-[10px]">open_in_new</span>
+                            </a>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-extrabold text-teal-700 uppercase bg-teal-100/50 px-2 py-1 rounded-md">✓ Đã phân tích</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 hover:border-[#0F766E]/50 rounded-2xl bg-slate-50/50 transition-colors relative group">
+                      <span className="material-symbols-outlined text-4xl text-slate-400 mb-2 group-hover:scale-110 transition-transform">cloud_upload</span>
+                      <p className="text-xs font-bold text-slate-600">Chọn file CV PDF của bạn</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Chỉ chấp nhận file định dạng PDF dung lượng dưới 5MB</p>
+                      
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          if (file.size > 5 * 1024 * 1024) {
+                            setAlert({ type: 'danger', msg: 'File không được vượt quá 5MB.' });
+                            return;
+                          }
+
+                          const formData = new FormData();
+                          formData.append('cvFile', file);
+                          
+                          setSaving(true);
+                          setAlert({ type: 'info', msg: 'Đang tải lên và phân tích CV bằng AI...' });
+                          try {
+                            const res = await userService.uploadCV(formData);
+                            if (res.success) {
+                              setAlert({ type: 'success', msg: 'CV đã được tải lên thành công và đang được phân tích ngầm.' });
+                              // Reload profile
+                              load();
+                            } else {
+                              setAlert({ type: 'danger', msg: res.message || 'Lỗi khi tải lên CV.' });
+                            }
+                          } catch (err) {
+                            console.error('Error uploading CV:', err);
+                            setAlert({ type: 'danger', msg: err.response?.data?.message || 'Lỗi kết nối máy chủ.' });
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-3">
                   <button type="submit" disabled={saving}
                     className="flex items-center gap-2 px-5 py-2.5 bg-[#0F766E] text-white text-sm font-bold rounded-xl hover:bg-[#0D5E58] shadow-sm hover:shadow-md transition-all active:scale-[0.98] disabled:opacity-60">
@@ -1441,6 +1700,117 @@ export default function Profile() {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    )}
+
+    {/* ── Invite Freelancer Modal ── */}
+    {showInviteModal && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ animation: 'fadeScale .2s ease' }}>
+          <div className="px-6 py-5 border-b border-[#F1F5F9] flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 text-lg">
+              Mời ứng tuyển dự án
+            </h3>
+            <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            {inviteSuccessMsg && (
+              <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-fade-in">
+                <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                {inviteSuccessMsg}
+              </div>
+            )}
+            
+            {inviteErrorMsg && (
+              <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-fade-in">
+                <span className="material-symbols-outlined text-[16px]">error</span>
+                {inviteErrorMsg}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#334155] mb-1.5">
+                Chọn dự án đang mở của bạn
+              </label>
+              {loadingProjects ? (
+                <div className="py-3 text-center text-xs text-slate-400">Đang tải danh sách dự án...</div>
+              ) : myProjects.length === 0 ? (
+                <div className="p-3 text-center text-xs text-slate-500 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+                  Bạn không có dự án nào đang ở trạng thái OPEN. <br />
+                  <Link to="/post-project" className="text-[#0F766E] font-bold hover:underline mt-1 inline-block">Đăng dự án mới</Link>
+                </div>
+              ) : (
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E2E8F0] text-sm text-[#334155] bg-white focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/10 hover:border-[#CBD5E1] transition-all"
+                >
+                  <option value="">-- Chọn dự án --</option>
+                  {myProjects.map(p => {
+                    // Tính toán match score dựa trên kỹ năng
+                    const matchedScore = (() => {
+                      if (!p.skills || p.skills.length === 0) return 50;
+                      const matched = p.skills.filter(s => (eSkills || []).map(flS => flS.toLowerCase()).includes(s.toLowerCase()));
+                      return Math.round((matched.length / p.skills.length) * 100);
+                    })();
+
+                    return (
+                      <option key={p.project_id} value={p.project_id}>
+                        {p.title} ({matchedScore}% Match)
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[13px] font-semibold text-[#334155]">
+                  Lời nhắn gửi Freelancer
+                </label>
+                {selectedProjectId && (
+                  <button
+                    type="button"
+                    onClick={handleAutoDraftMessage}
+                    disabled={draftingAI}
+                    className="text-[11px] text-[#0F766E] font-bold hover:underline cursor-pointer border-none bg-transparent flex items-center gap-0.5 disabled:opacity-50"
+                  >
+                    {draftingAI ? 'Đang viết...' : '✨ Tự soạn bằng AI'}
+                  </button>
+                )}
+              </div>
+              <textarea
+                value={inviteMessage}
+                onChange={e => setInviteMessage(e.target.value)}
+                rows="4"
+                placeholder="Ví dụ: Chào bạn, tôi rất ấn tượng với profile của bạn và muốn mời bạn ứng tuyển cho dự án của tôi..."
+                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] transition-all resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="px-6 pb-6 flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowInviteModal(false)}
+              className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer bg-white"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              onClick={handleSendInvitation}
+              disabled={sendingInvite || !selectedProjectId}
+              className="flex-1 py-2.5 rounded-xl bg-[#0F766E] text-white text-sm font-bold hover:bg-[#0D5E58] transition-all disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer border-none"
+            >
+              {sendingInvite ? 'Đang gửi...' : 'Gửi lời mời'}
+            </button>
+          </div>
         </div>
       </div>
     )}

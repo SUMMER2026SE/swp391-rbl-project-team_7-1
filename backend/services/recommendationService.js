@@ -203,6 +203,71 @@ const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolio
   return { score: Math.min(score, 100), reasons };
 };
 
+/* ─────────────── AI ENHANCEMENT: GEMINI ANALYSIS ─────────────── */
+
+const analyzeWithGemini = async (project, projectSkills, topFreelancers, skillsByFreelancer) => {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (!geminiKey || topFreelancers.length === 0) return {};
+
+  try {
+    const candidatesSummary = topFreelancers.map((fl, idx) => {
+      const flSkills = (skillsByFreelancer[fl.user_id] || []).map(s => s.skill_name).join(', ');
+      let cvSummary = '';
+      if (fl.cv_ai_evaluation) {
+        try {
+          const cv = JSON.parse(fl.cv_ai_evaluation);
+          cvSummary = cv.quickSummary || '';
+        } catch { }
+      }
+      return `[${idx + 1}] ID:${fl.user_id} | ${fl.full_name} | Kỹ năng: ${flSkills || 'N/A'} | Kinh nghiệm: ${fl.experience_years || 0} năm | ${cvSummary}`;
+    }).join('\n');
+
+    const requiredSkills = projectSkills.map(s => s.skill_name).join(', ');
+
+    const systemInstruction = `Bạn là chuyên gia tuyển dụng AI của hệ thống FJMS. Nhiệm vụ: phân tích danh sách ứng viên và đưa ra nhận xét NGẮN GỌN (1-2 câu) cho từng người so với yêu cầu dự án. 
+Yêu cầu định dạng trả về:
+- Trả về JSON thuần túy (không markdown) theo format: { "comments": { "ID_ứng_viên": "nhận xét ngắn gọn bằng tiếng Việt" } }
+- Tuyệt đối không sử dụng ký tự nháy kép đôi (") trong nội dung nhận xét, nếu cần hãy dùng nháy đơn (').`;
+
+    const userPrompt = `
+--- DỰ ÁN ---
+Tiêu đề: ${project.title}
+Mô tả: ${(project.description || '').substring(0, 400)}
+Kỹ năng yêu cầu: ${requiredSkills || 'N/A'}
+
+--- DANH SÁCH ỨNG VIÊN ---
+${candidatesSummary}
+    `.trim();
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1024, temperature: 0.2 }
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      let text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (text) {
+        // Clear markdown code blocks if any
+        if (text.startsWith('```')) {
+          text = text.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
+        text = text.trim();
+        const parsed = JSON.parse(text);
+        return parsed.comments || {};
+      }
+    }
+  } catch (err) {
+    console.error('[AI Recommendation] Lỗi khi gọi Gemini:', err);
+  }
+  return {};
+};
+
 /* ─────────────── MAIN RECOMMENDATION ENGINE ─────────────── */
 
 export const getRecommendations = async (projectId) => {
@@ -247,7 +312,7 @@ export const getRecommendations = async (projectId) => {
   });
 
   // 7. Calculate scores for each freelancer
-  const recommendations = freelancers.map(freelancer => {
+  const scored = freelancers.map(freelancer => {
     const flSkills = skillsByFreelancer[freelancer.user_id] || [];
 
     // Layer 1: Skill Matching (40%)
@@ -277,6 +342,16 @@ export const getRecommendations = async (projectId) => {
     // Combine unique reasons
     const allReasons = [...new Set([...skillReasons, ...historyReasons, ...proposalReasons, ...semanticReasons])];
 
+    // Parse CV insights if available
+    let cvInsights = null;
+    if (freelancer.cv_ai_evaluation) {
+      try {
+        cvInsights = typeof freelancer.cv_ai_evaluation === 'string'
+          ? JSON.parse(freelancer.cv_ai_evaluation)
+          : freelancer.cv_ai_evaluation;
+      } catch { }
+    }
+
     return {
       userId: freelancer.user_id,
       fullName: freelancer.full_name,
@@ -294,12 +369,24 @@ export const getRecommendations = async (projectId) => {
         proposalQuality: proposalScore,
         semanticMatch: semanticScore
       },
-      recommendationReasons: allReasons.slice(0, 5) // Top 5 reasons
+      recommendationReasons: allReasons.slice(0, 5),
+      cvInsights // NEW: pre-analyzed CV data from DB
     };
   });
 
-  // 8. Sort by score descending, return top 10
-  return recommendations
+  // 8. Sort by score descending, take top 10
+  const top10 = scored
     .sort((a, b) => b.recommendationScore - a.recommendationScore)
     .slice(0, 10);
+
+  // 9. AI Enhancement: Call Gemini ONCE for personalized comments on all top candidates
+  const topFreelancerData = top10.map(r => freelancers.find(f => f.user_id === r.userId));
+  const aiComments = await analyzeWithGemini(project, projectSkills, topFreelancerData, skillsByFreelancer);
+
+  // Attach AI comments to results
+  for (const rec of top10) {
+    rec.aiComment = aiComments[String(rec.userId)] || null;
+  }
+
+  return top10;
 };

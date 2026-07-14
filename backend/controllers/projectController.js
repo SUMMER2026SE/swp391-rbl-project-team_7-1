@@ -1,4 +1,9 @@
 import { sql, poolPromise } from '../config/db.js';
+import fs from 'fs';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
+
 
 /**
  * Get all projects (OPEN status only for public search - with Filters)
@@ -238,12 +243,13 @@ export const submitProposal = async (req, res) => {
       return res.status(400).json({ message: 'Bạn đã nộp đề xuất cho dự án này rồi.' });
     }
 
+    let rawCoverLetter = coverLetter || '';
     if (req.file) {
       const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
       coverLetter = `${coverLetter || ''}\n\n----------------------------------------\n[Tệp đính kèm]: ${fileUrl}`;
     }
 
-    await pool.request()
+    const insertResult = await pool.request()
       .input('projectId', sql.Int, projectId)
       .input('freelancerId', sql.Int, freelancerId)
       .input('proposedPrice', sql.Decimal(12, 2), parseFloat(proposedPrice))
@@ -252,15 +258,138 @@ export const submitProposal = async (req, res) => {
       .input('status', sql.VarChar, 'SUBMITTED')
       .query(`
         INSERT INTO proposals (project_id, freelancer_id, proposed_price, delivery_time_days, cover_letter, status, created_at)
+        OUTPUT INSERTED.proposal_id
         VALUES (@projectId, @freelancerId, @proposedPrice, @deliveryTimeDays, @coverLetter, @status, SYSUTCDATETIME())
       `);
 
-    res.status(201).json({ success: true, message: 'Nộp đề xuất ứng tuyển thành công!' });
+    const newProposalId = insertResult.recordset[0].proposal_id;
+
+    res.status(201).json({ success: true, message: 'Nộp đề xuất ứng tuyển thành công! AI đang tiến hành phân tích CV của bạn ngầm.' });
+
+    // Kích hoạt tác vụ phân tích AI ngầm
+    if (req.file) {
+      processAIEvaluationInBackground(newProposalId, projectId, freelancerId, req.file.path, rawCoverLetter);
+    }
   } catch (error) {
     console.error('Error submitting proposal:', error);
     res.status(500).json({ message: 'Lỗi server khi nộp đề xuất.' });
   }
 };
+
+// Tác vụ chạy ngầm phân tích hồ sơ và CV bằng Gemini AI
+async function processAIEvaluationInBackground(proposalId, projectId, freelancerId, filePath, coverLetterText) {
+  try {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!geminiKey) {
+      console.warn("⚠️ GEMINI_API_KEY chưa được cấu hình. Bỏ qua phân tích AI.");
+      return;
+    }
+
+    let cvText = "";
+    if (filePath && fs.existsSync(filePath)) {
+      try {
+        const dataBuffer = fs.readFileSync(filePath);
+        const pdfData = await pdfParse(dataBuffer);
+        cvText = (pdfData.text || "").replace(/\s+/g, ' ').substring(0, 8000);
+      } catch (err) {
+        console.error("❌ Lỗi khi đọc và chuyển văn bản PDF:", err);
+      }
+    }
+
+    const pool = await poolPromise;
+
+    // Lấy thông tin dự án
+    const projectRes = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query(`
+        SELECT p.title, p.description, 
+               (SELECT STRING_AGG(s.skill_name, ', ') 
+                FROM project_skills ps 
+                JOIN skills s ON ps.skill_id = s.skill_id 
+                WHERE ps.project_id = p.project_id) as required_skills
+        FROM projects p 
+        WHERE p.project_id = @projectId
+      `);
+    
+    if (projectRes.recordset.length === 0) return;
+    const project = projectRes.recordset[0];
+
+    // Lấy hồ sơ freelancer
+    const freelancerRes = await pool.request()
+      .input('freelancerId', sql.Int, freelancerId)
+      .query(`
+        SELECT u.full_name, u.bio, 
+               (SELECT STRING_AGG(s.skill_name, ', ') 
+                FROM freelancer_skills fs 
+                JOIN skills s ON fs.skill_id = s.skill_id 
+                WHERE fs.freelancer_id = u.user_id) as skills
+        FROM users u 
+        WHERE u.user_id = @freelancerId
+      `);
+    
+    if (freelancerRes.recordset.length === 0) return;
+    const freelancer = freelancerRes.recordset[0];
+
+    const systemInstruction = `
+      Bạn là chuyên gia nhân sự AI của nền tảng FJMS. Nhiệm vụ của bạn là so sánh CV và hồ sơ của Freelancer với yêu cầu dự án của Nhà tuyển dụng.
+      Hãy phân tích khách quan và trả về kết quả dưới dạng chuỗi JSON thuần túy (không chứa markdown \`\`\`json), ngôn ngữ Tiếng Việt, có cấu trúc như sau:
+      {
+        "matchScore": 85,
+        "quickSummary": "Ứng viên có kỹ năng React tốt trùng khớp dự án, tuy nhiên kinh nghiệm SQL Server còn hạn chế.",
+        "strengths": ["Đã làm 3 dự án React tương tự", "Có chứng chỉ chuyên môn liên quan"],
+        "gaps": ["Chưa có kinh nghiệm thực tế với SQL Server"]
+      }
+    `;
+
+    const userPrompt = `
+      --- YÊU CẦU DỰ ÁN ---
+      Tiêu đề: ${project.title}
+      Mô tả: ${project.description}
+      Kỹ năng yêu cầu: ${project.required_skills || 'N/A'}
+
+      --- HỒ SƠ FREELANCER ---
+      Tên: ${freelancer.full_name}
+      Kỹ năng trên hệ thống: ${freelancer.skills || 'N/A'}
+      Kinh nghiệm: ${freelancer.bio || 'Chưa cung cấp'}
+
+      --- THƯ GIỚI THIỆU (COVER LETTER) ---
+      ${coverLetterText || 'Chưa cung cấp'}
+
+      --- NỘI DUNG CV ĐÍNH KÈM ---
+      ${cvText || 'Không có file CV đính kèm.'}
+    `;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        const aiEvaluation = data.candidates[0].content.parts[0].text.trim();
+        
+        // Cập nhật Database
+        await pool.request()
+          .input('proposalId', sql.Int, proposalId)
+          .input('aiEvaluation', sql.NVarChar, aiEvaluation)
+          .query('UPDATE proposals SET ai_evaluation = @aiEvaluation WHERE proposal_id = @proposalId');
+        
+        console.log(`[AI CV Reader] Phân tích thành công đề xuất ID: ${proposalId}`);
+      }
+    } else {
+      const errorText = await response.text();
+      console.error(`[AI CV Reader] Lỗi từ Gemini API: ${response.status} - ${errorText}`);
+    }
+  } catch (error) {
+    console.error("[AI CV Reader] Lỗi tiến trình ngầm:", error);
+  }
+}
 
 /**
  * Get all project categories (From develop)

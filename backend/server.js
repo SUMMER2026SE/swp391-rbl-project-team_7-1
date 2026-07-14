@@ -26,6 +26,7 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 import aiChatRoutes from './routes/aiChatRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
 import projectModerationRoutes from './routes/projectModerationRoutes.js';
+import invitationRoutes from './routes/invitationRoutes.js';
 
 import { sql, poolPromise } from './config/db.js';
 import { initDb } from './utils/initDb.js';
@@ -44,6 +45,13 @@ const io = new Server(server, {
     credentials: true
   }
 });
+
+// Track active online users: Map of userId -> { socketId, lastSeen }
+const activeUsers = new Map();
+
+app.set('socketio', io);
+app.set('activeUsers', activeUsers);
+
 
 // CORS setup to allow client origins
 app.use(cors({
@@ -81,6 +89,7 @@ app.use('/api/admin/analytics', analyticsRoutes);
 app.use('/api/ai', aiChatRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/admin/projects', projectModerationRoutes);
+app.use('/api/invitations', invitationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -91,8 +100,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Track active online users: Map of userId -> { socketId, lastSeen }
-const activeUsers = new Map();
+
 
 // Socket.io Real-time Event Handlers
 io.on('connection', (socket) => {
