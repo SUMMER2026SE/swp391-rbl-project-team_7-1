@@ -104,6 +104,7 @@ export default function FreelancerWallet() {
 
   if (loading) {
     return (
+
       <main className="flex-1 w-full min-h-screen bg-[#F2F0EB] flex justify-center items-center">
         <span className="material-symbols-outlined animate-spin text-4xl text-[#4A6755]">progress_activity</span>
       </main>
@@ -111,227 +112,260 @@ export default function FreelancerWallet() {
   }
 
   return (
-    <main className="flex-1 w-full min-h-screen bg-[#F2F0EB] px-4 py-8 md:px-8 md:py-10 font-sans text-slate-800">
+    <main className="flex-1 w-full min-h-screen bg-[#F8FAFC] px-4 py-8 md:px-8 md:py-10 font-sans text-slate-800">
       <div className="max-w-[1200px] mx-auto">
         
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#4A6755] flex items-center justify-center text-white text-xl">
-              <span className="material-symbols-outlined">payments</span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight">Xin chào, {user?.full_name?.split(' ')[0] || 'bạn'}!</h1>
-              <p className="text-sm text-slate-500 font-medium">Khám phá thông tin thu nhập và ví của bạn</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => navigate('/withdraw')}
-              className="bg-[#4A6755] hover:bg-[#3d5446] text-white text-sm font-bold py-2.5 px-6 rounded-full transition-all shadow-md flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-lg">account_balance</span>
-              Rút Tiền
-            </button>
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-slate-600 cursor-pointer hover:bg-slate-50">
-              <span className="material-symbols-outlined text-lg">notifications</span>
-            </div>
-          </div>
+        <header className="mb-8">
+          <h1 className="text-[28px] font-black text-slate-800 tracking-tight mb-1">Ví tiền</h1>
+          <p className="text-[15px] text-slate-500 font-medium">Quản lý số dư, giao dịch và phương thức thanh toán</p>
         </header>
 
-        {/* BENTO BOX GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 auto-rows-min">
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* TOP ROW: Stats */}
-          <div className="md:col-span-3 bg-white p-5 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col justify-center">
-            <p className="text-xs text-slate-500 font-semibold mb-1">Số dư khả dụng</p>
-            <h2 className="text-2xl font-black text-slate-800">{formatCurrency(wallet?.balance || 0)}</h2>
-            <div className="mt-4 flex items-end gap-1 h-8 opacity-40">
-              {[40, 70, 45, 90, 65, 85, 60].map((h, i) => (
-                <div key={i} className="w-full bg-[#4A6755] rounded-t-sm" style={{ height: `${h}%` }}></div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="md:col-span-3 bg-white p-5 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col justify-center relative overflow-hidden">
-            <p className="text-xs text-slate-500 font-semibold mb-1">Tổng thu nhập (Tháng)</p>
-            <h2 className="text-2xl font-black text-slate-800">{formatCurrency(8500000)}</h2>
-            <div className="absolute right-[-10px] bottom-[-20px] opacity-20">
-              <svg width="100" height="80" viewBox="0 0 100 80" fill="none" stroke="#4A6755" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M0,80 Q20,20 50,50 T100,10" />
-              </svg>
-            </div>
-          </div>
-          
-          <div className="md:col-span-3 bg-white p-5 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-500 font-semibold mb-1">Rút tiền thành công</p>
-              <h2 className="text-2xl font-black text-slate-800">{successfulWithdrawals} <span className="text-sm font-medium text-slate-400">lần</span></h2>
-            </div>
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-emerald-500">
-              <span className="material-symbols-outlined">task_alt</span>
-            </div>
-          </div>
-
-          <div className="md:col-span-3 bg-[#4A6755] p-5 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex flex-col justify-center relative text-white overflow-hidden">
-            <p className="text-xs text-white/70 font-medium mb-1">Tiền đang chờ Ký quỹ</p>
-            <h2 className="text-2xl font-black">{formatCurrency(2000000)}</h2>
-            <div className="absolute right-0 bottom-10 w-24 h-8">
-               <svg width="100%" height="100%" viewBox="0 0 100 30" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round">
-                <path d="M0,15 Q20,30 40,15 T80,15 T100,5" />
-              </svg>
-            </div>
-          </div>
-
-          {/* MIDDLE ROW */}
-          <div className="md:col-span-8 bg-white p-6 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                Biến động số dư <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              </h3>
-              <select className="bg-slate-50 border-none text-xs font-semibold text-slate-500 py-1.5 px-3 rounded-full outline-none cursor-pointer">
-                <option>Tháng này</option>
-                <option>Tháng trước</option>
-              </select>
-            </div>
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
             
-            <div className="flex gap-8 mb-4">
-              <div>
-                <p className="text-xs text-slate-400 font-semibold">Thu vào</p>
-                <p className="text-lg font-black text-slate-800 flex items-center gap-1">
-                  {formatCurrency(8500000)} <span className="text-[10px] text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">+12.45%</span>
-                </p>
+            {/* Balance Card */}
+            <div className="relative bg-[#EBF6F1] rounded-3xl p-8 overflow-hidden shadow-sm">
+              {/* Blurred mesh gradient blobs */}
+              <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#CDECE0] rounded-full mix-blend-multiply filter blur-[80px] opacity-70 pointer-events-none"></div>
+              <div className="absolute -bottom-20 -right-10 w-96 h-96 bg-[#BCE4D3] rounded-full mix-blend-multiply filter blur-[100px] opacity-60 pointer-events-none"></div>
+              
+              <div className="relative z-10 w-full sm:w-2/3">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-xs font-bold tracking-widest text-[#0F766E] uppercase">Số dư hiện tại</span>
+                  <span className="material-symbols-outlined text-[16px] text-[#0F766E]">visibility</span>
+                </div>
+                <h2 className="text-[40px] font-black text-slate-800 leading-none mb-1">{formatCurrency(wallet?.balance || 0)}</h2>
+                <p className="text-sm font-bold text-[#0F766E] mb-10">Số dư khả dụng</p>
+                
+                <div className="flex items-center gap-8 border-t border-[#0F766E]/10 pt-5">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">Đang tạm giữ</p>
+                    <p className="text-lg font-black text-amber-500">{formatCurrency(12500000)}</p>
+                  </div>
+                  <div className="w-[1px] h-10 bg-[#0F766E]/10"></div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">Chờ rút</p>
+                    <p className="text-lg font-black text-blue-500">{formatCurrency(2000000)}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-slate-400 font-semibold">Rút ra</p>
-                <p className="text-lg font-black text-slate-800 flex items-center gap-1">
-                  {formatCurrency(3000000)} <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-bold">Ổn định</span>
-                </p>
+              {/* Wallet Illustration (Placeholder with CSS shapes to mimic mockup) */}
+              <div className="absolute right-0 bottom-0 top-0 w-1/3 hidden sm:flex items-center justify-center pointer-events-none">
+                <div className="relative w-40 h-40">
+                  <div className="absolute right-2 bottom-6 w-32 h-24 bg-[#0F766E] rounded-xl shadow-lg transform rotate-[-5deg]"></div>
+                  <div className="absolute right-6 bottom-10 w-28 h-20 bg-[#0D9488] rounded-xl shadow-inner transform rotate-[-5deg] border-t-4 border-[#0F766E]"></div>
+                  <div className="absolute right-10 bottom-14 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-yellow-700 shadow-md rotate-12">$</div>
+                  <div className="absolute right-20 bottom-24 w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center text-xs font-bold text-yellow-700 shadow-md">$</div>
+                </div>
               </div>
             </div>
-            
-            {/* 2-Column Bar Chart */}
-            <div className="flex-1 min-h-[160px] flex items-end justify-center gap-12 pt-6 pb-2 border-b-2 border-slate-50 mt-4">
-              {/* Income Bar */}
-              <div className="w-[80px] flex flex-col items-center gap-3">
-                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full whitespace-nowrap border border-emerald-100 shadow-sm">+ Tiền cộng</span>
-                <div className="w-full bg-gradient-to-t from-emerald-200 to-emerald-500 rounded-t-[10px] shadow-sm transition-all duration-300 hover:brightness-110" style={{ height: '140px' }}></div>
-              </div>
 
-              {/* Outcome Bar */}
-              <div className="w-[80px] flex flex-col items-center gap-3">
-                <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full whitespace-nowrap border border-slate-200 shadow-sm">- Tiền trừ</span>
-                <div className="w-full bg-gradient-to-t from-slate-200 to-slate-400 rounded-t-[10px] shadow-sm transition-all duration-300 hover:brightness-110" style={{ height: '50px' }}></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Profile Card */}
-          <div className="md:col-span-4 bg-white p-6 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center text-center">
-            <div className="w-20 h-20 rounded-full bg-slate-100 p-1 mb-4">
-              <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Freelancer&backgroundColor=e2e8f0" alt="Avatar" className="w-full h-full rounded-full object-cover" />
-            </div>
-            <h3 className="text-lg font-black text-slate-800">{user?.full_name}</h3>
-            <p className="text-xs font-semibold text-slate-400 mb-6">{user?.email}</p>
-            
-            <div className="w-full grid grid-cols-3 gap-2 border-t border-slate-100 pt-6">
-              <div>
-                <p className="text-lg font-black text-slate-800">15</p>
-                <p className="text-[10px] uppercase font-bold text-slate-400">Hoàn thành</p>
-              </div>
-              <div>
-                <p className="text-lg font-black text-slate-800">38</p>
-                <p className="text-[10px] uppercase font-bold text-slate-400">Đánh giá</p>
-              </div>
-              <div>
-                <p className="text-lg font-black text-slate-800">5.0</p>
-                <p className="text-[10px] uppercase font-bold text-slate-400">Điểm</p>
-              </div>
-            </div>
-          </div>
-
-          {/* BOTTOM ROW */}
-          <div className="md:col-span-6 bg-white p-6 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-slate-800">Tài khoản Rút tiền</h3>
-              <button onClick={() => setIsBankModalOpen(true)} className="text-xs bg-[#4A6755] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#3d5446] transition-colors">
-                {bankAccount ? 'Cập nhật' : 'Thêm thẻ +'}
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <button className="bg-white p-4 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow border border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                  <span className="material-symbols-outlined font-light">add</span>
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] font-semibold text-slate-800">Nạp tiền</p>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Nạp tiền vào ví</p>
+                </div>
+              </button>
+              <button onClick={() => navigate('/withdraw')} className="bg-white p-4 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow border border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                  <span className="material-symbols-outlined font-light">send</span>
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] font-semibold text-slate-800">Rút tiền</p>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Rút tiền về tài khoản</p>
+                </div>
+              </button>
+              <button onClick={() => navigate('/wallet/transactions')} className="bg-white p-4 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow border border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center">
+                  <span className="material-symbols-outlined font-light">history</span>
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] font-semibold text-slate-800">Lịch sử giao dịch</p>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Xem lịch sử giao dịch</p>
+                </div>
+              </button>
+              <button onClick={() => setIsBankModalOpen(true)} className="bg-white p-4 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 hover:shadow-md transition-shadow border border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center">
+                  <span className="material-symbols-outlined font-light">credit_card</span>
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] font-semibold text-slate-800">Phương thức TT</p>
+                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">Quản lý thanh toán</p>
+                </div>
               </button>
             </div>
-            
-            {bankAccount ? (
-              <div className="flex-1 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[1.25rem] p-5 text-white relative overflow-hidden shadow-lg transform transition-transform hover:scale-[1.02]">
-                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl"></div>
-                <div className="flex justify-between items-center mb-8">
-                  <span className="font-mono text-sm tracking-widest opacity-80">{bankAccount.bank_name}</span>
-                  <svg className="w-8 h-8 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                </div>
-                <p className="font-mono text-xl tracking-[0.15em] mb-4 text-slate-200">
-                  {bankAccount.account_number.replace(/\d(?=\d{4})/g, "*")}
-                </p>
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-[9px] uppercase tracking-widest opacity-60 mb-1">Chủ tài khoản</p>
-                    <p className="font-bold text-sm tracking-wide">{bankAccount.account_holder_name.toUpperCase()}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    <div className="w-6 h-6 rounded-full bg-rose-500/80 mix-blend-multiply"></div>
-                    <div className="w-6 h-6 rounded-full bg-amber-400/80 mix-blend-multiply -ml-3"></div>
-                  </div>
+
+            {/* Transactions Section */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col">
+              <div className="p-6 pb-0 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-slate-800">Lịch sử giao dịch</h3>
+                <button className="flex items-center gap-1 text-sm font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">filter_list</span> Bộ lọc
+                </button>
+              </div>
+              
+              {/* Tabs */}
+              <div className="px-6 py-4 flex gap-2 overflow-x-auto no-scrollbar">
+                {['Tất cả', 'Nạp tiền', 'Rút tiền', 'Thanh toán', 'Hoàn tiền'].map((tab, idx) => (
+                  <button key={tab} className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors ${idx === 0 ? 'bg-[#E6F5EE] text-[#10B981]' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              <div className="px-6 pb-4 flex-1">
+                <div className="space-y-1">
+                  {transactions.length > 0 ? transactions.map(tx => {
+                    const desc = (tx.description || tx.transaction_type).toLowerCase();
+                    let style = { bg: 'bg-[#E6F5EE]', text: 'text-[#10B981]', icon: 'arrow_downward', amountColor: 'text-[#10B981]' };
+                    
+                    if (desc.includes('rút')) {
+                      style = { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', icon: 'arrow_upward', amountColor: 'text-[#EF4444]' };
+                    } else if (desc.includes('thanh toán')) {
+                      style = { bg: 'bg-[#FDF2F8]', text: 'text-[#EC4899]', icon: 'receipt_long', amountColor: 'text-[#EF4444]' };
+                    } else if (desc.includes('tạm giữ')) {
+                      style = { bg: 'bg-[#FFF7ED]', text: 'text-[#F97316]', icon: 'lock', amountColor: 'text-[#EF4444]' };
+                    } else if (desc.includes('hoàn tiền')) {
+                      style = { bg: 'bg-[#F5F3FF]', text: 'text-[#8B5CF6]', icon: 'undo', amountColor: 'text-[#10B981]' };
+                    }
+
+                    return (
+                    <div key={tx.transaction_id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 border-b border-slate-50 last:border-0 gap-3">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${style.bg} ${style.text}`}>
+                          <span className="material-symbols-outlined text-[20px] font-light">
+                            {style.icon}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-[13px] font-semibold text-slate-800">{tx.description || tx.transaction_type}</p>
+                          <p className="text-[11px] font-medium text-slate-400 mt-0.5">{new Date(tx.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})} - {new Date(tx.created_at).toLocaleDateString('vi-VN')}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between w-full sm:w-auto gap-4 pl-14 sm:pl-0">
+                        <span className={`text-[13px] font-bold ${style.amountColor}`}>
+                          {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-md ${
+                            tx.status === 'COMPLETED' ? 'bg-[#E6F5EE] text-[#10B981]' : 
+                            desc.includes('tạm giữ') ? 'bg-[#FFF7ED] text-[#F97316]' : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {tx.status === 'COMPLETED' ? 'Thành công' : desc.includes('tạm giữ') ? 'Đang tạm giữ' : 'Đang xử lý'}
+                          </span>
+                          <button
+                            onClick={() => handleExport(tx)}
+                            disabled={isExporting}
+                            className="w-7 h-7 rounded-md bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors disabled:opacity-50 border border-slate-100"
+                            title="Xuất PDF"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">download</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}) : (
+                    <div className="text-center py-8 text-slate-400">
+                      <p className="text-sm">Chưa có giao dịch nào.</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            ) : (
-              <div className="flex-1 border-2 border-dashed border-slate-200 rounded-[1.25rem] flex flex-col items-center justify-center p-6 text-slate-400 cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => setIsBankModalOpen(true)}>
-                <span className="material-symbols-outlined text-4xl mb-2">add_card</span>
-                <p className="text-sm font-semibold text-slate-600">Chưa liên kết ngân hàng</p>
-                <p className="text-xs text-center mt-1">Thêm tài khoản để thực hiện giao dịch thuận tiện hơn.</p>
+              <div className="p-4 pt-0">
+                <button onClick={() => navigate('/wallet/transactions')} className="w-full py-3 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 text-[13px] font-medium text-slate-600 transition-colors shadow-sm">
+                  Xem tất cả giao dịch
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
-          <div className="md:col-span-6 bg-white p-6 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col">
-             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold text-slate-800">Giao dịch gần đây</h3>
-              <button onClick={() => navigate('/wallet/transactions')} className="text-[10px] uppercase font-bold text-slate-400 hover:text-[#4A6755]">Xem tất cả</button>
-            </div>
+          {/* RIGHT COLUMN */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
             
-            <div className="space-y-4 flex-1">
-              {transactions.length > 0 ? transactions.map(tx => (
-                <div key={tx.transaction_id} className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                      <span className="material-symbols-outlined text-[18px]">
-                        {tx.amount > 0 ? 'arrow_downward' : 'arrow_upward'}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800 line-clamp-1">{tx.description || tx.transaction_type}</p>
-                      <p className="text-[10px] text-slate-400">{new Date(tx.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})} - {new Date(tx.created_at).toLocaleDateString('vi-VN')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-sm font-black ${tx.amount > 0 ? 'text-emerald-500' : 'text-slate-800'}`}>
-                      {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
-                    </span>
-                    <button
-                      onClick={() => handleExport(tx)}
-                      disabled={isExporting}
-                      className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors cursor-pointer disabled:opacity-50"
-                      title="Xuất Hóa Đơn PDF"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">download</span>
-                    </button>
-                  </div>
+            {/* Overview Card */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-base font-bold text-slate-800">Tổng quan ví</h3>
+                <button className="text-xs font-semibold text-[#0F766E] flex items-center">Chi tiết <span className="material-symbols-outlined text-[16px]">chevron_right</span></button>
+              </div>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-slate-500">Tổng số dư</span>
+                  <span className="text-sm font-black text-slate-800">{formatCurrency((wallet?.balance || 0) + 12500000 + 2000000)}</span>
                 </div>
-              )) : (
-                <div className="text-center py-6 text-slate-400">
-                  <span className="material-symbols-outlined text-3xl mb-2">receipt_long</span>
-                  <p className="text-sm">Chưa có giao dịch nào.</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-slate-500">Số dư khả dụng</span>
+                  <span className="text-sm font-black text-emerald-500">{formatCurrency(wallet?.balance || 0)}</span>
                 </div>
-              )}
-            </div>
-          </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-slate-500">Đang tạm giữ</span>
+                  <span className="text-sm font-black text-amber-500">{formatCurrency(12500000)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-slate-500">Chờ rút</span>
+                  <span className="text-sm font-black text-blue-500">{formatCurrency(2000000)}</span>
+                </div>
+              </div>
 
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-slate-600">Hạn mức giao dịch</span>
+                  <span className="text-xs font-bold text-slate-800">44%</span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
+                  <div className="h-full bg-[#0F766E] rounded-full" style={{ width: '44%' }}></div>
+                </div>
+                <p className="text-[11px] font-semibold text-slate-400">44.000.000 đ / 100.000.000 đ</p>
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-base font-bold text-slate-800">Phương thức thanh toán</h3>
+                <button onClick={() => setIsBankModalOpen(true)} className="text-xs font-semibold text-[#0F766E]">Quản lý</button>
+              </div>
+              
+              <div className="space-y-3 mb-4">
+                {bankAccount && (
+                  <div className="flex items-center justify-between p-3 border border-slate-100 rounded-xl hover:border-slate-200 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#10B981] text-white flex items-center justify-center font-bold">
+                        {bankAccount.bank_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-semibold text-slate-800">{bankAccount.bank_name} <span className="font-normal text-slate-500">**** {bankAccount.account_number.slice(-4)}</span></p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-[#10B981] bg-[#E6F5EE] px-2 py-0.5 rounded">Mặc định</span>
+                      <span className="material-symbols-outlined text-slate-400 text-[18px] cursor-pointer hover:text-slate-600">more_vert</span>
+                    </div>
+                  </div>
+                )}
+                {!bankAccount && (
+                  <div className="text-center py-4 text-slate-400 text-sm">Chưa liên kết thẻ</div>
+                )}
+              </div>
+              
+              <button onClick={() => setIsBankModalOpen(true)} className="w-full py-3 rounded-xl border border-dashed border-emerald-300 text-[13px] font-medium text-[#10B981] hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">add</span> Thêm phương thức thanh toán
+              </button>
+            </div>
+
+
+
+          </div>
         </div>
       </div>
       
