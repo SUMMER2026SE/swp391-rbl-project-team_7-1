@@ -75,7 +75,7 @@ export const getFreelancersForProject = async (projectId) => {
         u.user_id, u.full_name, u.avatar_url,
         fp.rating_average, fp.total_reviews, fp.headline,
         fp.experience_years, fp.hourly_rate, fp.availability_status,
-        fp.portfolio_summary
+        fp.portfolio_summary, fp.cv_ai_evaluation
       FROM users u
       JOIN freelancer_profiles fp ON u.user_id = fp.freelancer_id
       WHERE u.role_default = 'FREELANCER'

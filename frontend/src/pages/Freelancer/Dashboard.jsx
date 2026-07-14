@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
 import { proposalService } from '../../services/proposalService';
+import { invitationService } from '../../services/invitationService';
 
 export default function FreelancerDashboard() {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ export default function FreelancerDashboard() {
   const [balance, setBalance] = useState(0);
   const [conversations, setConversations] = useState([]);
   const [profileCompletion, setProfileCompletion] = useState(85);
+  const [invitations, setInvitations] = useState([]);
   const [activeTab, setActiveTab] = useState('contracts');
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -88,6 +90,16 @@ export default function FreelancerDashboard() {
         console.error('Error fetching profile completion score:', profileErr);
       }
 
+      // 6. Fetch invitations
+      try {
+        const inviteRes = await invitationService.getFreelancerInvitations();
+        if (inviteRes.success) {
+          setInvitations(inviteRes.invitations || []);
+        }
+      } catch (inviteErr) {
+        console.error('Error fetching freelancer invitations:', inviteErr);
+      }
+
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setErrorMsg('Không thể tải một số dữ liệu bảng điều khiển.');
@@ -129,6 +141,27 @@ export default function FreelancerDashboard() {
     } catch (err) {
       console.error('Error withdrawing proposal:', err);
       alert('Lỗi mạng khi thực hiện rút đề xuất.');
+    }
+  };
+
+  const handleRespondToInvitation = async (invitationId, status) => {
+    const isAccept = status === 'ACCEPTED';
+    if (!window.confirm(`Bạn có chắc chắn muốn ${isAccept ? 'CHẤP NHẬN' : 'TỪ CHỐI'} lời mời hợp tác này?`)) {
+      return;
+    }
+    
+    try {
+      const res = await invitationService.respondToInvitation(invitationId, status);
+      if (res.success) {
+        setToastMsg(res.message);
+        fetchDashboardData();
+        setTimeout(() => setToastMsg(''), 4000);
+      } else {
+        alert(res.message || 'Lỗi khi phản hồi lời mời.');
+      }
+    } catch (err) {
+      console.error('Error responding to invitation:', err);
+      alert(err.response?.data?.message || 'Lỗi mạng khi phản hồi lời mời.');
     }
   };
 
@@ -378,6 +411,14 @@ export default function FreelancerDashboard() {
                   >
                     Đề xuất đã nộp ({submittedProposalsCount})
                   </button>
+                  <button 
+                    onClick={() => setActiveTab('invitations')}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                      activeTab === 'invitations' ? 'bg-white text-[#0F766E] shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Lời mời ({invitations.filter(i => i.status === 'PENDING').length})
+                  </button>
                 </div>
               </div>
 
@@ -466,7 +507,7 @@ export default function FreelancerDashboard() {
                     ))}
                   </div>
                 )
-              ) : (
+              ) : activeTab === 'proposals' ? (
                 proposals.length === 0 ? (
                   <div className="text-center py-16 text-slate-400 px-6 flex flex-col items-center justify-center">
                     <span className="material-symbols-outlined text-[48px] text-slate-300 mb-3">description</span>
@@ -572,6 +613,69 @@ export default function FreelancerDashboard() {
                         </div>
                       );
                     })}
+                  </div>
+                )
+              ) : (
+                /* activeTab === 'invitations' */
+                invitations.length === 0 ? (
+                  <div className="text-center py-16 text-slate-400 px-6 flex flex-col items-center justify-center">
+                    <span className="material-symbols-outlined text-[48px] text-slate-300 mb-3">mail_outline</span>
+                    <p className="text-sm font-semibold text-slate-500">Bạn chưa nhận được lời mời làm việc nào.</p>
+                    <p className="text-xs text-slate-400 mt-1 max-w-sm">Khi các nhà tuyển dụng mời bạn tham gia dự án của họ, chúng sẽ xuất hiện ở đây.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100">
+                    {invitations.map((invite) => (
+                      <div key={invite.invitation_id} className="p-6 hover:bg-slate-50/50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                              invite.status === 'ACCEPTED'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                : invite.status === 'DECLINED'
+                                ? 'bg-rose-50 text-rose-700 border-rose-100'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                            }`}>
+                              {invite.status === 'ACCEPTED' ? 'Đã chấp nhận' : invite.status === 'DECLINED' ? 'Đã từ chối' : 'Đang chờ'}
+                            </span>
+                            <span className="text-slate-400 text-xs font-semibold">
+                              Nhà tuyển dụng: <span className="text-[#0f766e] font-bold">{invite.employer_name}</span>
+                            </span>
+                          </div>
+                          
+                          <h3 className="font-extrabold text-slate-800 text-base mb-1 truncate">
+                            {invite.project_title}
+                          </h3>
+
+                          {invite.message && (
+                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100/50 mt-2 max-w-xl text-xs text-slate-600 italic">
+                              "{invite.message}"
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-xs text-slate-400 font-semibold">
+                            <span>Mời ngày: {new Date(invite.created_at).toLocaleDateString('vi-VN')}</span>
+                          </div>
+                        </div>
+
+                        {invite.status === 'PENDING' && (
+                          <div className="shrink-0 flex items-center gap-2">
+                            <button
+                              onClick={() => handleRespondToInvitation(invite.invitation_id, 'DECLINED')}
+                              className="px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-bold hover:bg-rose-600 hover:text-white transition-all cursor-pointer border-none"
+                            >
+                              Từ chối
+                            </button>
+                            <button
+                              onClick={() => handleRespondToInvitation(invite.invitation_id, 'ACCEPTED')}
+                              className="px-4 py-2 bg-[#0F766E] text-white rounded-xl text-xs font-bold hover:bg-[#0D5E58] transition-all cursor-pointer border-none"
+                            >
+                              Đồng ý &amp; Ứng tuyển
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )
               )}

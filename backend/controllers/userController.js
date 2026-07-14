@@ -1,6 +1,11 @@
 import bcrypt from 'bcryptjs';
 import { sql, poolPromise } from '../config/db.js';
 import { getUserById, fetchAllUsers, updateUserStatusById, approveContractById, getDashboardStats, fetchUsersWithFilters } from '../services/userService.js';
+import fs from 'fs';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
+
 
 export const getProfile = async (req, res) => {
   try {
@@ -21,7 +26,7 @@ export const getProfile = async (req, res) => {
     // 2. Fetch freelancer profile from freelancer_profiles
     const flResult = await pool.request()
       .input('userId', sql.Int, userId)
-      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary FROM freelancer_profiles WHERE freelancer_id = @userId`);
+      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary, cv_url, cv_ai_evaluation FROM freelancer_profiles WHERE freelancer_id = @userId`);
     
     const fl = flResult.recordset[0] || {};
 
@@ -56,6 +61,8 @@ export const getProfile = async (req, res) => {
     };
 
     user.bio_extras = JSON.stringify(bioExtrasObj);
+    user.cv_url = fl.cv_url || null;
+    user.cv_ai_evaluation = fl.cv_ai_evaluation || null;
 
     res.json({ user });
   } catch (error) {
@@ -665,7 +672,7 @@ export const getPublicProfile = async (req, res, next) => {
     // 2. Fetch freelancer profile from freelancer_profiles
     const flResult = await pool.request()
       .input('userId', sql.Int, userId)
-      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary, rating_average, total_reviews FROM freelancer_profiles WHERE freelancer_id = @userId`);
+      .query(`SELECT headline, experience_years, hourly_rate, availability_status, portfolio_summary, rating_average, total_reviews, cv_url, cv_ai_evaluation FROM freelancer_profiles WHERE freelancer_id = @userId`);
     
     const fl = flResult.recordset[0] || {};
 
@@ -704,6 +711,8 @@ export const getPublicProfile = async (req, res, next) => {
     user.bio_extras = JSON.stringify(bioExtrasObj);
     user.rating_average = fl.rating_average || 0.0;
     user.total_reviews = fl.total_reviews || 0;
+    user.cv_url = fl.cv_url || null;
+    user.cv_ai_evaluation = fl.cv_ai_evaluation || null;
 
     res.json({ user });
   } catch (error) {
@@ -794,6 +803,86 @@ export const getFreelancerReviews = async (req, res, next) => {
   } catch (error) {
     console.error('Error in getFreelancerReviews:', error);
     res.status(500).json({ message: 'Lỗi server khi lấy danh sách đánh giá.' });
+  }
+};
+
+export const uploadCV = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Vui lòng chọn file CV (PDF).' });
+    }
+
+    const cvUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    const filePath = req.file.path;
+
+    // Response quickly
+    res.json({
+      success: true,
+      message: 'CV đã tải lên thành công. Hệ thống đang phân tích CV bằng AI...',
+      cvUrl
+    });
+
+    // Run AI analysis in the background
+    setTimeout(async () => {
+      try {
+        const dataBuffer = fs.readFileSync(filePath);
+        const parsedPdf = await pdfParse(dataBuffer);
+        const cvText = parsedPdf.text || '';
+
+        const geminiKey = process.env.GEMINI_API_KEY;
+        if (!geminiKey) {
+          console.error('Gemini API Key is not set.');
+          return;
+        }
+
+        // Call Gemini to analyze CV generally
+        const systemInstruction = "Bạn là trợ lý AI phân tích CV của hệ thống FJMS. Hãy phân tích nội dung CV của freelancer và trả về kết quả dưới dạng JSON có các key sau: matchScore (điểm từ 0-100 đánh giá chất lượng hồ sơ chung), quickSummary (tóm tắt tối đa 2 câu về freelancer), strengths (mảng chứa tối đa 3 điểm mạnh nhất của họ), gaps (mảng chứa tối đa 3 mặt hạn chế hoặc điểm cần cải thiện của họ). Chỉ trả về đúng chuỗi JSON hợp lệ, không chứa khối code hay ký tự định dạng khác.";
+        const userPrompt = `Dưới đây là nội dung CV của freelancer:\n\n${cvText.substring(0, 8000)}`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+            generationConfig: { maxOutputTokens: 1024, temperature: 0.5, responseMimeType: "application/json" }
+          })
+        });
+
+        let aiResultStr = '';
+        if (response.ok) {
+          const resData = await response.json();
+          aiResultStr = resData.candidates[0]?.content?.parts[0]?.text?.trim() || '';
+        }
+
+        const pool = await poolPromise;
+        await pool.request()
+          .input('freelancerId', sql.Int, userId)
+          .input('cvUrl', sql.VarChar, cvUrl)
+          .input('cvAiEvaluation', sql.NVarChar, aiResultStr)
+          .query(`
+            IF EXISTS (SELECT 1 FROM freelancer_profiles WHERE freelancer_id = @freelancerId)
+            BEGIN
+              UPDATE freelancer_profiles 
+              SET cv_url = @cvUrl, cv_ai_evaluation = @cvAiEvaluation, updated_at = GETDATE()
+              WHERE freelancer_id = @freelancerId;
+            END
+            ELSE
+            BEGIN
+              INSERT INTO freelancer_profiles (freelancer_id, availability_status, rating_average, total_reviews, cv_url, cv_ai_evaluation, created_at)
+              VALUES (@freelancerId, 'AVAILABLE', 0.00, 0, @cvUrl, @cvAiEvaluation, GETDATE());
+            END
+          `);
+        console.log(`[AI CV] Done analyzing general profile CV for freelancer_id = ${userId}`);
+      } catch (err) {
+        console.error('Error analyzing CV in background:', err);
+      }
+    }, 0);
+
+  } catch (error) {
+    console.error('Error in uploadCV:', error);
+    res.status(500).json({ success: false, message: 'Lỗi server khi tải lên CV.' });
   }
 };
 

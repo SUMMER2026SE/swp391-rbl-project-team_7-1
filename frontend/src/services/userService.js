@@ -59,5 +59,12 @@ export const userService = {
   getFreelancerReviews: async (freelancerId) => {
     const response = await api.get(`/user/${freelancerId}/reviews`);
     return response.data;
+  },
+
+  uploadCV: async (formData) => {
+    const response = await api.post('/user/profile/upload-cv', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
   }
 };

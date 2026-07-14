@@ -1,4 +1,6 @@
 import express from 'express';
+import multer from 'multer';
+import fs from 'fs';
 import {
   getProfile,
   updateProfile,
@@ -23,8 +25,23 @@ import {
   // Public Profiles
   getPublicProfile,
   getAllFreelancers,
-  getFreelancerReviews
+  getFreelancerReviews,
+  uploadCV
 } from '../controllers/userController.js';
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = './uploads';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
 
 import { verifyToken, verifyAdmin } from '../middleware/authMiddleware.js';
 
@@ -41,6 +58,7 @@ router.use(verifyToken);
 
 router.get('/profile', getProfile);
 router.put('/profile', updateProfile);
+router.post('/profile/upload-cv', upload.single('cvFile'), uploadCV);
 router.put('/change-password', changePassword);
 router.delete('/account', deleteAccount);
 
