@@ -107,7 +107,7 @@ export const updateProfile = async (req, res) => {
       .input('fullName', sql.NVarChar, fullName)
       .input('phone', sql.VarChar, phone || null)
       .input('bio', sql.NVarChar, finalBio)
-      .input('avatarUrl', sql.VarChar, avatarUrl || null)
+      .input('avatarUrl', sql.VarChar(sql.MAX), avatarUrl || null)
       .input('companyName', sql.NVarChar, companyName)
       .input('websiteUrl', sql.NVarChar, websiteUrl)
       .input('address', sql.NVarChar, address)
