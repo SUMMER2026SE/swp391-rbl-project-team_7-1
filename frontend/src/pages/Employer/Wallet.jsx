@@ -11,6 +11,7 @@ export default function EmployerWallet() {
   const [wallet, setWallet] = useState(null);
   const [bankAccount, setBankAccount] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [activeTab, setActiveTab] = useState('Tất cả');
   const [loading, setLoading] = useState(true);
   
   
@@ -81,7 +82,7 @@ export default function EmployerWallet() {
       if (txRes.ok) {
         const txData = await txRes.json();
         const txArray = txData.data || [];
-        setTransactions(txArray.slice(0, 4)); // Only keep latest 4
+        setTransactions(txArray);
       }
 
     } catch (error) {
@@ -103,6 +104,16 @@ export default function EmployerWallet() {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
+
+  const filteredTransactions = transactions.filter(tx => {
+    if (activeTab === 'Tất cả') return true;
+    const desc = (tx.description || tx.transaction_type).toLowerCase();
+    if (activeTab === 'Nạp tiền') return desc.includes('nạp tiền') || (!desc.includes('rút') && !desc.includes('thanh toán') && !desc.includes('tạm giữ') && !desc.includes('ký quỹ') && !desc.includes('hoàn tiền'));
+    if (activeTab === 'Rút tiền') return desc.includes('rút');
+    if (activeTab === 'Thanh toán') return desc.includes('thanh toán');
+    if (activeTab === 'Hoàn tiền') return desc.includes('hoàn tiền');
+    return true;
+  }).slice(0, 4);
 
   if (loading) {
     return (
@@ -216,8 +227,11 @@ export default function EmployerWallet() {
               
               {/* Tabs */}
               <div className="px-6 py-4 flex gap-2 overflow-x-auto no-scrollbar">
-                {['Tất cả', 'Nạp tiền', 'Rút tiền', 'Thanh toán', 'Hoàn tiền'].map((tab, idx) => (
-                  <button key={tab} className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors ${idx === 0 ? 'bg-[#E6F5EE] text-[#10B981]' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                {['Tất cả', 'Nạp tiền', 'Rút tiền', 'Thanh toán', 'Hoàn tiền'].map((tab) => (
+                  <button 
+                    key={tab} 
+                    onClick={() => setActiveTab(tab)}
+                    className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors ${activeTab === tab ? 'bg-[#E6F5EE] text-[#10B981]' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                     {tab}
                   </button>
                 ))}
@@ -225,7 +239,7 @@ export default function EmployerWallet() {
 
               <div className="px-6 pb-4 flex-1">
                 <div className="space-y-1">
-                  {transactions.length > 0 ? transactions.map(tx => {
+                  {filteredTransactions.length > 0 ? filteredTransactions.map(tx => {
                     const desc = (tx.description || tx.transaction_type).toLowerCase();
                     let style = { bg: 'bg-[#E6F5EE]', text: 'text-[#10B981]', icon: 'arrow_downward', amountColor: 'text-[#10B981]' };
                     
@@ -296,7 +310,6 @@ export default function EmployerWallet() {
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-base font-bold text-slate-800">Tổng quan ví</h3>
-                <button className="text-xs font-semibold text-[#0F766E] flex items-center">Chi tiết <span className="material-symbols-outlined text-[16px]">chevron_right</span></button>
               </div>
               
               <div className="space-y-4 mb-8">
@@ -314,16 +327,7 @@ export default function EmployerWallet() {
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-slate-600">Hạn mức chi tiêu</span>
-                  <span className="text-xs font-bold text-slate-800">12.5%</span>
-                </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
-                  <div className="h-full bg-rose-500 rounded-full" style={{ width: '12.5%' }}></div>
-                </div>
-                <p className="text-[11px] font-semibold text-slate-400">12.500.000 đ / 100.000.000 đ</p>
-              </div>
+
             </div>
 
             {/* Payment Methods */}
