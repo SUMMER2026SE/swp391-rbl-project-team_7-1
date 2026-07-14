@@ -104,9 +104,8 @@ export default function FreelancerWallet() {
 
   if (loading) {
     return (
-
-      <main className="flex-1 w-full min-h-screen bg-[#F2F0EB] flex justify-center items-center">
-        <span className="material-symbols-outlined animate-spin text-4xl text-[#4A6755]">progress_activity</span>
+      <main className="flex-1 w-full min-h-screen bg-[#F8FAFC] flex justify-center items-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-[#0F766E]">progress_activity</span>
       </main>
     );
   }
@@ -128,7 +127,7 @@ export default function FreelancerWallet() {
           <div className="lg:col-span-8 flex flex-col gap-6">
             
             {/* Balance Card */}
-            <div className="relative bg-[#EBF6F1] rounded-3xl p-8 overflow-hidden shadow-sm">
+            <div className="relative bg-gradient-to-r from-[#E2F2EC] via-[#EEF8F4] to-[#E2F2EC] rounded-3xl p-8 overflow-hidden shadow-sm border border-emerald-100/30">
               {/* Blurred mesh gradient blobs */}
               <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#CDECE0] rounded-full mix-blend-multiply filter blur-[80px] opacity-70 pointer-events-none"></div>
               <div className="absolute -bottom-20 -right-10 w-96 h-96 bg-[#BCE4D3] rounded-full mix-blend-multiply filter blur-[100px] opacity-60 pointer-events-none"></div>
