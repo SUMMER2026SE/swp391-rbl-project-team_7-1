@@ -15,7 +15,8 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# User uploads (Temporary CV/Images generated during testing)
-backend/uploads/
-frontend/dist/
+# Private Ngrok configs
+ngrok.yml
 
+# Uploaded files
+backend/uploads/

@@ -37,7 +37,7 @@ export default function EmployerDashboard() {
         }
 
         // 2. Fetch contracts (active hirings)
-        const contractsRes = await fetch('http://localhost:5000/api/contracts', {
+        const contractsRes = await fetch('http://localhost:5000/api/contracts?role=EMPLOYER', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const contractsData = await contractsRes.json();

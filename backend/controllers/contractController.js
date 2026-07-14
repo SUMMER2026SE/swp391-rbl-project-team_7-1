@@ -40,18 +40,29 @@ export const getContractById = async (req, res) => {
 export const getActiveContracts = async (req, res) => {
   try {
     const userId = req.user.id;
+    const role = req.query.role ? req.query.role.toUpperCase() : null;
     const pool = await poolPromise;
+
+    let queryStr = `
+      SELECT c.*, p.title as project_title, p.deadline as project_deadline,
+             (SELECT TOP 1 status FROM work_submissions WHERE contract_id = c.contract_id ORDER BY submitted_at DESC) as latest_submission_status
+      FROM contracts c
+      JOIN projects p ON c.project_id = p.project_id
+    `;
+
+    if (role === 'EMPLOYER') {
+      queryStr += ` WHERE c.employer_id = @userId`;
+    } else if (role === 'FREELANCER') {
+      queryStr += ` WHERE c.freelancer_id = @userId`;
+    } else {
+      queryStr += ` WHERE (c.employer_id = @userId OR c.freelancer_id = @userId)`;
+    }
+
+    queryStr += ` ORDER BY c.created_at DESC`;
 
     const result = await pool.request()
       .input('userId', sql.Int, userId)
-      .query(`
-        SELECT c.*, p.title as project_title, p.deadline as project_deadline,
-               (SELECT TOP 1 status FROM work_submissions WHERE contract_id = c.contract_id ORDER BY submitted_at DESC) as latest_submission_status
-        FROM contracts c
-        JOIN projects p ON c.project_id = p.project_id
-        WHERE (c.employer_id = @userId OR c.freelancer_id = @userId)
-        ORDER BY c.created_at DESC
-      `);
+      .query(queryStr);
 
     res.json({ success: true, contracts: result.recordset });
   } catch (error) {

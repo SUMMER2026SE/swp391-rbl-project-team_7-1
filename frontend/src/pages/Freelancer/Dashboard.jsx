@@ -28,7 +28,7 @@ export default function FreelancerDashboard() {
       setLoading(true);
       
       // 1. Fetch active contracts
-      const contractRes = await fetch('http://localhost:5000/api/contracts', {
+      const contractRes = await fetch('http://localhost:5000/api/contracts?role=FREELANCER', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const contractData = await contractRes.json();

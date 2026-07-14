@@ -112,7 +112,12 @@ export default function MessagesEmployer() {
       ? import.meta.env.VITE_API_URL.replace('/api', '') 
       : 'http://localhost:5000';
 
-    const socket = io(socketUrl);
+    const socket = io(socketUrl, {
+      transports: ['websocket'],
+      extraHeaders: {
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
     socketRef.current = socket;
     activeSocket = socket;
 
