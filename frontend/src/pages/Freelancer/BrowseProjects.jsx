@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { projectService } from '../../services/projectService';
 
 export default function BrowseProjects() {
   const [projects, setProjects] = useState([]);
@@ -17,9 +18,8 @@ export default function BrowseProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/projects');
-        const data = await response.json();
-        if (response.ok && data.success) {
+        const data = await projectService.getPublicProjects();
+        if (data.success) {
           const mapped = data.projects.map(p => ({
             id: p.project_id,
             category: p.category_name === 'Programming' ? 'Lập trình Web' 

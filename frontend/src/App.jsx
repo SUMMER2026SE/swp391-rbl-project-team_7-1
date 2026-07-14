@@ -59,6 +59,7 @@ import SubmitWork from './pages/Freelancer/SubmitWork';
 import Projects from './pages/Public/Projects'; // Original projects list
 import Profile from './pages/Public/Profile'; // Public profile page
 import BrowseFreelancers from './pages/Public/BrowseFreelancers';
+import ReportPlaceholder from './pages/Public/ReportPlaceholder';
 
 import { useAuth } from './hooks/useAuth';
 
@@ -150,6 +151,7 @@ export default function App() {
         <Route path="/post-project" element={<PostProject />} />
         <Route path="/edit-project/:id" element={<PostProject editMode={true} />} />
         <Route path="/escrow-checkout" element={<EscrowCheckout />} />
+        <Route path="/report" element={<ReportPlaceholder />} />
 
         {/* Admin Dashboard Paths */}
         <Route path="/admin-dashboard" element={<AdminDashboard />} />

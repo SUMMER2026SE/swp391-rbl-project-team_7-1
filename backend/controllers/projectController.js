@@ -1,56 +1,107 @@
 import { sql, poolPromise } from '../config/db.js';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
 import { createRequire } from 'module';
+
 const require = createRequire(import.meta.url);
 const pdfParse = require('pdf-parse');
 
+/**
+ * Parse optional Bearer token from request to extract user info (role + id).
+ * Returns { userId, role } or null if no valid token.
+ */
+function parseOptionalToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Normalize: decoded.userId or decoded.id
+    const userId = decoded.userId || decoded.id;
+    const role = decoded.role || decoded.roleDefault || null;
+    return { userId, role };
+  } catch {
+    return null;
+  }
+}
 
 /**
- * Get all projects (OPEN status only for public search - with Filters)
+ * Get projects — filtered by authenticated user's role if a valid Bearer token is present:
+ * - FREELANCER: only projects they have proposals for or contracts with
+ * - EMPLOYER:   only projects they posted (employer_id)
+ * - No token / other: all OPEN projects (public browsing)
  */
 export const getProjects = async (req, res) => {
   try {
     const { q, categoryId, budgetMin, budgetMax, budgetType } = req.query;
     const pool = await poolPromise;
 
+    // 1. Check optional auth to determine role-based filtering
+    const userInfo = parseOptionalToken(req);
+    const isFreelancer = userInfo && userInfo.role === 'FREELANCER';
+    const isEmployer   = userInfo && userInfo.role === 'EMPLOYER';
+
     let query = `
       SELECT p.*, pc.category_name, u.full_name as company_name, u.avatar_url
       FROM projects p
       LEFT JOIN project_categories pc ON p.category_id = pc.category_id
       LEFT JOIN users u ON p.employer_id = u.user_id
-      WHERE p.status = 'OPEN'
     `;
 
     const request = pool.request();
 
-    if (q) {
-      request.input('search', sql.NVarChar, `%${q}%`);
-      query += ` AND (p.title LIKE @search OR p.description LIKE @search)`;
+    if (isFreelancer && userInfo.userId) {
+      // Freelancer: projects linked via proposals OR contracts
+      const freelancerId = userInfo.userId;
+      request.input('freelancerId', sql.Int, freelancerId);
+      query += `
+        INNER JOIN (
+          SELECT DISTINCT project_id FROM proposals WHERE freelancer_id = @freelancerId
+          UNION
+          SELECT DISTINCT project_id FROM contracts WHERE freelancer_id = @freelancerId
+        ) AS参与的 ON p.project_id = 参与的.project_id
+      `;
+      // Do NOT add status = 'OPEN' filter — show all statuses the user is involved in
+    } else if (isEmployer && userInfo.userId) {
+      // Employer: only projects they posted
+      request.input('employerId', sql.Int, userInfo.userId);
+      query += ` WHERE p.employer_id = @employerId`;
+    } else {
+      // Anonymous / public: only OPEN projects
+      query += ` WHERE p.status = 'OPEN'`;
     }
 
-    if (categoryId) {
-      request.input('categoryId', sql.Int, parseInt(categoryId));
-      query += ` AND p.category_id = @categoryId`;
-    }
+    if (!isFreelancer && !isEmployer) {
+      // Apply filters only for public/unauthenticated browsing
+      if (q) {
+        request.input('search', sql.NVarChar, `%${q}%`);
+        query += ` AND (p.title LIKE @search OR p.description LIKE @search)`;
+      }
 
-    if (budgetMin) {
-      request.input('budgetMin', sql.Decimal(18, 2), parseFloat(budgetMin));
-      query += ` AND (p.budget_max >= @budgetMin OR p.budget_min >= @budgetMin)`;
-    }
+      if (categoryId) {
+        request.input('categoryId', sql.Int, parseInt(categoryId));
+        query += ` AND p.category_id = @categoryId`;
+      }
 
-    if (budgetMax) {
-      request.input('budgetMax', sql.Decimal(18, 2), parseFloat(budgetMax));
-      query += ` AND (p.budget_min <= @budgetMax OR p.budget_max <= @budgetMax)`;
-    }
+      if (budgetMin) {
+        request.input('budgetMin', sql.Decimal(18, 2), parseFloat(budgetMin));
+        query += ` AND (p.budget_max >= @budgetMin OR p.budget_min >= @budgetMin)`;
+      }
 
-    if (budgetType) {
-      request.input('budgetType', sql.VarChar, budgetType.toUpperCase());
-      query += ` AND p.budget_type = @budgetType`;
+      if (budgetMax) {
+        request.input('budgetMax', sql.Decimal(18, 2), parseFloat(budgetMax));
+        query += ` AND (p.budget_min <= @budgetMax OR p.budget_max <= @budgetMax)`;
+      }
+
+      if (budgetType) {
+        request.input('budgetType', sql.VarChar, budgetType.toUpperCase());
+        query += ` AND p.budget_type = @budgetType`;
+      }
     }
 
     query += ` ORDER BY p.created_at DESC`;
 
-    const result = await request.query(query); // Sửa lỗi gọi biến query của bạn ở đây từ `query.query` thành `request.query(query)`
+    const result = await request.query(query);
 
     // Fetch skills for each project
     const projects = result.recordset;
