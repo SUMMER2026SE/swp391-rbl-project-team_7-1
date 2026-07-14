@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { contractService } from '../../services/contractService';
 import VisualEscrowTimeline from '../../components/Project/VisualEscrowTimeline';
+import Swal from 'sweetalert2';
 
 const renderDescription = (desc) => {
   if (!desc) return null;
@@ -117,9 +118,18 @@ export default function ReviewSubmission() {
   }, [contractId]);
 
   const handleApprove = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn nghiệm thu công việc này? Hành động này sẽ giải ngân toàn bộ số tiền ký quỹ trực tiếp cho Freelancer.')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Nghiệm thu công việc?',
+      text: 'Bạn có chắc chắn muốn nghiệm thu công việc này? Hành động này sẽ giải ngân toàn bộ số tiền ký quỹ trực tiếp cho Freelancer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#0F766E',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Đồng ý nghiệm thu',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
     
     const latestSub = submissions[0];
     if (!latestSub) return;

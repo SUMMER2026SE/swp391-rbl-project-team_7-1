@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 export default function MyProjects() {
   const [projects, setProjects] = useState([]);
@@ -44,9 +45,18 @@ export default function MyProjects() {
   }, [token]);
 
   const handleCloseProject = async (projectId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn đóng dự án này? Sau khi đóng, freelancer sẽ không thể gửi đề xuất mới.')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Đóng dự án?',
+      text: 'Bạn có chắc chắn muốn đóng dự án này? Sau khi đóng, freelancer sẽ không thể gửi đề xuất mới.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#D97706',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Đồng ý đóng',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/projects/${projectId}/close`, {
@@ -61,18 +71,37 @@ export default function MyProjects() {
         fetchMyProjects();
         setTimeout(() => setToastMsg(''), 3000);
       } else {
-        alert(data.message || 'Lỗi khi đóng dự án.');
+        Swal.fire({
+          title: 'Lỗi',
+          text: data.message || 'Lỗi khi đóng dự án.',
+          icon: 'error',
+          confirmButtonColor: '#0F766E'
+        });
       }
     } catch (err) {
       console.error('Error closing project:', err);
-      alert('Lỗi mạng khi thực hiện đóng dự án.');
+      Swal.fire({
+        title: 'Thất bại',
+        text: 'Lỗi mạng khi thực hiện đóng dự án.',
+        icon: 'error',
+        confirmButtonColor: '#0F766E'
+      });
     }
   };
 
   const handleDeleteProject = async (projectId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác.')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xóa dự án?',
+      text: 'Bạn có chắc chắn muốn xóa dự án này? Thao tác này không thể hoàn tác.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#E11D48',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Đồng ý xóa',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
@@ -87,11 +116,21 @@ export default function MyProjects() {
         fetchMyProjects();
         setTimeout(() => setToastMsg(''), 3000);
       } else {
-        alert(data.message || 'Lỗi khi xóa dự án.');
+        Swal.fire({
+          title: 'Lỗi',
+          text: data.message || 'Lỗi khi xóa dự án.',
+          icon: 'error',
+          confirmButtonColor: '#0F766E'
+        });
       }
     } catch (err) {
       console.error('Error deleting project:', err);
-      alert('Lỗi mạng khi thực hiện xóa dự án.');
+      Swal.fire({
+        title: 'Thất bại',
+        text: 'Lỗi mạng khi thực hiện xóa dự án.',
+        icon: 'error',
+        confirmButtonColor: '#0F766E'
+      });
     }
   };
 
@@ -300,15 +339,14 @@ export default function MyProjects() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[900px] align-middle">
+              <table className="w-full text-left border-collapse min-w-[850px] align-middle">
                 <thead>
                   <tr className="border-b border-slate-100 text-slate-400 text-[11px] uppercase font-bold tracking-wider bg-slate-50/30">
                     <th className="py-4 px-6 font-semibold">Tên dự án</th>
-                    <th className="py-4 px-6 font-semibold">Danh mục</th>
-                    <th className="py-4 px-6 font-semibold">Ngân sách</th>
-                    <th className="py-4 px-6 font-semibold text-center">Trạng thái</th>
-                    <th className="py-4 px-6 font-semibold text-center">Số đề xuất</th>
-                    <th className="py-4 px-6 font-semibold text-right">Thao tác</th>
+                    <th className="py-4 px-6 font-semibold w-[150px]">Danh mục</th>
+                    <th className="py-4 px-6 font-semibold w-[140px]">Ngân sách</th>
+                    <th className="py-4 px-6 font-semibold text-center w-[140px]">Trạng thái</th>
+                    <th className="py-4 px-6 font-semibold text-right w-[320px]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100/70">
@@ -346,8 +384,8 @@ export default function MyProjects() {
                         </div>
                       </td>
 
-                      <td className="py-6 px-6 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wide border ${
+                      <td className="py-6 px-6 text-center whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wide border whitespace-nowrap ${
                           project.status === 'OPEN' 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
                           : project.status === 'IN_PROGRESS'
@@ -371,24 +409,17 @@ export default function MyProjects() {
                         </span>
                       </td>
 
-                      <td className="py-6 px-6 text-center">
-                        <Link 
-                          to={`/manage-proposals/${project.project_id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-teal-50 hover:text-[#0F766E] text-slate-700 text-xs font-extrabold transition-all border border-slate-200/20"
-                        >
-                          <span className="material-symbols-outlined text-[13px]">group</span>
-                          <span>{project.proposalsCount || 0}</span>
-                        </Link>
-                      </td>
-
-                      <td className="py-6 px-6 text-right">
+                      <td className="py-6 px-6 text-right whitespace-nowrap">
                         <div className="flex justify-end items-center gap-3">
                           <Link 
                             to={`/manage-proposals/${project.project_id}`} 
-                            className="px-4 py-2 bg-teal-50 text-[#0F766E] font-bold text-xs rounded-xl hover:bg-[#0F766E] hover:text-white transition-all shadow-sm flex items-center gap-1 border border-teal-100 shrink-0"
+                            className="px-4 py-2 bg-teal-50 hover:bg-teal-100 text-[#0F766E] font-bold text-xs rounded-xl transition-all flex items-center gap-2 border border-teal-100/60 shrink-0"
                           >
-                            <span className="material-symbols-outlined text-[15px]">group</span>
-                            Hồ sơ ứng tuyển
+                            <span className="material-symbols-outlined text-[16px]">group</span>
+                            <span>Hồ sơ ứng tuyển</span>
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-black bg-[#0F766E] text-white min-w-[18px] shadow-[0_1px_2px_rgba(15,118,110,0.15)]">
+                              {project.proposalsCount || 0}
+                            </span>
                           </Link>
 
                           {/* Nhóm icon quản lý có kích thước cố định để căn thẳng hàng nút chính */}

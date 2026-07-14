@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { proposalService } from '../../services/proposalService';
 import api from '../../services/api';
 import { invitationService } from '../../services/invitationService';
+import Swal from 'sweetalert2';
 
 function AIReviewCard({ aiEvaluationString }) {
   if (!aiEvaluationString) return null;
@@ -162,7 +163,7 @@ export default function ManageProposals() {
       }
     } catch (err) {
       console.error('Error drafting AI invitation:', err);
-      setInviteErrorMsg('Lỗi kết nối máy chủ khi gọi AI.');
+      setInviteErrorMsg(err.response?.data?.message || 'Lỗi kết nối máy chủ khi gọi AI.');
     } finally {
       setDraftingAI(false);
     }
@@ -219,9 +220,19 @@ export default function ManageProposals() {
   };
 
   const handleHire = async (proposalId, proposedPrice) => {
-    if (!window.confirm(`Bạn có đồng ý chấp nhận đề xuất này với chi phí ${proposedPrice.toLocaleString('vi-VN')} đ và chuyển tới trang ký quỹ?`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Xác nhận duyệt đề xuất',
+      text: `Bạn có đồng ý chấp nhận đề xuất này với chi phí ${proposedPrice.toLocaleString('vi-VN')} đ và chuyển tới trang ký quỹ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0F766E',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Đồng ý',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       // 1. Accept proposal
       const data = await proposalService.updateProposalStatus(proposalId, 'ACCEPTED');
@@ -229,11 +240,21 @@ export default function ManageProposals() {
         // 2. Redirect to escrow deposit page with amount prefilled
         navigate(`/project/${projectId}/fund?amount=${proposedPrice}`);
       } else {
-        alert(data.message || 'Lỗi khi duyệt đề xuất.');
+        Swal.fire({
+          title: 'Duyệt thất bại',
+          text: data.message || 'Lỗi khi duyệt đề xuất.',
+          icon: 'error',
+          confirmButtonColor: '#0F766E'
+        });
       }
     } catch (err) {
       console.error('Error hiring:', err);
-      alert(err.response?.data?.message || 'Lỗi hệ thống khi duyệt đề xuất.');
+      Swal.fire({
+        title: 'Lỗi kết nối',
+        text: err.response?.data?.message || 'Lỗi hệ thống khi duyệt đề xuất.',
+        icon: 'error',
+        confirmButtonColor: '#0F766E'
+      });
     }
   };
 

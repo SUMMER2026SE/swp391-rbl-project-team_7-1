@@ -128,7 +128,7 @@ export default function FreelancerWallet() {
         {/* Header Section */}
         <header className="mb-8">
           <h1 className="text-[28px] font-black text-slate-800 tracking-tight mb-1">Ví tiền</h1>
-          <p className="text-[15px] text-slate-500 font-medium">Quản lý số dư, giao dịch và phương thức thanh toán</p>
+          <p className="text-[15px] text-slate-500 font-medium">Quản lý số dư, giao dịch và tài khoản thanh toán</p>
         </header>
 
         {/* MAIN GRID */}
@@ -329,22 +329,13 @@ export default function FreelancerWallet() {
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-slate-600">Hạn mức giao dịch</span>
-                  <span className="text-xs font-bold text-slate-800">44%</span>
-                </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
-                  <div className="h-full bg-[#0F766E] rounded-full" style={{ width: '44%' }}></div>
-                </div>
-                <p className="text-[11px] font-semibold text-slate-400">44.000.000 đ / 100.000.000 đ</p>
-              </div>
+              {/* Hạn mức giao dịch đã được loại bỏ */}
             </div>
 
             {/* Payment Methods */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
               <div className="flex justify-between items-center mb-5">
-                <h3 className="text-base font-bold text-slate-800">Phương thức thanh toán</h3>
+                <h3 className="text-base font-bold text-slate-800">Tài khoản thanh toán</h3>
                 <button onClick={() => setIsBankModalOpen(true)} className="text-xs font-semibold text-[#0F766E]">Quản lý</button>
               </div>
               
@@ -361,7 +352,6 @@ export default function FreelancerWallet() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-semibold text-[#10B981] bg-[#E6F5EE] px-2 py-0.5 rounded">Mặc định</span>
-                      <span className="material-symbols-outlined text-slate-400 text-[18px] cursor-pointer hover:text-slate-600">more_vert</span>
                     </div>
                   </div>
                 )}
@@ -370,9 +360,11 @@ export default function FreelancerWallet() {
                 )}
               </div>
               
-              <button onClick={() => setIsBankModalOpen(true)} className="w-full py-3 rounded-xl border border-dashed border-emerald-300 text-[13px] font-medium text-[#10B981] hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">add</span> Thêm phương thức thanh toán
-              </button>
+              {!bankAccount && (
+                <button onClick={() => setIsBankModalOpen(true)} className="w-full py-3 rounded-xl border border-dashed border-emerald-300 text-[13px] font-medium text-[#10B981] hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
+                   <span className="material-symbols-outlined text-[18px]">add</span> Thêm tài khoản thanh toán
+                </button>
+              )}
             </div>
 
 

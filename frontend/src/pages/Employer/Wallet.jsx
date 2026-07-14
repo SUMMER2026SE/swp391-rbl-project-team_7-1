@@ -130,7 +130,7 @@ export default function EmployerWallet() {
         {/* Header Section */}
         <header className="mb-8">
           <h1 className="text-[28px] font-black text-slate-800 tracking-tight mb-1">Ví tiền Nhà tuyển dụng</h1>
-          <p className="text-[15px] text-slate-500 font-medium">Quản lý số dư, giao dịch và phương thức thanh toán</p>
+          <p className="text-[15px] text-slate-500 font-medium">Quản lý số dư, giao dịch và tài khoản thanh toán</p>
         </header>
 
         {/* MAIN GRID */}
@@ -333,7 +333,7 @@ export default function EmployerWallet() {
             {/* Payment Methods */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
               <div className="flex justify-between items-center mb-5">
-                <h3 className="text-base font-bold text-slate-800">Phương thức thanh toán</h3>
+                <h3 className="text-base font-bold text-slate-800">Tài khoản thanh toán</h3>
                 <button onClick={() => setIsBankModalOpen(true)} className="text-xs font-semibold text-[#0F766E]">Quản lý</button>
               </div>
               
@@ -350,18 +350,19 @@ export default function EmployerWallet() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-semibold text-[#10B981] bg-[#E6F5EE] px-2 py-0.5 rounded">Mặc định</span>
-                      <span className="material-symbols-outlined text-slate-400 text-[18px] cursor-pointer hover:text-slate-600">more_vert</span>
                     </div>
                   </div>
                 )}
                 {!bankAccount && (
-                  <div className="text-center py-4 text-slate-400 text-sm">Chưa liên kết thẻ</div>
+                  <div className="text-center py-4 text-slate-400 text-sm">Chưa liên kết tài khoản</div>
                 )}
               </div>
               
-              <button onClick={() => setIsBankModalOpen(true)} className="w-full py-3 rounded-xl border border-dashed border-emerald-300 text-[13px] font-medium text-[#10B981] hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">add</span> Thêm phương thức thanh toán
-              </button>
+              {!bankAccount && (
+                <button onClick={() => setIsBankModalOpen(true)} className="w-full py-3 rounded-xl border border-dashed border-emerald-300 text-[13px] font-medium text-[#10B981] hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">add</span> Thêm tài khoản thanh toán
+                </button>
+              )}
             </div>
 
           </div>

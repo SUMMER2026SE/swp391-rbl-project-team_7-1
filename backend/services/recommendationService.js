@@ -18,8 +18,8 @@ const calculateSkillMatch = (freelancerSkills, projectSkills) => {
 
   const score = Math.round((matchedCount / projectSkills.length) * 100);
   const reasons = matchedCount > 0
-    ? [`Matches ${matchedCount} of ${projectSkills.length} required skills`]
-    : ['No direct skill match'];
+    ? [`Khớp ${matchedCount}/${projectSkills.length} kỹ năng yêu cầu`]
+    : ['Không khớp trực tiếp kỹ năng nào'];
 
   return { score, reasons };
 };
@@ -38,14 +38,14 @@ const calculateHistoricalPreference = (
   const maxBonus = 100;
 
   if (!employerHistory.length) {
-    return { score: 50, reasons: ['No employer history available'] };
+    return { score: 50, reasons: ['Chưa có lịch sử tuyển dụng từ doanh nghiệp này'] };
   }
 
   // Check if freelancer was previously hired by this employer
   const previouslyHired = employerHistory.some(h => h.freelancer_id === freelancer.user_id);
   if (previouslyHired) {
     bonusPoints += 30;
-    reasons.push('Previously hired by this employer');
+    reasons.push('Đã từng được thuê bởi nhà tuyển dụng này');
   }
 
   // Check category preference
@@ -53,7 +53,7 @@ const calculateHistoricalPreference = (
   if (categoryMatches > 0) {
     const categoryScore = Math.min(categoryMatches * 10, 20);
     bonusPoints += categoryScore;
-    reasons.push(`Hired ${categoryMatches} freelancers for this category`);
+    reasons.push(`Đã tuyển ${categoryMatches} freelancer cho danh mục này`);
   }
 
   // Check skill preference
@@ -64,7 +64,7 @@ const calculateHistoricalPreference = (
     if (commonSkills.length > 0) {
       const skillBonus = Math.min(commonSkills.length * 10, 20);
       bonusPoints += skillBonus;
-      reasons.push(`Employer frequently hires ${commonSkills.slice(0, 3).join(', ')} developers`);
+      reasons.push(`Doanh nghiệp thường thuê lập trình viên ${commonSkills.slice(0, 3).join(', ')}`);
     }
   }
 
@@ -73,7 +73,7 @@ const calculateHistoricalPreference = (
     const avgHiredRating = employerHistory.reduce((sum, h) => sum + (h.rating_average || 0), 0) / employerHistory.length;
     if (freelancer.rating_average >= avgHiredRating) {
       bonusPoints += 15;
-      reasons.push('Rating matches employer\'s preferred range');
+      reasons.push('Đánh giá sao phù hợp với tiêu chuẩn tuyển dụng');
     }
   }
 
@@ -82,7 +82,7 @@ const calculateHistoricalPreference = (
     const avgExperience = employerHistory.reduce((sum, h) => sum + (h.experience_years || 0), 0) / employerHistory.length;
     if (freelancer.experience_years >= avgExperience * 0.8) {
       bonusPoints += 15;
-      reasons.push('Experience level meets employer preference');
+      reasons.push('Số năm kinh nghiệm đáp ứng mong muốn tuyển dụng');
     }
   }
 
@@ -97,7 +97,7 @@ const calculateProposalQuality = (freelancer, proposals) => {
 
   const flProposals = proposals.filter(p => p.freelancer_id === freelancer.user_id);
   if (!flProposals.length) {
-    return { score: 50, reasons: ['No proposal history'] };
+    return { score: 50, reasons: ['Chưa có lịch sử đề xuất'] };
   }
 
   const p = flProposals[0];
@@ -109,7 +109,7 @@ const calculateProposalQuality = (freelancer, proposals) => {
     const acceptanceRate = (accepted / total) * 100;
     if (acceptanceRate > 50) {
       score += 20;
-      reasons.push(`High proposal acceptance rate (${Math.round(acceptanceRate)}%)`);
+      reasons.push(`Tỷ lệ nhận đề xuất cao (${Math.round(acceptanceRate)}%)`);
     }
   }
 
@@ -118,10 +118,10 @@ const calculateProposalQuality = (freelancer, proposals) => {
     const deliveryDays = Math.round(p.avg_delivery_days);
     if (deliveryDays <= 7) {
       score += 15;
-      reasons.push('Consistent quick delivery (avg ' + deliveryDays + ' days)');
+      reasons.push('Thời gian bàn giao nhanh (trung bình ' + deliveryDays + ' ngày)');
     } else if (deliveryDays <= 30) {
       score += 10;
-      reasons.push('Reasonable delivery estimates (avg ' + deliveryDays + ' days)');
+      reasons.push('Thời gian bàn giao hợp lý (trung bình ' + deliveryDays + ' ngày)');
     }
   }
 
@@ -129,7 +129,7 @@ const calculateProposalQuality = (freelancer, proposals) => {
   const hasPortfolioDescription = freelancer.portfolio_summary && freelancer.portfolio_summary.length > 50;
   if (hasPortfolioDescription) {
     score += 15;
-    reasons.push('Detailed portfolio and project descriptions');
+    reasons.push('Hồ sơ năng lực và mô tả dự án rất chi tiết');
   }
 
   return { score: Math.min(score, 100), reasons };
@@ -158,7 +158,7 @@ const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolio
   ].join(' ').toLowerCase();
 
   if (!freelancerText.trim()) {
-    return { score: 30, reasons: ['Limited portfolio information'] };
+    return { score: 30, reasons: ['Thông tin hồ sơ năng lực còn hạn chế'] };
   }
 
   // Tokenize and compute keyword overlap
@@ -176,11 +176,11 @@ const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolio
     score += Math.round(overlapRatio * 40);
 
     if (overlapRatio > 0.3) {
-      reasons.push('Portfolio highly matches project scope');
+      reasons.push('Hồ sơ năng lực rất khớp với mô tả dự án');
     } else if (overlapRatio > 0.1) {
-      reasons.push('Portfolio partially matches project requirements');
+      reasons.push('Hồ sơ năng lực khớp một phần với yêu cầu dự án');
     } else {
-      reasons.push('Portfolio has some relevant keywords');
+      reasons.push('Hồ sơ năng lực có các từ khóa liên quan');
     }
   }
 
@@ -192,12 +192,12 @@ const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolio
   if (projectHasRelatedSkills) {
     score += 10;
     if (reasons.length === 0) {
-      reasons.push('Skills align with project domain');
+      reasons.push('Kỹ năng cá nhân phù hợp với lĩnh vực dự án');
     }
   }
 
   if (reasons.length === 0) {
-    reasons.push('Moderate semantic relevance');
+    reasons.push('Độ tương đồng ngữ nghĩa trung bình');
   }
 
   return { score: Math.min(score, 100), reasons };

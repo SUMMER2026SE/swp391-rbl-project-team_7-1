@@ -363,7 +363,7 @@ export default function Profile() {
       }
     } catch (err) {
       console.error('Error drafting AI invitation:', err);
-      setInviteErrorMsg('Lỗi kết nối máy chủ khi gọi AI.');
+      setInviteErrorMsg(err.response?.data?.message || 'Lỗi kết nối máy chủ khi gọi AI.');
     } finally {
       setDraftingAI(false);
     }

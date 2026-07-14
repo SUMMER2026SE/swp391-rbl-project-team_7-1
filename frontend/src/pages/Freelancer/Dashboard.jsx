@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
 import { proposalService } from '../../services/proposalService';
 import { invitationService } from '../../services/invitationService';
+import Swal from 'sweetalert2';
 
 export default function FreelancerDashboard() {
   const { user } = useAuth();
@@ -125,9 +126,18 @@ export default function FreelancerDashboard() {
   }, [token, user?.userId, user?.user_id, user?.id, navigate]);
 
   const handleWithdrawProposal = async (proposalId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn rút đề xuất này? Thao tác này không thể hoàn tác.')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Rút đề xuất?',
+      text: 'Bạn có chắc chắn muốn rút đề xuất này? Thao tác này không thể hoàn tác.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#E11D48',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Đồng ý rút',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const data = await proposalService.deleteProposal(proposalId);
@@ -136,19 +146,38 @@ export default function FreelancerDashboard() {
         fetchDashboardData();
         setTimeout(() => setToastMsg(''), 4000);
       } else {
-        alert(data.message || 'Lỗi khi rút đề xuất.');
+        Swal.fire({
+          title: 'Thất bại',
+          text: data.message || 'Lỗi khi rút đề xuất.',
+          icon: 'error',
+          confirmButtonColor: '#0F766E'
+        });
       }
     } catch (err) {
       console.error('Error withdrawing proposal:', err);
-      alert('Lỗi mạng khi thực hiện rút đề xuất.');
+      Swal.fire({
+        title: 'Lỗi kết nối',
+        text: 'Lỗi mạng khi thực hiện rút đề xuất.',
+        icon: 'error',
+        confirmButtonColor: '#0F766E'
+      });
     }
   };
 
   const handleRespondToInvitation = async (invitationId, status) => {
     const isAccept = status === 'ACCEPTED';
-    if (!window.confirm(`Bạn có chắc chắn muốn ${isAccept ? 'CHẤP NHẬN' : 'TỪ CHỐI'} lời mời hợp tác này?`)) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: isAccept ? 'Chấp nhận lời mời?' : 'Từ chối lời mời?',
+      text: `Bạn có chắc chắn muốn ${isAccept ? 'CHẤP NHẬN' : 'TỪ CHỐI'} lời mời hợp tác này?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: isAccept ? '#0F766E' : '#E11D48',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: isAccept ? 'Đồng ý nhận' : 'Từ chối',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
     
     try {
       const res = await invitationService.respondToInvitation(invitationId, status);
@@ -157,11 +186,21 @@ export default function FreelancerDashboard() {
         fetchDashboardData();
         setTimeout(() => setToastMsg(''), 4000);
       } else {
-        alert(res.message || 'Lỗi khi phản hồi lời mời.');
+        Swal.fire({
+          title: 'Thất bại',
+          text: res.message || 'Lỗi khi phản hồi lời mời.',
+          icon: 'error',
+          confirmButtonColor: '#0F766E'
+        });
       }
     } catch (err) {
       console.error('Error responding to invitation:', err);
-      alert(err.response?.data?.message || 'Lỗi mạng khi phản hồi lời mời.');
+      Swal.fire({
+        title: 'Lỗi kết nối',
+        text: err.response?.data?.message || 'Lỗi mạng khi phản hồi lời mời.',
+        icon: 'error',
+        confirmButtonColor: '#0F766E'
+      });
     }
   };
 
@@ -648,7 +687,7 @@ export default function FreelancerDashboard() {
                           </h3>
 
                           {invite.message && (
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100/50 mt-2 max-w-xl text-xs text-slate-600 italic">
+                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100/50 mt-2 max-w-xl text-xs text-slate-600 italic break-words break-all whitespace-pre-wrap max-h-32 overflow-y-auto">
                               "{invite.message}"
                             </div>
                           )}

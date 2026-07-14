@@ -232,22 +232,29 @@ export const draftAIInvitation = async (req, res) => {
     const project = projectRes.recordset[0] || {};
     const freelancer = freelancerRes.recordset[0] || {};
 
-    const systemInstruction = `Bạn là trợ lý soạn thảo thư mời hợp tác của hệ thống FJMS. Hãy viết một bức thư mời ngắn gọn (3-4 câu), chuyên nghiệp nhưng thân thiện bằng tiếng Việt. Bức thư phải đề cập CỤ THỂ lý do vì sao freelancer này phù hợp với dự án (dựa trên kỹ năng hoặc kinh nghiệm của họ). Trả về đúng nội dung bức thư, không chứa lời tự thoại hay ký tự định dạng.`;
+    const systemInstruction = `Bạn là trợ lý AI của hệ thống FJMS. Nhiệm vụ của bạn là thay mặt Nhà tuyển dụng viết một lời nhắn mời hợp tác NGẮN GỌN (khoảng 3 câu, tối đa 80 từ) gửi đến Freelancer. 
+
+Yêu cầu lời nhắn phải được viết dưới góc nhìn của Nhà tuyển dụng (xưng "Tôi" hoặc "Chúng tôi", gọi đối phương là "Bạn" hoặc "Anh/Chị"), TUYỆT ĐỐI KHÔNG xưng là "FJMS".
+
+Cấu trúc lời nhắn:
+1. Lời chào ngắn gọn gửi đến Freelancer.
+2. Nêu nhanh lý do thấy kỹ năng/chuyên môn của họ phù hợp với dự án.
+3. Ngỏ lời mời họ ứng tuyển hoặc phản hồi để thảo luận thêm.
+
+Định dạng đầu ra: Chỉ trả về nội dung lời nhắn mời hợp tác hoàn chỉnh dưới dạng văn bản thuần túy, không chứa lời dẫn giải, không tự thoại, không có ký tự markdown.`;
 
     const userPrompt = `
-Viết lời mời cho freelancer tham gia ứng tuyển dự án:
+Hãy viết lời mời hợp tác ngắn gọn (khoảng 60-80 từ) gửi cho freelancer sau đây dưới góc nhìn của Nhà tuyển dụng (Employer):
 
---- DỰ ÁN ---
-Tiêu đề: ${project.title || 'N/A'}
-Mô tả: ${(project.description || '').substring(0, 500)}
-Kỹ năng yêu cầu: ${project.required_skills || 'N/A'}
+--- THÔNG TIN CHI TIẾT ---
+- Tên Freelancer: ${freelancer.full_name || 'Ứng viên'}
+- Chuyên môn của Freelancer: ${freelancer.headline || 'Chuyên viên tự do'}
+- Dự án của tôi: ${project.title || 'Dự án trên FJMS'}
+- Mô tả dự án: ${(project.description || '').substring(0, 300)}
+- Kỹ năng dự án yêu cầu: ${project.required_skills || 'N/A'}
 
---- FREELANCER ---
-Tên: ${freelancer.full_name || 'Freelancer'}
-Chuyên môn: ${freelancer.headline || 'N/A'}
-Kỹ năng: ${freelancer.skills || 'N/A'}
-${freelancer.cv_ai_evaluation ? `Đánh giá CV: ${freelancer.cv_ai_evaluation.substring(0, 500)}` : ''}
-    `.trim();
+Lưu ý: Lời nhắn phải đại diện cho Nhà tuyển dụng (xưng "Chúng tôi/Tôi"), nêu ngắn gọn lý do kỹ năng phù hợp và ngỏ lời mời ứng tuyển. Trả về đúng lời nhắn hoàn chỉnh.
+`.trim();
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
@@ -255,7 +262,7 @@ ${freelancer.cv_ai_evaluation ? `Đánh giá CV: ${freelancer.cv_ai_evaluation.s
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemInstruction }] },
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { maxOutputTokens: 300, temperature: 0.7 }
+        generationConfig: { maxOutputTokens: 250, temperature: 0.7 }
       })
     });
 
