@@ -300,54 +300,54 @@ export default function MyProjects() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
+              <table className="w-full text-left border-collapse min-w-[900px] align-middle">
                 <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 text-[11px] uppercase font-bold tracking-wider bg-slate-50/50">
-                    <th className="py-4 px-6 font-bold">Tên dự án</th>
-                    <th className="py-4 px-6 font-bold">Danh mục</th>
-                    <th className="py-4 px-6 font-bold">Ngân sách</th>
-                    <th className="py-4 px-6 font-bold text-center">Trạng thái</th>
-                    <th className="py-4 px-6 font-bold text-center">Số đề xuất</th>
-                    <th className="py-4 px-6 font-bold text-right">Thao tác</th>
+                  <tr className="border-b border-slate-100 text-slate-400 text-[11px] uppercase font-bold tracking-wider bg-slate-50/30">
+                    <th className="py-4 px-6 font-semibold">Tên dự án</th>
+                    <th className="py-4 px-6 font-semibold">Danh mục</th>
+                    <th className="py-4 px-6 font-semibold">Ngân sách</th>
+                    <th className="py-4 px-6 font-semibold text-center">Trạng thái</th>
+                    <th className="py-4 px-6 font-semibold text-center">Số đề xuất</th>
+                    <th className="py-4 px-6 font-semibold text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100/70">
                   {filteredProjects.map((project) => (
-                    <tr key={project.project_id} className="hover:bg-slate-50/70 transition-all duration-200 group">
-                      <td className="py-5 px-6 max-w-xs md:max-w-sm">
+                    <tr key={project.project_id} className="hover:bg-slate-50/40 transition-all duration-200 group">
+                      <td className="py-6 px-6 max-w-xs md:max-w-sm">
                         <div className="flex flex-col min-w-0">
                           <Link 
                             to={`/project-details/${project.project_id}`} 
-                            className="font-bold text-slate-800 hover:text-[#0F766E] transition-colors truncate text-sm md:text-base"
+                            className="font-extrabold text-slate-800 hover:text-[#0F766E] transition-colors truncate text-[15px]"
                           >
                             {project.title}
                           </Link>
-                          <span className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-[12px]">calendar_today</span>
+                          <span className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[13px] text-slate-400">calendar_today</span>
                             Hạn chót: {project.deadline ? new Date(project.deadline).toLocaleDateString('vi-VN') : 'Không giới hạn'}
                           </span>
                         </div>
                       </td>
 
-                      <td className="py-5 px-6">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                      <td className="py-6 px-6 whitespace-nowrap">
+                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-[11px] font-bold bg-[#F1F5F9] text-slate-600 border border-slate-200/40">
                           {project.category_name || 'Lập trình Web'}
                         </span>
                       </td>
 
-                      <td className="py-5 px-6">
+                      <td className="py-6 px-6 whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span className="font-extrabold text-sm text-[#0F766E]">
+                          <span className="font-extrabold text-[14px] text-[#0F766E] tracking-tight">
                             {project.budget_max ? `${Math.round(project.budget_max).toLocaleString('vi-VN')} đ` : 'Thương lượng'}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                          <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
                             {project.budget_type === 'HOURLY' ? 'Theo giờ' : 'Gói cố định'}
                           </span>
                         </div>
                       </td>
 
-                      <td className="py-5 px-6 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide border ${
+                      <td className="py-6 px-6 text-center">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wide border ${
                           project.status === 'OPEN' 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
                           : project.status === 'IN_PROGRESS'
@@ -371,51 +371,55 @@ export default function MyProjects() {
                         </span>
                       </td>
 
-                      <td className="py-5 px-6 text-center">
+                      <td className="py-6 px-6 text-center">
                         <Link 
                           to={`/manage-proposals/${project.project_id}`}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 hover:bg-teal-50 hover:text-[#0F766E] text-slate-800 text-xs font-black shadow-inner transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-teal-50 hover:text-[#0F766E] text-slate-700 text-xs font-extrabold transition-all border border-slate-200/20"
                         >
-                          {project.proposalsCount || 0}
+                          <span className="material-symbols-outlined text-[13px]">group</span>
+                          <span>{project.proposalsCount || 0}</span>
                         </Link>
                       </td>
 
-                      <td className="py-5 px-6 text-right">
-                        <div className="flex justify-end items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+                      <td className="py-6 px-6 text-right">
+                        <div className="flex justify-end items-center gap-3">
                           <Link 
                             to={`/manage-proposals/${project.project_id}`} 
-                            className="px-3.5 py-2 bg-teal-50 text-[#0F766E] font-bold text-xs rounded-xl hover:bg-[#0F766E] hover:text-white transition-all shadow-sm flex items-center gap-1 border border-teal-100/50"
+                            className="px-4 py-2 bg-teal-50 text-[#0F766E] font-bold text-xs rounded-xl hover:bg-[#0F766E] hover:text-white transition-all shadow-sm flex items-center gap-1 border border-teal-100 shrink-0"
                           >
-                            <span className="material-symbols-outlined text-[14px]">group</span>
+                            <span className="material-symbols-outlined text-[15px]">group</span>
                             Hồ sơ ứng tuyển
                           </Link>
 
-                          {project.status === 'OPEN' && (
-                            <>
-                              <Link 
-                                to={`/edit-project/${project.project_id}`} 
-                                className="p-2 text-slate-400 hover:text-[#0F766E] hover:bg-slate-100 rounded-xl transition-all flex items-center justify-center"
-                                title="Chỉnh sửa dự án"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">edit</span>
-                              </Link>
-                              <button 
-                                onClick={() => handleCloseProject(project.project_id)}
-                                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all flex items-center justify-center cursor-pointer border-none bg-transparent"
-                                title="Đóng dự án"
-                              >
-                                <span className="material-symbols-outlined text-[18px]">cancel</span>
-                              </button>
-                            </>
-                          )}
+                          {/* Nhóm icon quản lý có kích thước cố định để căn thẳng hàng nút chính */}
+                          <div className="flex items-center justify-end gap-1.5 w-[110px] shrink-0">
+                            {project.status === 'OPEN' && (
+                              <>
+                                <Link 
+                                  to={`/edit-project/${project.project_id}`} 
+                                  className="w-8 h-8 text-slate-400 hover:text-[#0F766E] hover:bg-teal-50 rounded-xl transition-all flex items-center justify-center border border-slate-100 hover:border-teal-200"
+                                  title="Chỉnh sửa dự án"
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">edit</span>
+                                </Link>
+                                <button 
+                                  onClick={() => handleCloseProject(project.project_id)}
+                                  className="w-8 h-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all flex items-center justify-center border border-slate-100 hover:border-amber-200 cursor-pointer bg-transparent"
+                                  title="Đóng dự án"
+                                >
+                                  <span className="material-symbols-outlined text-[16px]">cancel</span>
+                                </button>
+                              </>
+                            )}
 
-                          <button 
-                            onClick={() => handleDeleteProject(project.project_id)}
-                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all flex items-center justify-center cursor-pointer border-none bg-transparent"
-                            title="Xóa dự án"
-                          >
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
-                          </button>
+                            <button 
+                              onClick={() => handleDeleteProject(project.project_id)}
+                              className="w-8 h-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all flex items-center justify-center border border-slate-100 hover:border-rose-200 cursor-pointer bg-transparent ms-auto"
+                              title="Xóa dự án"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>

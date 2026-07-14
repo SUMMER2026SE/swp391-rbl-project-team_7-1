@@ -127,10 +127,10 @@ export default function FreelancerWallet() {
           <div className="lg:col-span-8 flex flex-col gap-6">
             
             {/* Balance Card */}
-            <div className="relative bg-gradient-to-r from-[#E2F2EC] via-[#EEF8F4] to-[#E2F2EC] rounded-3xl p-8 overflow-hidden shadow-sm border border-emerald-100/30">
+            <div className="relative bg-gradient-to-r from-[#FFFFFF] via-[#EEFAF4] to-[#DDF1E8] rounded-3xl p-8 overflow-hidden shadow-sm border border-slate-100">
               {/* Blurred mesh gradient blobs */}
-              <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#CDECE0] rounded-full mix-blend-multiply filter blur-[80px] opacity-70 pointer-events-none"></div>
-              <div className="absolute -bottom-20 -right-10 w-96 h-96 bg-[#BCE4D3] rounded-full mix-blend-multiply filter blur-[100px] opacity-60 pointer-events-none"></div>
+              <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#E6F4EA] rounded-full mix-blend-multiply filter blur-[80px] opacity-40 pointer-events-none"></div>
+              <div className="absolute -bottom-20 -right-10 w-96 h-96 bg-[#D1FAE5] rounded-full mix-blend-multiply filter blur-[100px] opacity-55 pointer-events-none"></div>
               
               <div className="relative z-10 w-full sm:w-2/3">
                 <div className="flex items-center gap-2 mb-4">
