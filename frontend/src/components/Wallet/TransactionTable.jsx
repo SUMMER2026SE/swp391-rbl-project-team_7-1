@@ -96,7 +96,7 @@ export default function TransactionTable({ transactions }) {
     }
     const absAmount = Math.abs(tx.amount);
     const sign = isPositive ? '+' : '-';
-    const colorClass = isPositive ? 'text-[#10B981]' : 'text-slate-800'; 
+    const colorClass = isPositive ? 'text-[#10B981]' : 'text-[#EF4444]'; 
     return { text: `${sign}${formatCurrency(absAmount)}`, colorClass };
   };
 

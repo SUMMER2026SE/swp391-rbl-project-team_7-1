@@ -75,7 +75,7 @@ export default function TransactionHistoryPage() {
           </div>
         ) : (
           <>
-            <TransactionTable transactions={transactions} />
+            <TransactionTable transactions={transactions.filter(tx => tx.transaction_type !== 'SERVICE_FEE')} />
             
             {/* Pagination */}
             {totalPages > 1 && (

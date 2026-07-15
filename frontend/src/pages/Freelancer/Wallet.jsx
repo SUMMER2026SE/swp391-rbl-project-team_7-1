@@ -104,6 +104,7 @@ export default function FreelancerWallet() {
   };
 
   const filteredTransactions = transactions.filter(tx => {
+    if (tx.transaction_type === 'SERVICE_FEE') return false;
     if (activeTab === 'Tất cả') return true;
     const desc = (tx.description || tx.transaction_type).toLowerCase();
     if (activeTab === 'Nạp tiền') return desc.includes('nạp tiền') || (!desc.includes('rút') && !desc.includes('thanh toán') && !desc.includes('tạm giữ') && !desc.includes('ký quỹ') && !desc.includes('hoàn tiền'));
@@ -239,17 +240,26 @@ export default function FreelancerWallet() {
                 <div className="space-y-1">
                   {filteredTransactions.length > 0 ? filteredTransactions.map(tx => {
                     const desc = (tx.description || tx.transaction_type).toLowerCase();
-                    let style = { bg: 'bg-[#E6F5EE]', text: 'text-[#10B981]', icon: 'arrow_downward', amountColor: 'text-[#10B981]' };
+                    let style = { bg: 'bg-[#E6F5EE]', text: 'text-[#10B981]', icon: 'arrow_downward' };
                     
                     if (desc.includes('rút')) {
-                      style = { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', icon: 'arrow_upward', amountColor: 'text-[#EF4444]' };
+                      style = { bg: 'bg-[#EFF6FF]', text: 'text-[#3B82F6]', icon: 'arrow_upward' };
                     } else if (desc.includes('thanh toán')) {
-                      style = { bg: 'bg-[#FDF2F8]', text: 'text-[#EC4899]', icon: 'receipt_long', amountColor: 'text-[#EF4444]' };
+                      style = { bg: 'bg-[#FDF2F8]', text: 'text-[#EC4899]', icon: 'receipt_long' };
                     } else if (desc.includes('tạm giữ')) {
-                      style = { bg: 'bg-[#FFF7ED]', text: 'text-[#F97316]', icon: 'lock', amountColor: 'text-[#EF4444]' };
+                      style = { bg: 'bg-[#FFF7ED]', text: 'text-[#F97316]', icon: 'lock' };
                     } else if (desc.includes('hoàn tiền')) {
-                      style = { bg: 'bg-[#F5F3FF]', text: 'text-[#8B5CF6]', icon: 'undo', amountColor: 'text-[#10B981]' };
+                      style = { bg: 'bg-[#F5F3FF]', text: 'text-[#8B5CF6]', icon: 'undo' };
                     }
+
+                    let isPositive = tx.amount > 0;
+                    if (['WITHDRAWAL', 'SERVICE_FEE', 'ESCROW_DEPOSIT', 'PAYMENT'].includes(tx.transaction_type)) {
+                      isPositive = false;
+                    } else if (['DEPOSIT', 'ESCROW_RELEASE', 'REFUND'].includes(tx.transaction_type)) {
+                      isPositive = true;
+                    }
+                    const amountSign = isPositive ? '+' : '-';
+                    const amountColor = isPositive ? 'text-[#10B981]' : 'text-[#EF4444]';
 
                     return (
                     <div key={tx.transaction_id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 border-b border-slate-50 last:border-0 gap-3">
@@ -265,8 +275,8 @@ export default function FreelancerWallet() {
                         </div>
                       </div>
                       <div className="flex items-center justify-between w-full sm:w-auto gap-4 pl-14 sm:pl-0">
-                        <span className={`text-[13px] font-bold ${style.amountColor}`}>
-                          {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                        <span className={`text-[13px] font-bold ${amountColor}`}>
+                          {amountSign}{formatCurrency(Math.abs(tx.amount))}
                         </span>
                         <div className="flex items-center gap-2">
                           <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-md ${

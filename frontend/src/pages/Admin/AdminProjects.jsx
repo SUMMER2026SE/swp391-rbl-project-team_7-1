@@ -169,31 +169,43 @@ export default function AdminProjects() {
     switch (status) {
       case 'OPEN':
         return (
-          <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+          <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap">
             Đang tuyển
           </span>
         );
       case 'CLOSED':
         return (
-          <span className="bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+          <span className="bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap">
             Chờ duyệt
           </span>
         );
       case 'REJECTED':
         return (
-          <span className="bg-rose-50 text-rose-700 border border-rose-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
-            Từ chối duyệt
+          <span className="bg-rose-50 text-rose-700 border border-rose-100 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap">
+            Từ chối
+          </span>
+        );
+      case 'IN_PROGRESS':
+        return (
+          <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap">
+            Đang thực hiện
           </span>
         );
       case 'COMPLETED':
         return (
-          <span className="bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+          <span className="bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap">
             Đã hoàn thành
+          </span>
+        );
+      case 'CANCELED':
+        return (
+          <span className="bg-slate-50 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap">
+            Đã hủy
           </span>
         );
       default:
         return (
-          <span className="bg-slate-50 text-slate-500 border border-slate-100 px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase">
+          <span className="bg-slate-50 text-slate-500 border border-slate-100 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase whitespace-nowrap">
             {status}
           </span>
         );
@@ -349,14 +361,14 @@ export default function AdminProjects() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-[#E2E8F0]">
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Tiêu đề dự án</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Nhà tuyển dụng</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Lĩnh vực</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngân sách</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Số lượng tuyển</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Trạng thái</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngày tạo</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider text-right">Thao tác</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider">Tiêu đề dự án</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider">Nhà tuyển dụng</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider">Lĩnh vực</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">Ngân sách</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">Số lượng tuyển</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">Trạng thái</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider whitespace-nowrap">Ngày tạo</th>
+                  <th className="py-4 px-4 text-xs font-bold text-[#64748b] uppercase tracking-wider text-right whitespace-nowrap">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -378,24 +390,24 @@ export default function AdminProjects() {
                 ) : (
                   projects.map((project) => (
                     <tr key={project.project_id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-4 px-6">
-                        <div className="font-bold text-slate-800 text-sm hover:text-[#0F766E] cursor-pointer transition-colors" onClick={() => viewDetail(project.project_id)}>{project.title}</div>
+                      <td className="py-4 px-4 max-w-[200px] truncate" title={project.title}>
+                        <div className="font-bold text-slate-800 text-[13px] hover:text-[#0F766E] cursor-pointer transition-colors truncate" onClick={() => viewDetail(project.project_id)}>{project.title}</div>
                       </td>
-                      <td className="py-4 px-6 text-sm font-semibold text-slate-600">{project.employer_name || 'N/A'}</td>
-                      <td className="py-4 px-6">
-                        <span className="px-2.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-100 rounded-lg text-xs font-bold">{project.category_name || 'Khác'}</span>
+                      <td className="py-4 px-4 text-[13px] font-semibold text-slate-600">{project.employer_name || 'N/A'}</td>
+                      <td className="py-4 px-4">
+                        <span className="px-2.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-100 rounded-lg text-xs font-bold whitespace-nowrap">{project.category_name || 'Khác'}</span>
                       </td>
-                      <td className="py-4 px-6 text-sm font-black text-[#0F766E]">
+                      <td className="py-4 px-4 text-[13px] font-black text-[#0F766E] whitespace-nowrap">
                         {formatBudget(project.budget_min)}
                       </td>
-                      <td className="py-4 px-6 text-sm font-bold text-slate-700">
+                      <td className="py-4 px-4 text-[13px] font-bold text-slate-700 whitespace-nowrap">
                         {project.required_freelancer_count || 1} người
                       </td>
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-4 whitespace-nowrap">
                         {getStatusBadge(project.status)}
                       </td>
-                      <td className="py-4 px-6 text-sm text-slate-500 font-semibold">{new Date(project.created_at).toLocaleDateString('vi-VN', { dateStyle: 'short' })}</td>
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-4 px-4 text-xs text-slate-500 font-semibold whitespace-nowrap">{new Date(project.created_at).toLocaleDateString('vi-VN', { dateStyle: 'short' })}</td>
+                      <td className="py-4 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => viewDetail(project.project_id)} className="px-3.5 py-1.5 rounded-xl border border-[#E2E8F0] bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all cursor-pointer">
                             Chi tiết
