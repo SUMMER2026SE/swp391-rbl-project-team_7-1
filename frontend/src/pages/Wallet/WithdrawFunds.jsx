@@ -213,7 +213,19 @@ export default function WithdrawFunds() {
                   <span className="material-symbols-outlined text-yellow-600">warning</span>
                   <div>
                     <p className="font-medium">Chưa có thẻ/tài khoản liên kết</p>
-                    <button onClick={() => navigate('/employer-wallet')} className="text-sm text-yellow-700 underline mt-1">Đi tới trang quản lý Ví để liên kết ngay</button>
+                    <button 
+                      onClick={() => {
+                        const activeRole = localStorage.getItem('active_role');
+                        if (activeRole === 'FREELANCER') {
+                          navigate('/freelancer-wallet');
+                        } else {
+                          navigate('/employer-wallet');
+                        }
+                      }} 
+                      className="text-sm text-yellow-700 underline mt-1"
+                    >
+                      Đi tới trang quản lý Ví để liên kết ngay
+                    </button>
                   </div>
                 </div>
               )}
