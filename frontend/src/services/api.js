@@ -27,12 +27,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid, auto-logout logic can be triggered here
-      // However, we'll let the AuthContext handle the actual redirect
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Optionally redirect to login, but better handled at context level
+      if (error.response.status === 403 && error.response.data?.message) {
+        window.alert(error.response.data.message);
+      }
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

@@ -7,7 +7,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx'
 import { BrowserRouter as Router } from 'react-router-dom';
 // Intercept all native fetch calls to replace localhost:5000 with VITE_API_URL dynamically
 const originalFetch = window.fetch;
-window.fetch = function (url, options) {
+window.fetch = async function (url, options) {
   if (typeof url === 'string') {
     // If it is an API request to ngrok
     if (url.startsWith('http://localhost:5000') || url.includes('ngrok-free.dev') || url.includes('ngrok-free.app')) {
@@ -36,7 +36,26 @@ window.fetch = function (url, options) {
       }
     }
   }
-  return originalFetch(url, options);
+
+  const response = await originalFetch(url, options);
+
+  if (typeof url === 'string' && url.includes('/api') && (response.status === 401 || response.status === 403)) {
+    if (response.status === 403) {
+      try {
+        const data = await response.clone().json();
+        if (data?.message) {
+          window.alert(data.message);
+        }
+      } catch (err) {
+        // ignore parse failures
+      }
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  }
+
+  return response;
 };
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';

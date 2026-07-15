@@ -399,6 +399,26 @@ export const getAdminUsers = async (req, res) => {
   }
 };
 
+const emitForceLogoutEvent = (req, userId) => {
+  const io = req.app.get('socketio');
+  const activeUsers = req.app.get('activeUsers');
+  if (!io || !activeUsers) return;
+
+  const userSession = activeUsers.get(Number(userId));
+  if (userSession && userSession.socketId) {
+    io.to(userSession.socketId).emit('force_logout', {
+      message: 'Tài khoản của bạn đã bị khóa bởi quản trị viên.'
+    });
+
+    const socket = io.sockets.sockets.get(userSession.socketId);
+    if (socket) {
+      socket.disconnect(true);
+    }
+
+    activeUsers.set(Number(userId), { socketId: null, lastSeen: new Date() });
+  }
+};
+
 export const updateAdminUserStatus = async (req, res) => {
   try {
     const userId = parseInt(req.params.userId, 10);
@@ -427,6 +447,10 @@ export const updateAdminUserStatus = async (req, res) => {
     }
 
     await updateUserStatusById(userId, status);
+    if (status === 'BANNED') {
+      emitForceLogoutEvent(req, userId);
+    }
+
     res.json({ message: 'Cập nhật trạng thái người dùng thành công.' });
   } catch (error) {
     console.error('Error updating admin user status:', error);
@@ -455,6 +479,7 @@ export const banUser = async (req, res) => {
     }
 
     await updateUserStatusById(userId, 'BANNED');
+    emitForceLogoutEvent(req, userId);
     res.json({ message: 'Người dùng đã được cấm thành công.' });
   } catch (error) {
     console.error('Error banning user:', error);
