@@ -154,7 +154,7 @@ export default function ForgotPassword() {
             </div>
           )}
 
-          <div className="relative min-h-[300px]">
+          <div className={`relative transition-all duration-300 ${step === 1 ? 'min-h-[220px]' : 'min-h-[400px]'}`}>
             {/* Step 1: Send OTP Form */}
             <form onSubmit={handleSendEmail} className={`space-y-4 absolute inset-0 w-full transition-all duration-500 ease-in-out ${step === 1 ? 'opacity-100 translate-x-0 z-10' : 'opacity-0 -translate-x-full pointer-events-none'}`}>
               <div>
