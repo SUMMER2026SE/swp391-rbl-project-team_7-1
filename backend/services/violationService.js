@@ -1,3 +1,17 @@
+/**
+ * @deprecated
+ * This service is deprecated. Use reportService.js instead.
+ * 
+ * Reason: Legacy violation system has been replaced by the new Report System.
+ * - OLD: /api/admin/violations (uses reported_user_id, project_id)
+ * - NEW: /api/v1/admin/reports (uses entity_type, entity_id)
+ * 
+ * This file is kept for reference only and will be removed in the next major version.
+ * Do NOT add new functionality here.
+ * 
+ * @see reportService.js
+ */
+
 import * as violationRepository from '../repositories/violationRepository.js';
 
 export const getViolations = async ({ search, reportType, status, page = 1, limit = 10 }) => {
@@ -30,10 +44,6 @@ export const getViolationDetails = async (id) => {
     throw new Error('VIOLATION_NOT_FOUND');
   }
 
-  // Map to desired output structure:
-  // - report information
-  // - reporter information
-  // - reported user information
   return {
     report_id: report.report_id,
     project_id: report.project_id,
@@ -55,26 +65,25 @@ export const getViolationDetails = async (id) => {
       full_name: report.reported_name,
       email: report.reported_email,
       status: report.reported_status
+    },
+    target: {
+      entity_type: report.entity_type || 'USER',
+      entity_id: report.entity_id || null,
+      project_title: report.target_project_title || null,
+      owner_id: report.owner_id || null,
+      metadata: report.metadata ? JSON.parse(report.metadata) : null
     }
   };
 };
 
 export const resolveViolation = async (id, action) => {
   const report = await violationRepository.getViolationById(id);
-  if (!report) {
-    throw new Error('VIOLATION_NOT_FOUND');
-  }
-
-  if (report.status !== 'PENDING') {
-    throw new Error('VIOLATION_ALREADY_PROCESSED');
-  }
+  if (!report) throw new Error('VIOLATION_NOT_FOUND');
+  if (report.status !== 'PENDING') throw new Error('VIOLATION_ALREADY_PROCESSED');
 
   const allowedActions = ['WARN', 'SUSPEND_USER', 'BAN_USER', 'NO_ACTION'];
-  if (!allowedActions.includes(action)) {
-    throw new Error('INVALID_ACTION');
-  }
+  if (!allowedActions.includes(action)) throw new Error('INVALID_ACTION');
 
-  // Apply action
   if (action === 'WARN') {
     await violationRepository.updateViolationStatus(id, 'RESOLVED');
     await violationRepository.createNotification(
@@ -104,30 +113,14 @@ export const resolveViolation = async (id, action) => {
 
 export const dismissViolation = async (id) => {
   const report = await violationRepository.getViolationById(id);
-  if (!report) {
-    throw new Error('VIOLATION_NOT_FOUND');
-  }
-
-  if (report.status !== 'PENDING') {
-    throw new Error('VIOLATION_ALREADY_PROCESSED');
-  }
-
+  if (!report) throw new Error('VIOLATION_NOT_FOUND');
+  if (report.status !== 'PENDING') throw new Error('VIOLATION_ALREADY_PROCESSED');
   await violationRepository.updateViolationStatus(id, 'DISMISSED');
   return { success: true };
 };
 
 export const createViolationReport = async ({ reporterId, reportedUserId, projectId, messageId, reviewId, reportType, reason }) => {
-  if (!reporterId || !reportedUserId || !reportType || !reason) {
-    throw new Error('MISSING_FIELDS');
-  }
-  await violationRepository.createViolationReport({
-    reporterId,
-    reportedUserId,
-    projectId,
-    messageId,
-    reviewId,
-    reportType,
-    reason
-  });
+  if (!reporterId || !reportedUserId || !reportType || !reason) throw new Error('MISSING_FIELDS');
+  await violationRepository.createViolationReport({ reporterId, reportedUserId, projectId, messageId, reviewId, reportType, reason });
   return { success: true };
 };

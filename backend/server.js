@@ -21,7 +21,9 @@ import proposalRoutes from './routes/proposalRoutes.js';
 import adminProposalRoutes from './routes/adminProposalRoutes.js';
 import disputeRoutes from './routes/disputeRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
-import violationRoutes from './routes/violationRoutes.js';
+import adminReportRoutes from './routes/adminReportRoutes.js';
+// LEGACY: violationRoutes deprecated - use /api/v1/admin/reports instead
+// import violationRoutes from './routes/violationRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import aiChatRoutes from './routes/aiChatRoutes.js';
 import recommendationRoutes from './routes/recommendationRoutes.js';
@@ -83,8 +85,16 @@ app.use('/api/contracts', contractRoutes);
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/admin', adminProposalRoutes);
 app.use('/api/disputes', disputeRoutes);
+// API v1 - Report System
+app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/admin/reports', adminReportRoutes);
+
+// Backward compatibility (will be removed in next major version)
 app.use('/api/reports', reportRoutes);
-app.use('/api/admin/violations', violationRoutes);
+app.use('/api/admin/reports', adminReportRoutes);
+
+// LEGACY: /api/admin/violations is deprecated - removed
+// app.use('/api/admin/violations', violationRoutes);
 app.use('/api/admin/analytics', analyticsRoutes);
 app.use('/api/ai', aiChatRoutes);
 app.use('/api/recommendations', recommendationRoutes);

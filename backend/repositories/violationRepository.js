@@ -10,7 +10,7 @@ export const fetchViolationsWithFilters = async ({ search, reportType, status, l
     const searchParam = `%${search}%`;
     countReq.input('search', sql.NVarChar, searchParam);
     listReq.input('search', sql.NVarChar, searchParam);
-    whereClauses.push('(u_reported.full_name LIKE @search OR u_reported.email LIKE @search)');
+    whereClauses.push('(u_reported.full_name LIKE @search OR u_reported.email LIKE @search OR prj.title LIKE @search)');
   }
 
   if (reportType) {
@@ -44,16 +44,23 @@ export const fetchViolationsWithFilters = async ({ search, reportType, status, l
       vr.review_id,
       vr.report_type,
       vr.reason,
+      vr.description,
+      vr.entity_type,
+      vr.entity_id,
+      vr.owner_id,
+      vr.metadata,
       vr.status,
       vr.created_at,
       vr.resolved_at,
       u_reporter.full_name AS reporter_name,
       u_reporter.email AS reporter_email,
       u_reported.full_name AS reported_name,
-      u_reported.email AS reported_email
+      u_reported.email AS reported_email,
+      prj.title AS target_project_title
     FROM violation_reports vr
     LEFT JOIN users u_reporter ON vr.reporter_id = u_reporter.user_id
     LEFT JOIN users u_reported ON vr.reported_user_id = u_reported.user_id
+    LEFT JOIN projects prj ON vr.entity_type = 'PROJECT' AND vr.entity_id = prj.project_id
     ${whereSql}
     ORDER BY vr.created_at DESC
     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
@@ -87,6 +94,11 @@ export const getViolationById = async (id) => {
         vr.review_id,
         vr.report_type,
         vr.reason,
+        vr.description,
+        vr.entity_type,
+        vr.entity_id,
+        vr.owner_id,
+        vr.metadata,
         vr.status,
         vr.created_at,
         vr.resolved_at,
@@ -97,10 +109,12 @@ export const getViolationById = async (id) => {
         u_reported.user_id AS reported_user_id,
         u_reported.full_name AS reported_name,
         u_reported.email AS reported_email,
-        u_reported.status AS reported_status
+        u_reported.status AS reported_status,
+        prj.title AS target_project_title
       FROM violation_reports vr
       LEFT JOIN users u_reporter ON vr.reporter_id = u_reporter.user_id
       LEFT JOIN users u_reported ON vr.reported_user_id = u_reported.user_id
+      LEFT JOIN projects prj ON vr.entity_type = 'PROJECT' AND vr.entity_id = prj.project_id
       WHERE vr.report_id = @id
     `);
 

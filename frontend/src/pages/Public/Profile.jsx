@@ -1,20 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { userService } from '../../services/userService';
 import { projectService } from '../../services/projectService';
 import { invitationService } from '../../services/invitationService';
+import ReportModal from '../../components/Report/ReportModal';
 
 
 /* ─── helpers ─── */
 const initials = (n = '') => n.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }) : '—';
-const fmtVND = (v) => {
-  if (!v) return '';
-  const n = parseInt(v);
-  if (isNaN(n)) return v;
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace('.0', '')} triệu đ`;
-  return `${n.toLocaleString('vi-VN')} đ`;
-};
 
 function AIReviewCard({ aiEvaluationString }) {
   if (!aiEvaluationString) return null;
@@ -275,6 +269,7 @@ export default function Profile() {
   const [showDel, setShowDel]   = useState(false);
   const [delPwd, setDelPwd]     = useState('');
   const [delText, setDelText]   = useState('');
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const fileRef = useRef();
   
@@ -669,6 +664,17 @@ export default function Profile() {
                     <span className="material-symbols-outlined text-[16px] text-[#0F766E]">payments</span>
                     <span className="text-sm font-bold">{parseInt(eRate).toLocaleString('vi-VN')}<span className="font-normal text-[#94A3B8] text-xs"> đ/giờ</span></span>
                   </div>
+                )}
+
+                {isPublicView && (
+                  <button
+                    type="button"
+                    onClick={() => setShowReportModal(true)}
+                    className="w-full mt-4 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 text-slate-900 text-xs font-bold rounded-xl hover:bg-amber-400 shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer border-none"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">report_problem</span>
+                    Báo cáo
+                  </button>
                 )}
 
                 {activeRole === 'EMPLOYER' && eLocation && (
@@ -1813,6 +1819,16 @@ export default function Profile() {
           </div>
         </div>
       </div>
+    )}
+
+    {isPublicView && (
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        entityType="USER"
+        entityId={profile?.user_id || profile?.id || id || ''}
+        targetUserName={profile?.full_name || ''}
+      />
     )}
 
     <style>{`

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { projectService } from '../../services/projectService';
+import ReportModal from '../../components/Report/ReportModal';
 
 export default function ProjectDetails() {
   const token = localStorage.getItem('token');
@@ -10,7 +11,8 @@ export default function ProjectDetails() {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
-  const [currentUser, setCurrentUser] = useState(() => {
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [currentUser] = useState(() => {
     const u = localStorage.getItem('user');
     return u && u !== 'null' && u !== 'undefined' ? JSON.parse(u) : null;
   });
@@ -120,6 +122,14 @@ export default function ProjectDetails() {
             </button>
             <button className="hover:text-[#0F766E] hover:border-teal-200 transition-colors p-2.5 bg-white border border-slate-150 rounded-xl shadow-sm cursor-pointer flex items-center justify-center" title="Lưu tin tuyển dụng">
               <span className="material-symbols-outlined text-[18px]">bookmark_border</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowReportModal(true)}
+              className="hover:text-[#0F766E] hover:border-teal-200 transition-colors p-2.5 bg-white border border-slate-150 rounded-xl shadow-sm cursor-pointer flex items-center justify-center"
+              title="Báo cáo dự án"
+            >
+              <span className="material-symbols-outlined text-[18px]">report_problem</span>
             </button>
           </div>
         </div>
@@ -405,6 +415,16 @@ export default function ProjectDetails() {
           </div>
         </div>
       </div>
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        entityType="PROJECT"
+        entityId={project?.project_id || id}
+        ownerId={project?.employer_id || project?.owner_id || project?.user_id}
+        projectTitle={project?.title}
+        targetUserName={project?.employer_name || project?.owner_name || ''}
+      />
     </main>
   );
 }

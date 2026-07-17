@@ -109,6 +109,24 @@ export const initDb = async () => {
       END
     `);
 
+    await pool.request().query(`
+      IF EXISTS (SELECT * FROM sysobjects WHERE name='violation_reports' AND xtype='U')
+      BEGIN
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('violation_reports') AND name = 'project_id')
+          ALTER TABLE violation_reports ADD project_id INT NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('violation_reports') AND name = 'entity_type')
+          ALTER TABLE violation_reports ADD entity_type NVARCHAR(50) NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('violation_reports') AND name = 'entity_id')
+          ALTER TABLE violation_reports ADD entity_id INT NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('violation_reports') AND name = 'owner_id')
+          ALTER TABLE violation_reports ADD owner_id INT NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('violation_reports') AND name = 'metadata')
+          ALTER TABLE violation_reports ADD metadata NVARCHAR(MAX) NULL;
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('violation_reports') AND name = 'description')
+          ALTER TABLE violation_reports ADD description NVARCHAR(MAX) NULL;
+      END
+    `);
+
     console.log('✅ Wallet Management, Review, and AI Chat tables initialized (if not existed)');
   } catch (error) {
     console.error('❌ Failed to initialize database tables:', error);

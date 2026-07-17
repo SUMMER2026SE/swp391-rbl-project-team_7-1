@@ -1,52 +1,87 @@
 import { sql, poolPromise } from '../config/db.js';
 
-const parseIntParam = (value) => {
+/**
+ * Report Repository
+ * 
+ * Production-grade data access layer.
+ * ONLY responsible for database operations - no business logic.
+ */
+
+const ALLOWED_ENTITY_TYPES = ['PROJECT', 'USER', 'REVIEW', 'ORDER', 'MESSAGE'];
+const ALLOWED_STATUSES = ['PENDING', 'UNDER_REVIEW', 'RESOLVED', 'DISMISSED'];
+const MAX_LIMIT = 100;
+const MIN_LIMIT = 1;
+
+const toInt = (value) => {
   const parsed = parseInt(value, 10);
   return Number.isInteger(parsed) ? parsed : null;
 };
 
-const parsePositiveIntParam = (value) => {
+const toPositiveInt = (value) => {
   const parsed = parseInt(value, 10);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
 };
 
-export const buildReportFilters = ({ status, report_type }) => {
-  const whereClauses = [];
+const normalizeText = (value) => (value == null ? null : String(value).trim());
+
+const buildListFilters = ({ status, entity_type, violation_type, search }) => {
+  const clauses = [];
   const params = {};
 
-  if (status && typeof status === 'string') {
-    whereClauses.push('vr.status = @status');
-    params.status = { type: sql.VarChar(50), value: status.trim().toUpperCase() };
+  if (status && ALLOWED_STATUSES.includes(status.toUpperCase())) {
+    clauses.push('vr.status = @status');
+    params.status = { type: sql.VarChar(50), value: status.toUpperCase() };
   }
 
-  if (report_type && typeof report_type === 'string') {
-    whereClauses.push('vr.report_type = @report_type');
-    params.report_type = { type: sql.VarChar(100), value: report_type.trim() };
+  if (entity_type && ALLOWED_ENTITY_TYPES.includes(entity_type.toUpperCase())) {
+    clauses.push('vr.entity_type = @entityType');
+    params.entityType = { type: sql.VarChar(50), value: entity_type.toUpperCase() };
+  }
+
+  if (violation_type) {
+    clauses.push('vr.violation_type = @violationType');
+    params.violationType = { type: sql.VarChar(100), value: violation_type.trim() };
+  }
+
+  if (search && typeof search === 'string' && search.trim()) {
+    const searchPattern = `%${search.trim()}%`;
+    clauses.push(`(
+      rep.full_name LIKE @search OR 
+      own.full_name LIKE @search OR 
+      p.title LIKE @search OR 
+      vr.description LIKE @search OR 
+      vr.violation_type LIKE @search
+    )`);
+    params.search = { type: sql.NVarChar(255), value: searchPattern };
   }
 
   return {
-    whereSql: whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '',
+    whereSql: clauses.length > 0 ? 'WHERE ' + clauses.join(' AND ') : '',
     params
   };
 };
 
-export const fetchReports = async ({ status, report_type, limit = 25, offset = 0 }) => {
+// ============================================================================
+// CORE CRUD
+// ============================================================================
+
+export const fetchReports = async ({ status, entity_type, violation_type, search, limit = 25, offset = 0 }) => {
   const pool = await poolPromise;
-  const { whereSql, params } = buildReportFilters({ status, report_type });
+  const { whereSql, params } = buildListFilters({ status, entity_type, violation_type, search });
 
-  const safeLimit = Math.min(Math.max(parsePositiveIntParam(limit) ?? 25, 1), 100);
-  const safeOffset = parsePositiveIntParam(offset) ?? 0;
+  const safeLimit = Math.min(Math.max(toPositiveInt(limit) ?? 25, MIN_LIMIT), MAX_LIMIT);
+  const safeOffset = toPositiveInt(offset) ?? 0;
 
-  const countRequest = pool.request();
-  const listRequest = pool.request();
+  const countReq = pool.request();
+  const listReq = pool.request();
 
   Object.entries(params).forEach(([name, { type, value }]) => {
-    countRequest.input(name, type, value);
-    listRequest.input(name, type, value);
+    countReq.input(name, type, value);
+    listReq.input(name, type, value);
   });
 
-  listRequest.input('limit', sql.Int, safeLimit);
-  listRequest.input('offset', sql.Int, safeOffset);
+  listReq.input('limit', sql.Int, safeLimit);
+  listReq.input('offset', sql.Int, safeOffset);
 
   const countQuery = `
     SELECT COUNT(1) AS total
@@ -57,26 +92,44 @@ export const fetchReports = async ({ status, report_type, limit = 25, offset = 0
   const listQuery = `
     SELECT
       vr.report_id,
+      vr.violation_type,
       vr.report_type,
       vr.status,
       vr.description,
       vr.reporter_id,
-      vr.target_user_id,
+      vr.entity_type,
+      vr.entity_id,
+      vr.owner_id,
+      vr.metadata,
       vr.created_at,
+      vr.updated_at,
       vr.resolved_at,
+      rep.user_id AS reporter_user_id,
       rep.full_name AS reporter_name,
-      tgt.full_name AS target_name
+      rep.email AS reporter_email,
+      rep.avatar_url AS reporter_avatar,
+      own.user_id AS owner_user_id,
+      own.full_name AS owner_name,
+      own.email AS owner_email,
+      own.avatar_url AS owner_avatar,
+      CASE 
+        WHEN vr.entity_type = 'PROJECT' THEN p.title
+        WHEN vr.entity_type = 'USER' THEN tgt.full_name
+        ELSE NULL
+      END AS entity_title
     FROM violation_reports vr
     LEFT JOIN users rep ON vr.reporter_id = rep.user_id
-    LEFT JOIN users tgt ON vr.target_user_id = tgt.user_id
+    LEFT JOIN users own ON vr.owner_id = own.user_id
+    LEFT JOIN users tgt ON vr.entity_type = 'USER' AND vr.entity_id = tgt.user_id
+    LEFT JOIN projects p ON vr.entity_type = 'PROJECT' AND vr.entity_id = p.project_id
     ${whereSql}
     ORDER BY vr.created_at DESC
     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
   `;
 
   const [countResult, listResult] = await Promise.all([
-    countRequest.query(countQuery),
-    listRequest.query(listQuery)
+    countReq.query(countQuery),
+    listReq.query(listQuery)
   ]);
 
   return {
@@ -86,10 +139,8 @@ export const fetchReports = async ({ status, report_type, limit = 25, offset = 0
 };
 
 export const getReportById = async (reportId) => {
-  const id = parseIntParam(reportId);
-  if (!id || id <= 0) {
-    return null;
-  }
+  const id = toInt(reportId);
+  if (!id || id <= 0) return null;
 
   const pool = await poolPromise;
   const result = await pool.request()
@@ -97,70 +148,258 @@ export const getReportById = async (reportId) => {
     .query(`
       SELECT
         vr.report_id,
+        vr.violation_type,
         vr.report_type,
         vr.status,
         vr.description,
         vr.reporter_id,
-        vr.target_user_id,
+        vr.entity_type,
+        vr.entity_id,
+        vr.owner_id,
+        vr.metadata,
         vr.created_at,
+        vr.updated_at,
         vr.resolved_at,
+        rep.user_id AS reporter_user_id,
         rep.full_name AS reporter_name,
-        tgt.full_name AS target_name
+        rep.email AS reporter_email,
+        rep.avatar_url AS reporter_avatar,
+        own.user_id AS owner_user_id,
+        own.full_name AS owner_name,
+        own.email AS owner_email,
+        own.avatar_url AS owner_avatar,
+        CASE 
+          WHEN vr.entity_type = 'PROJECT' THEN p.title
+          WHEN vr.entity_type = 'USER' THEN tgt.full_name
+          ELSE NULL
+        END AS entity_title,
+        CASE 
+          WHEN vr.entity_type = 'PROJECT' THEN p.description
+          ELSE NULL
+        END AS entity_description
       FROM violation_reports vr
       LEFT JOIN users rep ON vr.reporter_id = rep.user_id
-      LEFT JOIN users tgt ON vr.target_user_id = tgt.user_id
+      LEFT JOIN users own ON vr.owner_id = own.user_id
+      LEFT JOIN users tgt ON vr.entity_type = 'USER' AND vr.entity_id = tgt.user_id
+      LEFT JOIN projects p ON vr.entity_type = 'PROJECT' AND vr.entity_id = p.project_id
       WHERE vr.report_id = @reportId
     `);
 
   return result.recordset[0] || null;
 };
 
-export const updateReportStatus = async (reportId, status) => {
-  const id = parseIntParam(reportId);
-  if (!id || id <= 0) {
-    throw new Error('Invalid report id.');
-  }
-
+export const createReport = async ({ reporterId, entityType, entityId, ownerId, violationType, description, metadata }) => {
   const pool = await poolPromise;
-  await pool.request()
-    .input('reportId', sql.Int, id)
-    .input('status', sql.VarChar(50), status)
-    .query(`
-      UPDATE violation_reports
-      SET status = @status,
-          resolved_at = SYSUTCDATETIME()
-      WHERE report_id = @reportId
-    `);
-};
+  const metadataValue = normalizeText(metadata ? JSON.stringify(metadata) : null);
+  const descValue = normalizeText(description);
 
-export const createReport = async ({ reporterId, targetUserId, reportType, reason, description }) => {
-  const pool = await poolPromise;
   const result = await pool.request()
     .input('reporterId', sql.Int, reporterId)
-    .input('targetUserId', sql.Int, targetUserId)
-    .input('reportType', sql.VarChar(100), reportType)
-    .input('reason', sql.NVarChar, reason || null)
-    .input('description', sql.NVarChar, description || null)
+    .input('entityType', sql.VarChar(50), entityType)
+    .input('entityId', sql.Int, entityId ?? null)
+    .input('ownerId', sql.Int, ownerId ?? null)
+    .input('violationType', sql.VarChar(100), violationType || 'OTHER')
+    .input('description', sql.NVarChar(sql.MAX), descValue)
+    .input('metadata', sql.NVarChar(sql.MAX), metadataValue)
     .input('status', sql.VarChar(50), 'PENDING')
     .query(`
-      INSERT INTO violation_reports (reporter_id, target_user_id, reported_user_id, report_type, reason, description, status, created_at)
-      VALUES (@reporterId, @targetUserId, @targetUserId, @reportType, @reason, @description, @status, SYSUTCDATETIME());
+      INSERT INTO violation_reports (
+        reporter_id, entity_type, entity_id, owner_id, violation_type, report_type,
+        description, metadata, status, created_at, updated_at
+      )
+      VALUES (
+        @reporterId, @entityType, @entityId, @ownerId, @violationType, @violationType,
+        @description, @metadata, @status, SYSUTCDATETIME(), SYSUTCDATETIME()
+      );
       SELECT SCOPE_IDENTITY() AS report_id;
     `);
 
   return result.recordset[0]?.report_id;
 };
 
-export const findDuplicateReport = async ({ reporterId, targetUserId }) => {
+export const updateReportStatus = async (reportId, status) => {
+  const id = toInt(reportId);
+  if (!id || id <= 0) throw new Error('Invalid report id');
+
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('reportId', sql.Int, id)
+    .input('status', sql.VarChar(50), status)
+    .query(`
+      UPDATE violation_reports
+      SET status = @status,
+          updated_at = SYSUTCDATETIME(),
+          resolved_at = CASE WHEN @status IN ('RESOLVED', 'DISMISSED') THEN SYSUTCDATETIME() ELSE resolved_at END
+      WHERE report_id = @reportId
+    `);
+
+  return result.rowsAffected[0] > 0;
+};
+
+// ============================================================================
+// DUPLICATE DETECTION
+// ============================================================================
+
+export const findDuplicateReport = async ({ reporterId, entityType, entityId, violationType, withinDays = 7 }) => {
   const pool = await poolPromise;
   const result = await pool.request()
     .input('reporterId', sql.Int, reporterId)
-    .input('targetUserId', sql.Int, targetUserId)
+    .input('entityType', sql.VarChar(50), entityType)
+    .input('entityId', sql.Int, entityId)
+    .input('violationType', sql.VarChar(100), violationType)
+    .input('withinDays', sql.Int, withinDays)
     .query(`
-      SELECT report_id FROM violation_reports
+      SELECT TOP 1 report_id, status, created_at
+      FROM violation_reports
       WHERE reporter_id = @reporterId
-        AND target_user_id = @targetUserId
-        AND status = 'PENDING'
+        AND entity_type = @entityType
+        AND entity_id = @entityId
+        AND violation_type = @violationType
+        AND status IN ('PENDING', 'UNDER_REVIEW')
+        AND DATEDIFF(DAY, created_at, SYSUTCDATETIME()) <= @withinDays
+      ORDER BY created_at DESC
     `);
+
   return result.recordset[0] || null;
+};
+
+// ============================================================================
+// OWNERSHIP VALIDATION
+// ============================================================================
+
+export const getProjectOwner = async (projectId) => {
+  const id = toInt(projectId);
+  if (!id || id <= 0) return null;
+
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('projectId', sql.Int, id)
+    .query(`
+      SELECT project_id, employer_id AS owner_id, title
+      FROM projects WHERE project_id = @projectId
+    `);
+
+  return result.recordset[0] || null;
+};
+
+export const getUserById = async (userId) => {
+  const id = toInt(userId);
+  if (!id || id <= 0) return null;
+
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('userId', sql.Int, id)
+    .query('SELECT user_id, full_name, email, status FROM users WHERE user_id = @userId');
+
+  return result.recordset[0] || null;
+};
+
+// ============================================================================
+// EVIDENCE
+// ============================================================================
+
+export const createEvidence = async ({ reportId, userId, fileUrl, fileType, fileName, fileSize }) => {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('reportId', sql.Int, reportId)
+    .input('userId', sql.Int, userId)
+    .input('fileUrl', sql.NVarChar(500), fileUrl)
+    .input('fileType', sql.VarChar(50), fileType)
+    .input('fileName', sql.NVarChar(255), fileName || null)
+    .input('fileSize', sql.Int, fileSize || null)
+    .query(`
+      INSERT INTO report_evidence (report_id, file_url, file_type, file_name, file_size, uploaded_by, created_at)
+      VALUES (@reportId, @fileUrl, @fileType, @fileName, @fileSize, @userId, SYSUTCDATETIME());
+      SELECT SCOPE_IDENTITY() AS id;
+    `);
+
+  return result.recordset[0]?.id;
+};
+
+export const getEvidenceByReportId = async (reportId) => {
+  const pool = await poolPromise;
+  const result = await pool.request()
+    .input('reportId', sql.Int, reportId)
+    .query(`
+      SELECT id, report_id, file_url, file_type, file_name, file_size, uploaded_by, created_at
+      FROM report_evidence
+      WHERE report_id = @reportId
+      ORDER BY created_at ASC
+    `);
+
+  return result.recordset || [];
+};
+
+// ============================================================================
+// USER MY REPORTS
+// ============================================================================
+
+export const getMyReports = async (userId, { status, limit = 25, offset = 0 } = {}) => {
+  const pool = await poolPromise;
+  const safeLimit = Math.min(Math.max(toPositiveInt(limit) ?? 25, 1), 100);
+  const safeOffset = toPositiveInt(offset) ?? 0;
+
+  let whereClause = 'WHERE vr.reporter_id = @userId';
+  const countReq = pool.request();
+  const listReq = pool.request();
+
+  countReq.input('userId', sql.Int, userId);
+  listReq.input('userId', sql.Int, userId);
+
+  if (status && ALLOWED_STATUSES.includes(status.toUpperCase())) {
+    whereClause += ' AND vr.status = @status';
+    countReq.input('status', sql.VarChar(50), status.toUpperCase());
+    listReq.input('status', sql.VarChar(50), status.toUpperCase());
+  }
+
+  listReq.input('limit', sql.Int, safeLimit);
+  listReq.input('offset', sql.Int, safeOffset);
+
+  const countQuery = `SELECT COUNT(1) AS total FROM violation_reports vr ${whereClause}`;
+  const listQuery = `
+    SELECT vr.report_id, vr.entity_type, vr.entity_id, vr.violation_type, vr.report_type,
+           vr.description, vr.status, vr.created_at, vr.updated_at,
+           CASE 
+             WHEN vr.entity_type = 'PROJECT' THEN p.title
+             WHEN vr.entity_type = 'USER' THEN u.full_name
+             ELSE NULL
+           END AS entity_title
+    FROM violation_reports vr
+    LEFT JOIN projects p ON vr.entity_type = 'PROJECT' AND vr.entity_id = p.project_id
+    LEFT JOIN users u ON vr.entity_type = 'USER' AND vr.entity_id = u.user_id
+    ${whereClause}
+    ORDER BY vr.created_at DESC
+    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+  `;
+
+  const [countResult, listResult] = await Promise.all([
+    countReq.query(countQuery),
+    listReq.query(listQuery)
+  ]);
+
+  return {
+    total: countResult.recordset[0]?.total || 0,
+    reports: listResult.recordset || []
+  };
+};
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+export const createNotification = async ({ userId, title, message, type }) => {
+  const pool = await poolPromise;
+  try {
+    await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('title', sql.NVarChar(255), title || null)
+      .input('message', sql.NVarChar(sql.MAX), message)
+      .input('type', sql.VarChar(50), type || 'SYSTEM')
+      .query(`
+        INSERT INTO notifications (user_id, title, message, type, is_read, created_at)
+        VALUES (@userId, @title, @message, @type, 0, SYSUTCDATETIME())
+      `);
+  } catch (error) {
+    console.error('Error creating notification:', error.message);
+  }
 };

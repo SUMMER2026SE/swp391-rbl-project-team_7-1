@@ -142,9 +142,16 @@ export default function Header({ layout = 'dashboard' }) {
                 <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#1E293B] transition-colors" onClick={handleSwitchRole}>
                   Đổi vai trò
                 </button>
-                <Link className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-body-sm text-body-sm font-bold hover:shadow-[0_0_12px_rgba(45,212,191,0.4)] border border-teal-400/50 transition-all duration-300" to="/post-project">
-                  Đăng dự án
-                </Link>
+                <button
+                  type="button"
+                  aria-label="Báo cáo vi phạm"
+                  title="Báo cáo vi phạm"
+                  onClick={() => navigate('/report')}
+                  className="group relative flex h-11 w-11 items-center justify-center rounded-full border border-amber-300 bg-amber-400 text-slate-900 shadow-sm transition-all duration-200 hover:scale-105 hover:bg-amber-500 hover:shadow-md cursor-pointer"
+                >
+                  <span className="text-[20px] font-black leading-none">?</span>
+                  <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
+                </button>
                 <div className="relative" ref={dropdownRef}>
                   <div
                     className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 flex-shrink-0 cursor-pointer hover:border-slate-400 transition-all duration-200"
@@ -271,9 +278,10 @@ export default function Header({ layout = 'dashboard' }) {
             aria-label="Báo cáo vi phạm"
             title="Báo cáo vi phạm"
             onClick={() => navigate('/report')}
-            className="mr-2 flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-slate-600 transition-all duration-200 hover:border-[#0F766E] hover:text-[#0F766E]"
+            className="group relative mr-2 flex h-11 w-11 items-center justify-center rounded-full border border-amber-300 bg-amber-400 text-slate-900 shadow-sm transition-all duration-200 hover:scale-105 hover:bg-amber-500 hover:shadow-md cursor-pointer"
           >
-            <span className="text-lg font-semibold leading-none">?</span>
+            <span className="text-[20px] font-black leading-none">?</span>
+            <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
           </button>
           <div className="relative" ref={dropdownRef}>
             <div
