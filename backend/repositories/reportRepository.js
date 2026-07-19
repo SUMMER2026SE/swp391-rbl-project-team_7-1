@@ -205,11 +205,11 @@ export const createReport = async ({ reporterId, entityType, entityId, ownerId, 
     .query(`
       INSERT INTO violation_reports (
         reporter_id, entity_type, entity_id, owner_id, violation_type, report_type,
-        description, metadata, status, created_at, updated_at
+        description, metadata, status, created_at, updated_at, reason
       )
       VALUES (
         @reporterId, @entityType, @entityId, @ownerId, @violationType, @violationType,
-        @description, @metadata, @status, SYSUTCDATETIME(), SYSUTCDATETIME()
+        @description, @metadata, @status, SYSUTCDATETIME(), SYSUTCDATETIME(), @description
       );
       SELECT SCOPE_IDENTITY() AS report_id;
     `);
@@ -392,11 +392,11 @@ export const createNotification = async ({ userId, title, message, type }) => {
   try {
     await pool.request()
       .input('userId', sql.Int, userId)
-      .input('title', sql.NVarChar(255), title || null)
+      .input('title', sql.NVarChar(255), title || 'Hệ thống')
       .input('message', sql.NVarChar(sql.MAX), message)
       .input('type', sql.VarChar(50), type || 'SYSTEM')
       .query(`
-        INSERT INTO notifications (user_id, title, message, type, is_read, created_at)
+        INSERT INTO notifications (user_id, title, message, notification_type, is_read, created_at)
         VALUES (@userId, @title, @message, @type, 0, SYSUTCDATETIME())
       `);
   } catch (error) {

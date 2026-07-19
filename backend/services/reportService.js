@@ -32,9 +32,9 @@ const ALLOWED_VIOLATION_TYPES = [
   'INAPPROPRIATE_CONTENT', 'COPYRIGHT', 'OTHER'
 ];
 const ALLOWED_STATUS_TRANSITIONS = {
-  'PENDING': ['UNDER_REVIEW', 'DISMISSED'],
+  'PENDING': ['UNDER_REVIEW', 'RESOLVED', 'DISMISSED'],
   'UNDER_REVIEW': ['RESOLVED', 'DISMISSED', 'PENDING'],
-  'RESOLVED': [],
+  'RESOLVED': ['PENDING'],
   'DISMISSED': ['PENDING']
 };
 const MAX_DESCRIPTION_LENGTH = 5000;
@@ -207,6 +207,7 @@ export const createNewReport = async ({ reporterId, entityType, entityId, violat
   } else if (normalizedType === 'USER') {
     const targetUser = await getUserById(parsedEntityId);
     if (!targetUser) return { status: 404, error: 'Target user not found.' };
+    resolvedOwnerId = parsedEntityId; // Với tài khoản bị báo cáo, owner chính là target user
   }
 
   // 9. Duplicate detection
@@ -389,9 +390,9 @@ const notifyReporter = async (reporterId, reportId, status) => {
 
     await createNotification({
       userId: reporterId,
-      title: 'Report Update',
+      title: 'Cập nhật báo cáo',
       message,
-      type: 'REPORT_RESOLVED'
+      type: 'REPORT'
     });
   } catch (err) {
     console.error('Failed to send notification:', err.message);

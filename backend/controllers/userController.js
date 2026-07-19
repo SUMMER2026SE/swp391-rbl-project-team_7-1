@@ -473,7 +473,7 @@ export const banUser = async (req, res) => {
     }
 
     if (user.status === 'BANNED') {
-      return res.status(400).json({ message: 'Người dùng đã bị cấm trước đó.' });
+      return res.json({ message: 'Người dùng đã bị cấm trước đó.' }); // Trả về 200 thay vì 400 để an toàn cho quy trình giải quyết liên quan
     }
 
     await updateUserStatusById(userId, 'BANNED');

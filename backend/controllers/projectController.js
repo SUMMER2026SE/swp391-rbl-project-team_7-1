@@ -33,7 +33,7 @@ function parseOptionalToken(req) {
  */
 export const getProjects = async (req, res) => {
   try {
-    const { q, categoryId, budgetMin, budgetMax, budgetType } = req.query;
+    const { q, categoryId, budgetMin, budgetMax, budgetType, filter } = req.query;
     const pool = await poolPromise;
 
     // 1. Check optional auth to determine role-based filtering
@@ -50,7 +50,7 @@ export const getProjects = async (req, res) => {
 
     const request = pool.request();
 
-    if (isFreelancer && userInfo.userId) {
+    if (isFreelancer && userInfo.userId && filter === 'my') {
       // Freelancer: projects linked via proposals OR contracts
       const freelancerId = userInfo.userId;
       request.input('freelancerId', sql.Int, freelancerId);
@@ -59,20 +59,20 @@ export const getProjects = async (req, res) => {
           SELECT DISTINCT project_id FROM proposals WHERE freelancer_id = @freelancerId
           UNION
           SELECT DISTINCT project_id FROM contracts WHERE freelancer_id = @freelancerId
-        ) AS参与的 ON p.project_id = 参与的.project_id
+        ) AS 参与 ON p.project_id = 参与.project_id
+        WHERE 1=1
       `;
-      // Do NOT add status = 'OPEN' filter — show all statuses the user is involved in
-    } else if (isEmployer && userInfo.userId) {
+    } else if (isEmployer && userInfo.userId && filter === 'my') {
       // Employer: only projects they posted
       request.input('employerId', sql.Int, userInfo.userId);
       query += ` WHERE p.employer_id = @employerId`;
     } else {
-      // Anonymous / public: only OPEN projects
+      // Anonymous / public (or logged-in browsing): only OPEN projects
       query += ` WHERE p.status = 'OPEN'`;
     }
 
-    if (!isFreelancer && !isEmployer) {
-      // Apply filters only for public/unauthenticated browsing
+    if (filter !== 'my') {
+      // Apply filters for public browsing
       if (q) {
         request.input('search', sql.NVarChar, `%${q}%`);
         query += ` AND (p.title LIKE @search OR p.description LIKE @search)`;
@@ -918,7 +918,8 @@ export const deleteProject = async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy dự án.' });
     }
 
-    if (ownerCheck.recordset[0].employer_id !== employerId) {
+    const userRole = req.user.role || req.user.roleDefault || req.user.role_default;
+    if (ownerCheck.recordset[0].employer_id !== employerId && userRole !== 'ADMIN') {
       return res.status(403).json({ message: 'Bạn không có quyền xóa dự án này.' });
     }
 
@@ -949,6 +950,16 @@ export const deleteProject = async (req, res) => {
       await transaction.request()
         .input('projectId', sql.Int, id)
         .query(`DELETE FROM messages WHERE project_id = @projectId`);
+
+      // Delete project invitations
+      await transaction.request()
+        .input('projectId', sql.Int, id)
+        .query(`DELETE FROM project_invitations WHERE project_id = @projectId`);
+
+      // Nullify references in violation reports so we don't break history
+      await transaction.request()
+        .input('projectId', sql.Int, id)
+        .query(`UPDATE violation_reports SET entity_id = NULL WHERE entity_type = 'PROJECT' AND entity_id = @projectId`);
 
       // Delete project
       await transaction.request()

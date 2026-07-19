@@ -7,8 +7,6 @@ const statusBadge = (status) => {
   switch (status) {
     case 'ACTIVE':
       return 'bg-teal-50 text-teal-700 border border-teal-100';
-    case 'SUSPENDED':
-      return 'bg-amber-50 text-amber-700 border border-amber-100';
     case 'BANNED':
       return 'bg-rose-50 text-rose-700 border border-rose-100';
     default:
@@ -19,7 +17,6 @@ const statusBadge = (status) => {
 const statusText = (status) => {
   switch (status) {
     case 'ACTIVE': return 'Hoạt động';
-    case 'SUSPENDED': return 'Tạm khóa';
     case 'BANNED': return 'Bị cấm';
     default: return status;
   }
@@ -100,15 +97,14 @@ export default function AdminUsers() {
   const handleAction = async (userId, action) => {
     const actionMap = {
       ban: 'BANNED',
-      suspend: 'SUSPENDED',
       activate: 'ACTIVE'
     };
-    const actionTextMap = { ban: 'cấm', suspend: 'tạm khóa', activate: 'kích hoạt' };
+    const actionTextMap = { ban: 'cấm', activate: 'bỏ cấm' };
     const statusToSet = actionMap[action];
     const actionText = actionTextMap[action] || 'thay đổi trạng thái';
 
     const result = await Swal.fire({
-      title: `${action === 'activate' ? 'Kích hoạt' : action === 'ban' ? 'Cấm' : 'Tạm khóa'} người dùng?`,
+      title: `${action === 'activate' ? 'Bỏ cấm' : 'Cấm'} người dùng?`,
       text: `Bạn có chắc muốn ${actionText} người dùng này không?`,
       icon: 'warning',
       showCancelButton: true,
@@ -194,7 +190,6 @@ export default function AdminUsers() {
               >
                 <option value="">Tất cả trạng thái</option>
                 <option value="ACTIVE">Hoạt động</option>
-                <option value="SUSPENDED">Tạm khóa</option>
                 <option value="BANNED">Bị cấm</option>
               </select>
 
@@ -319,38 +314,19 @@ export default function AdminUsers() {
                       {/* Actions */}
                       <td className="py-3 px-5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {user.status === 'ACTIVE' && (
+                          {user.status === 'ACTIVE' ? (
                             <button
                               onClick={() => handleAction(user.user_id, 'ban')}
                               className="px-3.5 py-1.5 rounded-lg border border-rose-100 bg-rose-50/50 hover:bg-rose-600 text-rose-600 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
                             >
-                              Tạm khóa
+                              Cấm
                             </button>
-                          )}
-
-                          {user.status === 'SUSPENDED' && (
-                            <>
-                              <button
-                                onClick={() => handleAction(user.user_id, 'activate')}
-                                className="px-3.5 py-1.5 rounded-lg border border-teal-100 bg-teal-50/50 hover:bg-teal-600 text-teal-700 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
-                              >
-                                Kích hoạt
-                              </button>
-                              <button
-                                onClick={() => handleAction(user.user_id, 'ban')}
-                                className="px-3.5 py-1.5 rounded-lg border border-rose-100 bg-rose-50/50 hover:bg-rose-600 text-rose-600 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
-                              >
-                                Cấm
-                              </button>
-                            </>
-                          )}
-
-                          {user.status === 'BANNED' && (
+                          ) : (
                             <button
                               onClick={() => handleAction(user.user_id, 'activate')}
                               className="px-3.5 py-1.5 rounded-lg border border-teal-100 bg-teal-50/50 hover:bg-teal-600 text-teal-700 hover:text-white text-xs font-bold transition-all cursor-pointer active:scale-95 shadow-sm"
                             >
-                              Kích hoạt
+                              Bỏ cấm
                             </button>
                           )}
                         </div>
