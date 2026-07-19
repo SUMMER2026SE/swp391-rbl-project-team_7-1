@@ -25,7 +25,7 @@ export default function DashboardLayout() {
       <Sidebar />
 
       {/* Main Canvas Content Area */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen bg-[#F8FAFC] relative">
+      <div className="flex-1 md:ml-64 flex flex-col min-h-screen bg-[#F8FAFC] relative min-w-0">
         {/* Dashboard Header */}
         <Header layout="dashboard" />
 
