@@ -129,7 +129,11 @@ export default function Header({ layout = 'dashboard' }) {
           <div className="flex items-center gap-4 shrink-0">
             {token ? (
               <>
-                <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#1E293B] transition-colors" onClick={handleSwitchRole}>
+                <button 
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F766E]/5 hover:bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/10 rounded-full text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer" 
+                  onClick={handleSwitchRole}
+                >
+                  <span className="material-symbols-outlined text-[15px]">sync</span>
                   Đổi vai trò
                 </button>
                 <button
@@ -240,7 +244,11 @@ export default function Header({ layout = 'dashboard' }) {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#0F766E] transition-colors" onClick={handleSwitchRole}>
+          <button 
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0F766E]/5 hover:bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/10 rounded-full text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer" 
+            onClick={handleSwitchRole}
+          >
+            <span className="material-symbols-outlined text-[15px]">sync</span>
             Đổi vai trò
           </button>
           <button
