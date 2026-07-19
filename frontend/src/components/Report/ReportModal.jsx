@@ -2,27 +2,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { buildReportPayload, reportService } from '../../services/reportService';
 
 const REPORT_TYPES = [
-  { value: 'FRAUD', label: 'Fraud / Scam' },
-  { value: 'HARASSMENT', label: 'Harassment' },
-  { value: 'SPAM', label: 'Spam' },
-  { value: 'FAKE_PROFILE', label: 'Fake Profile' },
-  { value: 'INAPPROPRIATE_CONTENT', label: 'Inappropriate Content' },
-  { value: 'COPYRIGHT', label: 'Copyright Violation' },
-  { value: 'OTHER', label: 'Other' }
+  { value: 'FRAUD', label: 'Lừa đảo / Gian lận' },
+  { value: 'HARASSMENT', label: 'Quấy rối / Công kích' },
+  { value: 'SPAM', label: 'Spam quảng cáo / Rác' },
+  { value: 'FAKE_PROFILE', label: 'Tài khoản giả mạo' },
+  { value: 'INAPPROPRIATE_CONTENT', label: 'Nội dung không lành mạnh' },
+  { value: 'COPYRIGHT', label: 'Vi phạm bản quyền' },
+  { value: 'OTHER', label: 'Lý do khác' }
 ];
 
-/**
- * ReportModal
- * 
- * Standardized report modal with confirmation dialog.
- * 
- * Key features:
- * - Removed ownerId dependency (backend resolves ownership)
- * - Uses standardized entityType + entityId contract
- * - Confirmation dialog before submission
- * - Comprehensive error handling (409, 429, 400, network)
- * - Double-submit prevention
- */
 export default function ReportModal({
   isOpen,
   onClose,
@@ -85,15 +73,15 @@ export default function ReportModal({
     const effectiveEntityId = isProjectReport ? entityId : targetUserId;
 
     if (!violationType) {
-      setError('Please select a report type.');
+      setError('Vui lòng chọn loại vi phạm cần báo cáo.');
       return;
     }
     if (!description.trim()) {
-      setError('Please provide a description.');
+      setError('Vui lòng cung cấp mô tả chi tiết hành vi vi phạm.');
       return;
     }
     if (!effectiveEntityId) {
-      setError(isProjectReport ? 'Project context is missing.' : 'Target user context is missing.');
+      setError(isProjectReport ? 'Thiếu thông tin đối tượng dự án.' : 'Thiếu thông tin đối tượng người dùng.');
       return;
     }
 
@@ -127,18 +115,18 @@ export default function ReportModal({
           handleClose();
         }, 2000);
       } else {
-        setError(result.message || 'Failed to submit report.');
+        setError(result.message || 'Gửi báo cáo vi phạm thất bại.');
       }
     } catch (err) {
       const serverMsg = err.response?.data?.message;
       if (serverMsg) {
         setError(serverMsg);
       } else if (err.response?.status === 409) {
-        setError('You have already submitted a similar report for this item. Please wait for it to be reviewed.');
+        setError('Bạn đã gửi một báo cáo tương tự cho đối tượng này gần đây. Vui lòng chờ kiểm duyệt.');
       } else if (err.response?.status === 429) {
-        setError('Too many requests. Please wait a moment before trying again.');
+        setError('Hành động quá nhanh. Vui lòng chờ giây lát trước khi thử lại.');
       } else {
-        setError(err.message || 'Failed to submit report. Please try again.');
+        setError(err.message || 'Gửi báo cáo thất bại. Vui lòng thử lại sau.');
       }
     } finally {
       setLoading(false);
@@ -147,61 +135,63 @@ export default function ReportModal({
 
   if (!isOpen) return null;
 
+  const currentReportTypeLabel = REPORT_TYPES.find(t => t.value === violationType)?.label || violationType;
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative overflow-hidden border border-slate-100 animate-in fade-in duration-200">
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">{entityScope === 'PROJECT' ? 'Báo cáo dự án' : 'Báo cáo người dùng'}</h2>
-            {entityScope === 'PROJECT' ? (
-              <p className="text-sm text-slate-500 mt-1">Dự án: <span className="font-medium text-slate-700">{projectTitle || 'Dự án được chọn'}</span></p>
-            ) : targetUserName && (
-              <p className="text-sm text-slate-500 mt-1">Đối tượng: <span className="font-medium text-slate-700">{targetUserName}</span></p>
-            )}
+        <div className="flex items-center justify-between p-6 border-b border-slate-150">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-rose-600 text-[22px]">gavel</span>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                {entityScope === 'PROJECT' ? 'Báo cáo dự án tuyển dụng' : 'Báo cáo người dùng'}
+              </h2>
+              {entityScope === 'PROJECT' ? (
+                <p className="text-xs text-slate-400 mt-0.5 font-semibold">Dự án: <span className="font-bold text-[#0F766E]">{projectTitle || 'Dự án được chọn'}</span></p>
+              ) : targetUserName && (
+                <p className="text-xs text-slate-400 mt-0.5 font-semibold">Đối tượng: <span className="font-bold text-[#0F766E]">{targetUserName}</span></p>
+              )}
+            </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
+            className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-xl hover:bg-slate-100 cursor-pointer border-none bg-transparent"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
 
         {/* Body */}
         <form onSubmit={handlePreSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p>{error}</p>
+            <div className="p-4 bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl text-xs font-bold flex items-start gap-2.5 animate-in slide-in-from-top-1">
+              <span className="material-symbols-outlined text-[18px] text-rose-500 mt-0.5 shrink-0">error</span>
+              <p className="leading-relaxed">{error}</p>
             </div>
           )}
 
           {success && (
-            <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm flex items-start gap-3">
-              <svg className="w-5 h-5 text-green-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p>Report submitted successfully. Our team will review it shortly.</p>
+            <div className="p-4 bg-emerald-50 border border-emerald-150 text-emerald-700 rounded-2xl text-xs font-bold flex items-start gap-2.5 animate-in slide-in-from-top-1">
+              <span className="material-symbols-outlined text-[18px] text-emerald-500 mt-0.5 shrink-0">check_circle</span>
+              <p className="leading-relaxed">Báo cáo vi phạm đã được gửi thành công. Đội ngũ kiểm duyệt sẽ xử lý trong thời gian sớm nhất.</p>
             </div>
           )}
 
           {/* Report Type */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Report Type <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Lý do báo cáo vi phạm <span className="text-rose-500">*</span>
             </label>
             <select
               value={violationType}
               onChange={(e) => setViolationType(e.target.value)}
               disabled={loading || success}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all text-slate-800 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] outline-none transition-all text-sm text-slate-800 bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:border-slate-300"
             >
-              <option value="">Select a reason for reporting</option>
+              <option value="">Chọn lý do báo cáo vi phạm</option>
               {REPORT_TYPES.map((type) => (
                 <option key={type.value} value={type.value}>{type.label}</option>
               ))}
@@ -210,19 +200,19 @@ export default function ReportModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Description <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Mô tả chi tiết vi phạm <span className="text-rose-500">*</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide detailed information about the violation"
+              placeholder="Vui lòng cung cấp chi tiết bằng chứng và hành vi vi phạm..."
               rows={4}
               maxLength={5000}
               disabled={loading || success}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all text-slate-800 bg-white resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] outline-none transition-all text-sm text-slate-800 bg-white resize-none disabled:opacity-50 disabled:cursor-not-allowed hover:border-slate-300"
             />
-            <p className="text-xs text-slate-400 mt-1 text-right">{description.length}/5000</p>
+            <p className="text-[10px] text-slate-455 mt-1 text-right font-bold">{description.length}/5000 ký tự</p>
           </div>
 
           {/* Actions */}
@@ -231,54 +221,50 @@ export default function ReportModal({
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 py-3 px-4 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-all disabled:opacity-50"
+              className="flex-1 py-3 px-4 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-50 transition-all disabled:opacity-50 cursor-pointer"
             >
-              Cancel
+              Hủy bỏ
             </button>
             <button
               type="submit"
               disabled={loading || success}
-              className="flex-1 py-3 px-4 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-3 px-4 bg-rose-600 text-white rounded-xl font-bold text-xs hover:bg-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer border-none"
             >
               {loading && (
-                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
               )}
-              {loading ? 'Submitting...' : success ? 'Submitted ✓' : 'Submit Report'}
+              {loading ? 'Đang gửi...' : success ? 'Đã gửi ✓' : 'Gửi báo cáo'}
             </button>
           </div>
         </form>
 
         {/* Confirmation Dialog */}
         {showConfirm && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center p-6 z-10">
+          <div className="absolute inset-0 bg-white/98 backdrop-blur-xs flex items-center justify-center p-6 z-10 animate-in fade-in duration-200">
             <div className="text-center max-w-sm">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+              <div className="w-12 h-12 mx-auto mb-3.5 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-rose-600 text-[24px]">warning</span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800 mb-2">Xác nhận gửi báo cáo</h3>
-              <p className="text-sm text-slate-600 mb-1">
-                Bạn có chắc chắn muốn gửi báo cáo vi phạm này?
+              <h3 className="text-base font-bold text-slate-800 mb-1.5">Xác nhận gửi báo cáo</h3>
+              <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                Bạn có chắc chắn muốn gửi báo cáo vi phạm này đến Ban quản trị FJMS để xử lý không?
               </p>
-              <p className="text-xs text-slate-400 mb-6">
-                Loại: <strong>{violationType}</strong> — Mô tả: "{description.substring(0, 100)}{description.length > 100 ? '...' : ''}"
-              </p>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-150 text-[11px] text-left text-slate-500 font-semibold mb-6 space-y-1">
+                <p>• Loại: <span className="text-rose-600 font-bold">{currentReportTypeLabel}</span></p>
+                <p className="line-clamp-2">• Nội dung: "{description}"</p>
+              </div>
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-2.5 px-4 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-all"
+                  className="flex-1 py-2.5 px-4 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-50 transition-all cursor-pointer"
                 >
-                  Hủy
+                  Quay lại
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmSubmit}
-                  className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-all"
+                  className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs transition-all cursor-pointer border-none"
                 >
                   Xác nhận gửi
                 </button>

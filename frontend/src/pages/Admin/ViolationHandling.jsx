@@ -180,70 +180,78 @@ export default function ViolationHandling() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] min-h-screen">
+    <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#F8FAFC] min-h-screen">
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 pb-12">
 
         {/* Header */}
-        <div className="flex flex-col gap-1.5">
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Xử lý báo cáo vi phạm</h1>
-          <p className="text-sm text-slate-500 font-medium">
-            Xem xét, kiểm tra nội dung và thực hiện các quyết định kỷ luật đối với các hành vi vi phạm điều khoản nền tảng.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Xử lý báo cáo vi phạm</h1>
+            <p className="text-xs text-slate-455 font-semibold">
+              Xem xét, kiểm tra nội dung và thực hiện các quyết định kỷ luật đối với các hành vi vi phạm điều khoản nền tảng.
+            </p>
+          </div>
+          <div className="bg-[#0F766E]/5 border border-[#0F766E]/10 rounded-2xl px-4 py-2.5 flex items-center gap-2 self-start md:self-auto">
+            <span className="material-symbols-outlined text-[#0F766E] text-[18px]">gavel</span>
+            <span className="text-xs font-extrabold text-[#0F766E]">Tổng cộng: {total} báo cáo</span>
+          </div>
         </div>
 
         {/* Filters */}
-        <form onSubmit={handleSearch} className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:max-w-md">
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50/50 border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all duration-200"
-              placeholder="Tìm kiếm báo cáo..."
-              type="text"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-            <select
-              value={entityType}
-              onChange={(e) => setEntityType(e.target.value)}
-              className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all"
-            >
-              <option value="">Tất cả loại</option>
-              <option value="PROJECT">Dự án</option>
-              <option value="USER">Người dùng</option>
-              <option value="REVIEW">Đánh giá</option>
-              <option value="ORDER">Đơn hàng</option>
-              <option value="MESSAGE">Tin nhắn</option>
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-semibold text-slate-600 focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15 transition-all"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="PENDING">Chờ xử lý</option>
-              <option value="UNDER_REVIEW">Đang xem xét</option>
-              <option value="RESOLVED">Đã giải quyết</option>
-              <option value="DISMISSED">Đã bác bỏ</option>
-            </select>
-            <button type="submit" className="px-5 py-2.5 bg-[#0F766E] text-white rounded-2xl text-sm font-bold shadow-[0_4px_12px_rgba(15,118,110,0.15)] hover:bg-[#0d5e58] hover:shadow-[0_4px_16px_rgba(15,118,110,0.25)] transition-all cursor-pointer">
-              Tìm kiếm
-            </button>
-            <button type="button" onClick={handleReset} className="px-5 py-2.5 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer">
-              Đặt lại
-            </button>
+        <form onSubmit={handleSearch} className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.015)]">
+          <div className="flex flex-col lg:flex-row gap-3 items-center justify-between">
+            <div className="relative w-full lg:max-w-md">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50/60 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/10 transition-all duration-200"
+                placeholder="Tìm kiếm báo cáo..."
+                type="text"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-end">
+              <select
+                value={entityType}
+                onChange={(e) => setEntityType(e.target.value)}
+                className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-650 focus:outline-none focus:border-[#0F766E] hover:border-slate-300 transition-all cursor-pointer"
+              >
+                <option value="">Tất cả loại</option>
+                <option value="PROJECT">Dự án</option>
+                <option value="USER">Người dùng</option>
+                <option value="REVIEW">Đánh giá</option>
+                <option value="ORDER">Đơn hàng</option>
+                <option value="MESSAGE">Tin nhắn</option>
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-655 focus:outline-none focus:border-[#0F766E] hover:border-slate-300 transition-all cursor-pointer"
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="PENDING">Chờ xử lý</option>
+                <option value="UNDER_REVIEW">Đang xem xét</option>
+                <option value="RESOLVED">Đã giải quyết</option>
+                <option value="DISMISSED">Đã bác bỏ</option>
+              </select>
+              <button type="submit" className="px-4 py-2 bg-[#0F766E] hover:bg-[#0D5E58] text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer border-none">
+                Tìm kiếm
+              </button>
+              <button type="button" onClick={handleReset} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 transition-all cursor-pointer">
+                Đặt lại
+              </button>
+            </div>
           </div>
         </form>
 
         {/* Alerts */}
         {alert.msg && (
-          <div className={`p-4 rounded-2xl border flex items-center gap-2 text-sm font-semibold ${
+          <div className={`px-4 py-3 rounded-xl border flex items-center gap-2 text-xs font-bold animate-in slide-in-from-top-1 ${
             alert.type === 'success'
               ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
               : 'bg-rose-50 border-rose-100 text-rose-800'
           }`}>
-            <span className="material-symbols-outlined text-[18px]">
+            <span className="material-symbols-outlined text-[16px]">
               {alert.type === 'success' ? 'check_circle' : 'error'}
             </span>
             <span>{alert.msg}</span>
@@ -251,72 +259,70 @@ export default function ViolationHandling() {
         )}
 
         {/* Reports Table */}
-        <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-[0_4px_20px_rgba(15,23,42,0.03)] overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.01)] overflow-hidden">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-[#E2E8F0]">
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Mã</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Đối tượng</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Người báo cáo</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Loại vi phạm</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Trạng thái</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider">Ngày báo cáo</th>
-                  <th className="py-4 px-6 text-xs font-bold text-[#64748b] uppercase tracking-wider text-right">Thao tác</th>
+                <tr className="bg-slate-50/80 border-b border-slate-150">
+                  <th className="py-3.5 px-5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mã</th>
+                  <th className="py-3.5 px-5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Đối tượng</th>
+                  <th className="py-3.5 px-5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Người báo cáo</th>
+                  <th className="py-3.5 px-5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Loại vi phạm</th>
+                  <th className="py-3.5 px-5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                  <th className="py-3.5 px-5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ngày báo cáo</th>
+                  <th className="py-3.5 px-5 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="py-16 text-center">
-                      <div className="flex flex-col items-center justify-center space-y-3">
-                        <div className="w-8 h-8 border-3 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <div className="w-7 h-7 border-2 border-[#0F766E] border-t-transparent rounded-full animate-spin"></div>
                         <p className="text-xs font-semibold text-slate-400">Đang tải danh sách báo cáo...</p>
                       </div>
                     </td>
                   </tr>
                 ) : reports.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="py-16 text-center text-slate-400 font-semibold text-sm">
+                    <td colSpan="7" className="py-16 text-center text-slate-400 font-bold text-xs">
                       Không tìm thấy báo cáo nào.
                     </td>
                   </tr>
                 ) : (
                   reports.map((r) => (
-                    <tr key={r.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-4 px-6 text-sm text-slate-500 font-semibold">#{r.id}</td>
-                      <td className="py-4 px-6">
+                    <tr key={r.id} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="py-3 px-5 text-xs text-slate-500 font-bold">#{r.id}</td>
+                      <td className="py-3 px-5">
                         <div>
-                          <div className="font-bold text-slate-850 text-sm">
-                            <span className={`text-xs px-1.5 py-0.5 rounded mr-1.5 ${
+                          <div className="font-bold text-slate-800 text-xs">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded mr-1.5 font-bold ${
                               r.target.type === 'PROJECT' 
                                 ? 'bg-indigo-50 text-indigo-600' 
-                                : 'bg-teal-50 text-teal-600'
+                                : 'bg-teal-50 text-teal-650'
                             }`}>
                               {r.target.type}
                             </span>
                             {r.target.title || `#${r.target.id}`}
                           </div>
                           {r.owner && (
-                            <div className="text-xs text-slate-400 mt-0.5">
+                            <div className="text-[10px] text-slate-400 mt-0.5 font-semibold">
                               Chủ sở hữu: {r.owner.username || `#${r.owner.id}`}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="font-bold text-slate-850 text-sm">
-                          {r.reporter.username || `#${r.reporter.id}`}
-                        </div>
+                      <td className="py-3 px-5 font-bold text-slate-600 text-xs">
+                        {r.reporter.username || `#${r.reporter.id}`}
                       </td>
-                      <td className="py-4 px-6 text-sm font-bold text-slate-800">
-                        <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-xs font-bold text-slate-600">
+                      <td className="py-3 px-5">
+                        <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600">
                           {r.violation.type}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusBadge(r.status)}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
+                      <td className="py-3 px-5">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusBadge(r.status)}`}>
+                          <span className={`w-1 h-1 rounded-full ${
                             r.status === 'PENDING' ? 'bg-amber-500' :
                             r.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
                             r.status === 'RESOLVED' ? 'bg-emerald-500' : 'bg-slate-400'
@@ -324,14 +330,14 @@ export default function ViolationHandling() {
                           {getStatusLabelVi(r.status)}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-sm text-slate-500 font-semibold">
+                      <td className="py-3 px-5 text-xs text-slate-400 font-semibold">
                         {formatDate(r.createdAt)}
                       </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-3 px-5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleViewDetails(r)}
-                            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-655 hover:bg-slate-50 text-[10px] font-bold transition-all cursor-pointer"
                           >
                             Chi tiết
                           </button>
@@ -339,19 +345,19 @@ export default function ViolationHandling() {
                             <>
                               <button
                                 onClick={() => handleUnderReview(r.id)}
-                                className="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold transition-colors cursor-pointer"
+                                className="px-2.5 py-1 rounded-lg border border-blue-100 bg-blue-50/50 hover:bg-blue-600 text-blue-700 hover:text-white text-[10px] font-bold transition-all cursor-pointer active:scale-95"
                               >
                                 Xem xét
                               </button>
                               <button
                                 onClick={() => handleResolveClick(r)}
-                                className="px-3 py-1.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#0d5e58] text-xs font-bold transition-colors cursor-pointer"
+                                className="px-2.5 py-1 bg-[#0F766E] hover:bg-[#0D5E58] text-white text-[10px] font-bold rounded-lg transition-all cursor-pointer border-none active:scale-95 shadow-sm"
                               >
                                 Xử lý
                               </button>
                               <button
                                 onClick={() => handleDismiss(r.id)}
-                                className="px-3 py-1.5 rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                                className="px-2.5 py-1 rounded-lg border border-rose-100 bg-rose-50/50 hover:bg-rose-600 text-rose-600 hover:text-white text-[10px] font-bold transition-all cursor-pointer active:scale-95"
                               >
                                 Bỏ qua
                               </button>
@@ -361,13 +367,13 @@ export default function ViolationHandling() {
                             <>
                               <button
                                 onClick={() => handleResolveClick(r)}
-                                className="px-3 py-1.5 rounded-xl bg-[#0F766E] text-white hover:bg-[#0d5e58] text-xs font-bold transition-colors cursor-pointer"
+                                className="px-2.5 py-1 bg-[#0F766E] hover:bg-[#0D5E58] text-white text-[10px] font-bold rounded-lg transition-all cursor-pointer border-none active:scale-95 shadow-sm"
                               >
                                 Xử lý
                               </button>
                               <button
                                 onClick={() => handleDismiss(r.id)}
-                                className="px-3 py-1.5 rounded-xl border border-rose-100 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                                className="px-2.5 py-1 rounded-lg border border-rose-100 bg-rose-50/50 hover:bg-rose-600 text-rose-600 hover:text-white text-[10px] font-bold transition-all cursor-pointer active:scale-95"
                               >
                                 Bỏ qua
                               </button>
@@ -383,11 +389,11 @@ export default function ViolationHandling() {
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 border-t border-slate-100 bg-slate-50/50">
-            <div className="text-xs font-semibold text-slate-500">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border-t border-slate-100 bg-slate-50/50">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               Hiển thị {reports.length} trên tổng số {total} báo cáo.
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => {
                   if (page > 1) {
@@ -397,11 +403,11 @@ export default function ViolationHandling() {
                   }
                 }}
                 disabled={page <= 1}
-                className="px-3.5 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-bold text-slate-600 shadow-sm disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
+                className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
               >
                 Trước
               </button>
-              <span className="text-xs font-extrabold text-slate-700 bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-xl">
+              <span className="text-[10px] font-extrabold text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-lg">
                 Trang {page} / {totalPages}
               </span>
               <button
@@ -413,7 +419,7 @@ export default function ViolationHandling() {
                   }
                 }}
                 disabled={page >= totalPages}
-                className="px-3.5 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-bold text-slate-600 shadow-sm disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
+                className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 disabled:opacity-40 transition-all cursor-pointer hover:bg-slate-50"
               >
                 Sau
               </button>
@@ -424,41 +430,41 @@ export default function ViolationHandling() {
 
       {/* Detail Modal */}
       {showDetailModal && selectedReport && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowDetailModal(false)}>
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-base font-black text-slate-800">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" onClick={() => setShowDetailModal(false)}>
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in duration-200" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-800 tracking-tight">
                 Chi tiết báo cáo #{selectedReport.id}
                 {selectedReport.target.type === 'PROJECT' && (
-                  <span className="ml-2 text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg font-bold">Dự án</span>
+                  <span className="ml-2 text-[9px] bg-indigo-50 text-indigo-650 px-2 py-0.5 rounded-lg font-bold">Dự án</span>
                 )}
               </h2>
-              <button onClick={() => setShowDetailModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+              <button onClick={() => setShowDetailModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer border-none bg-transparent">
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
-            <div className="p-6 flex flex-col gap-6 max-h-[75vh] overflow-y-auto">
+            <div className="p-6 flex flex-col gap-6 max-h-[75vh] overflow-y-auto text-left">
               {/* Target Entity Info */}
               <div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Đối tượng bị báo cáo</h3>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Đối tượng bị báo cáo</h3>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-150">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-650">
                       {selectedReport.target.type}
                     </span>
-                    <span className="font-bold text-slate-800 text-sm">
+                    <span className="font-bold text-slate-800 text-xs">
                       {selectedReport.target.title || `#${selectedReport.target.id}`}
                     </span>
                   </div>
                   {selectedReport.owner && (
                     <div className="mt-2 pt-2 border-t border-slate-200">
-                      <span className="text-xs text-slate-500 font-semibold">Chủ sở hữu:</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-6 h-6 rounded-full bg-slate-300 flex items-center justify-center text-xs font-bold text-white">
+                      <span className="text-[10px] text-slate-400 font-bold block mb-1">Chủ sở hữu:</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-slate-355 flex items-center justify-center text-[10px] font-bold text-slate-500">
                           {selectedReport.owner.username?.[0] || '?'}
                         </div>
-                        <span className="text-sm font-bold text-slate-700">{selectedReport.owner.username}</span>
-                        <span className="text-xs text-slate-400">({selectedReport.owner.email})</span>
+                        <span className="text-xs font-bold text-slate-700">{selectedReport.owner.username}</span>
+                        <span className="text-[10px] text-slate-400">({selectedReport.owner.email})</span>
                       </div>
                     </div>
                   )}
@@ -468,31 +474,31 @@ export default function ViolationHandling() {
               {/* Reporter & Violation */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Người gửi báo cáo</h3>
-                  <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-[#E2E8F0]">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Người gửi báo cáo</h3>
+                  <div className="bg-[#F8FAFC] p-4 rounded-xl border border-slate-200">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-xs font-bold text-white">
+                      <div className="w-8 h-8 rounded-full bg-teal-50 text-[#0F766E] border border-teal-100 flex items-center justify-center text-xs font-bold">
                         {selectedReport.reporter.username?.[0] || '?'}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-800 text-sm">{selectedReport.reporter.username}</p>
-                        <p className="text-xs text-slate-400 font-semibold">{selectedReport.reporter.email}</p>
+                        <p className="font-bold text-slate-800 text-xs">{selectedReport.reporter.username}</p>
+                        <p className="text-[10px] text-slate-400 font-semibold">{selectedReport.reporter.email}</p>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Thông tin vi phạm</h3>
-                  <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-[#E2E8F0]">
-                    <div className="mb-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Thông tin vi phạm</h3>
+                  <div className="bg-[#F8FAFC] p-4 rounded-xl border border-slate-200">
+                    <div className="mb-2 flex items-center">
                       <span className="text-xs text-slate-500 font-semibold">Loại vi phạm:</span>
-                      <span className="ml-2 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-xs font-bold text-slate-600">
+                      <span className="ml-2 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-600">
                         {selectedReport.violation.type}
                       </span>
                     </div>
-                    <div>
+                    <div className="flex items-center">
                       <span className="text-xs text-slate-500 font-semibold">Trạng thái:</span>
-                      <span className={`ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${statusBadge(selectedReport.status)}`}>
+                      <span className={`ml-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusBadge(selectedReport.status)}`}>
                         {getStatusLabelVi(selectedReport.status)}
                       </span>
                     </div>
@@ -502,9 +508,9 @@ export default function ViolationHandling() {
 
               {/* Description */}
               <div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mô tả vi phạm</h3>
-                <div className="bg-white p-4 rounded-2xl border border-slate-200">
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Mô tả vi phạm</h3>
+                <div className="bg-white p-4 rounded-xl border border-slate-200">
+                  <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
                     {selectedReport.violation.description || 'Không có mô tả.'}
                   </p>
                 </div>
@@ -513,40 +519,34 @@ export default function ViolationHandling() {
               {/* Evidence */}
               {selectedReport.evidence && selectedReport.evidence.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                     Bằng chứng ({selectedReport.evidence.length})
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedReport.evidence.map((ev, idx) => (
-                      <div key={ev.id || idx} className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <div key={ev.id || idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200">
                         <div className="flex items-start gap-2">
                           <div className="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center shrink-0">
                             {ev.fileType === 'IMAGE' ? (
-                              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
+                              <span className="material-symbols-outlined text-slate-500 text-sm">image</span>
                             ) : ev.fileType === 'DOCUMENT' ? (
-                              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
+                              <span className="material-symbols-outlined text-slate-500 text-sm">description</span>
                             ) : (
-                              <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                              </svg>
+                              <span className="material-symbols-outlined text-slate-500 text-sm">link</span>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold text-slate-700 truncate">
                               {ev.fileName || `${ev.fileType} file`}
                             </p>
-                            <p className="text-[10px] text-slate-400 mt-0.5">
+                            <p className="text-[9px] text-slate-400 mt-0.5">
                               {ev.fileType} • {formatDateTime(ev.createdAt)}
                             </p>
                             <a
                               href={ev.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[10px] text-[#0F766E] font-bold hover:underline mt-1 inline-block"
+                              className="text-[9px] text-[#0F766E] font-bold hover:underline mt-1 inline-block"
                             >
                               Xem bằng chứng →
                             </a>
@@ -561,10 +561,10 @@ export default function ViolationHandling() {
               {/* Timeline */}
               {selectedReport.history && selectedReport.history.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Lịch sử xử lý</h3>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Lịch sử xử lý</h3>
                   <div className="space-y-3">
                     {selectedReport.history.map((h, idx) => (
-                      <div key={h.id || idx} className="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <div key={h.id || idx} className="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
                         <div className="w-2 h-2 rounded-full bg-[#0F766E] mt-1.5 shrink-0"></div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -588,23 +588,23 @@ export default function ViolationHandling() {
               )}
 
               {/* Dates */}
-              <div className="grid grid-cols-2 gap-4 text-xs text-slate-500">
+              <div className="grid grid-cols-2 gap-4 text-xs text-slate-400 font-semibold">
                 <div>
-                  <span className="font-semibold">Ngày tạo:</span>{' '}
-                  <span className="font-bold text-slate-700">{formatDateTime(selectedReport.createdAt)}</span>
+                  <span>Ngày tạo:</span>{' '}
+                  <span className="font-bold text-slate-650">{formatDateTime(selectedReport.createdAt)}</span>
                 </div>
                 {selectedReport.resolvedAt && (
                   <div>
-                    <span className="font-semibold">Ngày xử lý:</span>{' '}
-                    <span className="font-bold text-slate-700">{formatDateTime(selectedReport.resolvedAt)}</span>
+                    <span>Ngày xử lý:</span>{' '}
+                    <span className="font-bold text-slate-650">{formatDateTime(selectedReport.resolvedAt)}</span>
                   </div>
                 )}
               </div>
             </div>
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-150 flex items-center justify-end gap-2.5">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                className="px-4 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer"
               >
                 Đóng
               </button>
@@ -612,19 +612,19 @@ export default function ViolationHandling() {
                 <>
                   <button
                     onClick={() => handleUnderReview(selectedReport.id)}
-                    className="px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    className="px-4 py-2 border border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-600 rounded-xl text-xs font-bold transition-all cursor-pointer"
                   >
-                    Đang xem xét
+                    Xem xét
                   </button>
                   <button
                     onClick={() => handleDismiss(selectedReport.id)}
-                    className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-100 transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-100 transition-all cursor-pointer"
                   >
                     Bác bỏ
                   </button>
                   <button
                     onClick={() => handleResolveClick(selectedReport)}
-                    className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0d5e58] rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0d5e58] rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
                   >
                     Giải quyết
                   </button>
@@ -634,13 +634,13 @@ export default function ViolationHandling() {
                 <>
                   <button
                     onClick={() => handleDismiss(selectedReport.id)}
-                    className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-100 transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold border border-rose-100 transition-all cursor-pointer"
                   >
                     Bác bỏ
                   </button>
                   <button
                     onClick={() => handleResolveClick(selectedReport)}
-                    className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0d5e58] rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0d5e58] rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
                   >
                     Giải quyết
                   </button>
@@ -653,41 +653,41 @@ export default function ViolationHandling() {
 
       {/* Resolve Modal */}
       {showResolveModal && selectedReport && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowResolveModal(false)}>
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-base font-black text-slate-800">Xác nhận giải quyết báo cáo</h2>
-              <button onClick={() => setShowResolveModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" onClick={() => setShowResolveModal(false)}>
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in duration-200" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-800">Xác nhận giải quyết báo cáo</h2>
+              <button onClick={() => setShowResolveModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer border-none bg-transparent">
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             </div>
-            <div className="p-6 flex flex-col gap-4">
-              <p className="text-sm text-slate-600">
-                Bạn sắp đánh dấu báo cáo <strong>#{selectedReport.id}</strong> là đã giải quyết.
+            <div className="p-6 flex flex-col gap-4 text-left">
+              <p className="text-xs text-slate-500 font-bold leading-relaxed">
+                Bạn chuẩn bị đánh dấu báo cáo <span className="text-slate-850">#{selectedReport.id}</span> là đã giải quyết thành công.
               </p>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Ghi chú xử lý (optional)
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Ghi chú xử lý (không bắt buộc)
                 </label>
                 <textarea
                   value={moderationNote}
                   onChange={(e) => setModerationNote(e.target.value)}
-                  placeholder="Ghi chú về hành động xử lý..."
+                  placeholder="Ghi chú thêm về phương hướng xử lý hành vi vi phạm..."
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none transition-all text-slate-800 bg-white resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] outline-none transition-all text-xs text-slate-800 bg-white resize-none"
                 />
               </div>
             </div>
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-150 flex items-center justify-end gap-2.5">
               <button
                 onClick={() => setShowResolveModal(false)}
-                className="px-4 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                className="px-4 py-2 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 onClick={handleResolveSubmit}
-                className="px-4 py-2 bg-[#0F766E] text-white hover:bg-[#0d5e58] rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                className="px-4 py-2 bg-[#0F766E] hover:bg-[#0D5E58] text-white rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
               >
                 Xác nhận giải quyết
               </button>

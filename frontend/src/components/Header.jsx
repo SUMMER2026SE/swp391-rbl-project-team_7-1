@@ -129,28 +129,20 @@ export default function Header({ layout = 'dashboard' }) {
           <div className="flex items-center gap-4 shrink-0">
             {token ? (
               <>
-                <button className="text-[#475569] hover:text-[#1E293B] transition-colors">
-                  <span className="material-symbols-outlined">notifications</span>
-                </button>
-                <button className="text-[#475569] hover:text-[#1E293B] transition-colors" onClick={() => navigate('/freelancer-wallet')}>
-                  <span className="material-symbols-outlined">account_balance_wallet</span>
-                </button>
-                <button className="text-[#475569] hover:text-[#1E293B] transition-colors" onClick={() => navigate('/messages-freelancer')}>
-                  <span className="material-symbols-outlined">mail</span>
-                </button>
-                <div className="w-[1px] h-6 bg-slate-200 mx-2"></div>
                 <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#1E293B] transition-colors" onClick={handleSwitchRole}>
                   Đổi vai trò
                 </button>
                 <button
                   type="button"
-                  aria-label="Báo cáo vi phạm"
                   title="Báo cáo vi phạm"
                   onClick={() => navigate('/report')}
-                  className="group relative flex h-11 w-11 items-center justify-center rounded-full border border-amber-300 bg-amber-400 text-slate-900 shadow-sm transition-all duration-200 hover:scale-105 hover:bg-amber-500 hover:shadow-md cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer relative"
                 >
-                  <span className="text-[20px] font-black leading-none">?</span>
-                  <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
+                  <span className="material-symbols-outlined text-[19px]">flag</span>
+                  <span className="absolute top-1 right-1 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  </span>
                 </button>
                 <div className="relative" ref={dropdownRef}>
                   <div
@@ -248,40 +240,20 @@ export default function Header({ layout = 'dashboard' }) {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <button className="text-[#475569] hover:text-[#1E293B] transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="text-[#475569] hover:text-[#1E293B] transition-colors" onClick={() => {
-            if (path.includes('employer')) {
-              navigate('/employer-wallet');
-            } else {
-              navigate('/freelancer-wallet');
-            }
-          }}>
-            <span className="material-symbols-outlined">account_balance_wallet</span>
-          </button>
-          <button className="text-[#475569] hover:text-[#1E293B] transition-colors" onClick={() => {
-            if (path.includes('employer')) {
-              navigate('/messages-employer');
-            } else {
-              navigate('/messages-freelancer');
-            }
-          }}>
-            <span className="material-symbols-outlined">mail</span>
-          </button>
-          <div className="w-[1px] h-6 bg-slate-200 mx-2"></div>
           <button className="text-[#1E293B] font-body-sm text-body-sm font-semibold hover:text-[#0F766E] transition-colors" onClick={handleSwitchRole}>
             Đổi vai trò
           </button>
           <button
             type="button"
-            aria-label="Báo cáo vi phạm"
             title="Báo cáo vi phạm"
             onClick={() => navigate('/report')}
-            className="group relative mr-2 flex h-11 w-11 items-center justify-center rounded-full border border-amber-300 bg-amber-400 text-slate-900 shadow-sm transition-all duration-200 hover:scale-105 hover:bg-amber-500 hover:shadow-md cursor-pointer"
+            className="w-10 h-10 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer relative mr-2"
           >
-            <span className="text-[20px] font-black leading-none">?</span>
-            <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
+            <span className="material-symbols-outlined text-[19px]">flag</span>
+            <span className="absolute top-1 right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+            </span>
           </button>
           <div className="relative" ref={dropdownRef}>
             <div

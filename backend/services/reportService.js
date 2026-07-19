@@ -8,7 +8,7 @@ import {
   getUserById,
   createEvidence,
   getEvidenceByReportId,
-  getMyReports
+  getMyReports as getMyReportsRepo
 } from '../repositories/reportRepository.js';
 import { createModerationLog, getModerationHistory } from '../repositories/moderationRepository.js';
 import { checkRateLimit, initRedis } from '../utils/redisClient.js';
@@ -251,7 +251,7 @@ export const getMyReports = async (userId, filters = {}) => {
     return { status: 401, error: 'Authentication required.' };
   }
 
-  const result = await getMyReports(userId, filters);
+  const result = await getMyReportsRepo(userId, filters);
 
   // Strip internal data - only return what user should see
   const safeReports = result.reports.map(r => ({

@@ -4,6 +4,7 @@ import { userService } from '../../services/userService';
 import { projectService } from '../../services/projectService';
 import { invitationService } from '../../services/invitationService';
 import ReportModal from '../../components/Report/ReportModal';
+import Swal from 'sweetalert2';
 
 
 /* ─── helpers ─── */
@@ -271,6 +272,7 @@ export default function Profile() {
   const [delText, setDelText]   = useState('');
   const [showReportModal, setShowReportModal] = useState(false);
 
+  const [showCVUploader, setShowCVUploader] = useState(false);
   const fileRef = useRef();
   
   const { id } = useParams();
@@ -540,7 +542,19 @@ export default function Profile() {
   };
 
   const handleDeletePortfolio = async (portId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa dự án portfolio này?')) return;
+    const result = await Swal.fire({
+      title: 'Xóa dự án portfolio?',
+      text: 'Bạn có chắc muốn xóa dự án portfolio này?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#E11D48',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Đồng ý xóa',
+      cancelButtonText: 'Hủy'
+    });
+
+    if (!result.isConfirmed) return;
+
     setSaving(true);
     setAlert({ type: '', msg: '' });
     try {
@@ -1242,6 +1256,84 @@ export default function Profile() {
             {/* ── PROFESSIONAL (Freelancer only) ── */}
             {tab === 'professional' && isFL && (
               <form onSubmit={save} className="space-y-4">
+                {/* Tải lên CV */}
+                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
+                  <h3 className="font-bold text-[#334155] mb-1">Tải lên hồ sơ CV của bạn</h3>
+                  <p className="text-[13px] text-[#94A3B8] mb-4">CV của bạn sẽ được AI tự động phân tích để đối chiếu và tăng khả năng gợi ý với nhà tuyển dụng.</p>
+                  
+                  <div className="flex flex-col gap-4">
+                    {profile?.cv_url && (
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-teal-50/60 border border-teal-100 rounded-xl gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="material-symbols-outlined text-[#0F766E]">picture_as_pdf</span>
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">CV hiện tại đã được tải lên</p>
+                            <a href={profile.cv_url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#0F766E] hover:underline font-semibold flex items-center gap-0.5 mt-0.5">
+                              Mở tệp CV <span className="material-symbols-outlined text-[10px]">open_in_new</span>
+                            </a>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-extrabold text-teal-700 uppercase bg-teal-100/50 px-2.5 py-1 rounded-md">✓ Đã phân tích</span>
+                          <button
+                            type="button"
+                            onClick={() => setShowCVUploader(!showCVUploader)}
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                          >
+                            {showCVUploader ? 'Hủy bỏ' : 'Chỉnh sửa CV'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {(!profile?.cv_url || showCVUploader) && (
+                      <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 hover:border-[#0F766E]/50 rounded-2xl bg-slate-50/50 transition-colors relative group">
+                        <span className="material-symbols-outlined text-4xl text-slate-400 mb-2 group-hover:scale-110 transition-transform">cloud_upload</span>
+                        <p className="text-xs font-bold text-slate-600">Chọn file CV PDF của bạn</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Chỉ chấp nhận file định dạng PDF dung lượng dưới 5MB</p>
+                        
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                           onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            
+                            if (file.size > 5 * 1024 * 1024) {
+                              setAlert({ type: 'danger', msg: 'File không được vượt quá 5MB.' });
+                              return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('cvFile', file);
+                            
+                            setSaving(true);
+                            setAlert({ type: 'info', msg: 'Đang tải lên và phân tích CV bằng AI...' });
+
+                            try {
+                              const res = await userService.uploadCV(formData);
+                              if (res.success) {
+                                setAlert({ type: 'success', msg: 'CV đã được tải lên thành công và đã được AI phân tích.' });
+                                setShowCVUploader(false);
+                                // Reload profile
+                                load();
+                              } else {
+                                setAlert({ type: 'danger', msg: res.message || 'Lỗi khi tải lên CV.' });
+                              }
+                            } catch (err) {
+                              console.error('Error uploading CV:', err);
+                              setAlert({ type: 'danger', msg: err.response?.data?.message || 'Lỗi kết nối máy chủ.' });
+                            } finally {
+                              setSaving(false);
+                            }
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Title, Rate, Experience */}
                 <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
                   <h3 className="font-bold text-[#334155] mb-1">Thông tin nghề nghiệp</h3>
@@ -1403,70 +1495,6 @@ export default function Profile() {
                   )}
                 </div>
 
-                {/* Tải lên CV */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-6">
-                  <h3 className="font-bold text-[#334155] mb-1">Tải lên hồ sơ CV của bạn</h3>
-                  <p className="text-[13px] text-[#94A3B8] mb-4">CV của bạn sẽ được AI tự động phân tích để đối chiếu và tăng khả năng gợi ý với nhà tuyển dụng.</p>
-                  
-                  <div className="flex flex-col gap-4">
-                    {profile?.cv_url && (
-                      <div className="flex items-center justify-between p-3.5 bg-teal-50/60 border border-teal-100 rounded-xl">
-                        <div className="flex items-center gap-2.5">
-                          <span className="material-symbols-outlined text-[#0F766E]">picture_as_pdf</span>
-                          <div>
-                            <p className="text-xs font-bold text-slate-800">CV hiện tại đã được tải lên</p>
-                            <a href={profile.cv_url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#0F766E] hover:underline font-semibold flex items-center gap-0.5">
-                              Mở tệp CV <span className="material-symbols-outlined text-[10px]">open_in_new</span>
-                            </a>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-extrabold text-teal-700 uppercase bg-teal-100/50 px-2 py-1 rounded-md">✓ Đã phân tích</span>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 hover:border-[#0F766E]/50 rounded-2xl bg-slate-50/50 transition-colors relative group">
-                      <span className="material-symbols-outlined text-4xl text-slate-400 mb-2 group-hover:scale-110 transition-transform">cloud_upload</span>
-                      <p className="text-xs font-bold text-slate-600">Chọn file CV PDF của bạn</p>
-                      <p className="text-[10px] text-slate-400 mt-1">Chỉ chấp nhận file định dạng PDF dung lượng dưới 5MB</p>
-                      
-                      <input
-                        type="file"
-                        accept="application/pdf"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          
-                          if (file.size > 5 * 1024 * 1024) {
-                            setAlert({ type: 'danger', msg: 'File không được vượt quá 5MB.' });
-                            return;
-                          }
-
-                          const formData = new FormData();
-                          formData.append('cvFile', file);
-                          
-                          setSaving(true);
-                          setAlert({ type: 'info', msg: 'Đang tải lên và phân tích CV bằng AI...' });
-                          try {
-                            const res = await userService.uploadCV(formData);
-                            if (res.success) {
-                              setAlert({ type: 'success', msg: 'CV đã được tải lên thành công và đang được phân tích ngầm.' });
-                              // Reload profile
-                              load();
-                            } else {
-                              setAlert({ type: 'danger', msg: res.message || 'Lỗi khi tải lên CV.' });
-                            }
-                          } catch (err) {
-                            console.error('Error uploading CV:', err);
-                            setAlert({ type: 'danger', msg: err.response?.data?.message || 'Lỗi kết nối máy chủ.' });
-                          } finally {
-                            setSaving(false);
-                          }
-                        }}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 <div className="flex items-center gap-3">
                   <button type="submit" disabled={saving}
