@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-[1440px] mx-auto">
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
-          
+
           {/* Column 1: Brand & Desc */}
           <div className="space-y-4">
             <span className="text-3xl font-black text-teal-400 tracking-tighter">FJMS</span>
@@ -35,16 +35,15 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 4: Contact */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider">Liên hệ hỗ trợ</h4>
-            <p className="text-xs leading-relaxed text-slate-400">
-              Email: support@fjms.vn<br />
-              Hotline: 1900 1234<br />
-              Địa chỉ: Khu Công nghệ cao Hòa Lạc, Hà Nội
-            </p>
+            <div className="text-xs space-y-1 text-slate-400">
+              <p>Email: support@fjms.vn</p>
+              <p>Hotline: 1900 1234</p>
+              <p>Địa chỉ: Khu Công nghệ cao Hòa Lạc, Hà Nội</p>
+            </div>
           </div>
-          
+
         </div>
 
         {/* Bottom Section */}
