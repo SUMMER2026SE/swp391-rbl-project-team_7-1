@@ -3,19 +3,60 @@ import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
-    <footer className="w-full py-12 px-margin-mobile md:px-margin-desktop mt-auto bg-gradient-to-r from-[#1E293B] to-[#334155]">
-      <div className="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex flex-col items-center md:items-start gap-2">
-          <span className="font-headline-xl text-headline-xl font-bold text-white">FJMS</span>
-          <span className="font-body-sm text-body-sm text-slate-300">&copy; 2024 FJMS Marketplace. Bảo mật bởi VNPay Escrow.</span>
+    <footer className="w-full bg-slate-900 border-t border-slate-800 text-slate-400 py-16 px-6 md:px-12 mt-auto">
+      <div className="max-w-[1440px] mx-auto">
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
+          
+          {/* Column 1: Brand & Desc */}
+          <div className="space-y-4">
+            <span className="text-3xl font-black text-teal-400 tracking-tighter">FJMS</span>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Hệ thống kết nối và quản lý Freelancer chuyên nghiệp. Tiên phong giải pháp thanh toán bảo đảm bằng cơ chế ký quỹ thông minh.
+            </p>
+          </div>
+
+          {/* Column 2: Discover */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Khám phá</h4>
+            <ul className="space-y-2 text-xs">
+              <li><Link className="hover:text-teal-400 transition-colors" to="/browse-projects">Tìm kiếm công việc</Link></li>
+              <li><Link className="hover:text-teal-400 transition-colors" to="/freelancers">Danh sách Freelancer</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 3: Trust & Safety */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">An toàn & Bảo mật</h4>
+            <ul className="space-y-2 text-xs">
+              <li><Link className="hover:text-teal-400 transition-colors" to="/help-center">Hướng dẫn Ký quỹ Escrow</Link></li>
+              <li><Link className="hover:text-teal-400 transition-colors" to="#">Điều khoản dịch vụ</Link></li>
+              <li><Link className="hover:text-teal-400 transition-colors" to="#">Chính sách bảo mật</Link></li>
+            </ul>
+          </div>
+
+          {/* Column 4: Contact */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">Liên hệ hỗ trợ</h4>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Email: support@fjms.vn<br />
+              Hotline: 1900 1234<br />
+              Địa chỉ: Khu Công nghệ cao Hòa Lạc, Hà Nội
+            </p>
+          </div>
+          
         </div>
-        <nav className="flex flex-wrap justify-center gap-6">
-          <Link className="font-body-sm text-body-sm text-slate-300 hover:text-white transition-colors" to="/browse-projects">Danh mục</Link>
-          <Link className="font-body-sm text-body-sm text-slate-300 hover:text-white transition-colors" to="/help-center">An toàn & Bảo mật</Link>
-          <Link className="font-body-sm text-body-sm text-slate-300 hover:text-white transition-colors" to="#">Điều khoản dịch vụ</Link>
-          <Link className="font-body-sm text-body-sm text-slate-300 hover:text-white transition-colors" to="#">Chính sách riêng tư</Link>
-          <Link className="font-body-sm text-body-sm text-slate-300 hover:text-white transition-colors" to="/help-center">Hỗ trợ</Link>
-        </nav>
+
+        {/* Bottom Section */}
+        <div className="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-[11px] text-slate-500">
+            &copy; {new Date().getFullYear()} FJMS Platform. Bảo mật giao dịch qua cổng thanh toán VNPay.
+          </p>
+          <div className="flex items-center gap-4 text-[11px] text-slate-500">
+            <span>Phiên bản 2.5.0-Flash</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Hệ thống hoạt động bình thường" />
+          </div>
+        </div>
       </div>
     </footer>
   );

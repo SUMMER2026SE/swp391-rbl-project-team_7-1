@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../contexts/AuthContext';
 
 const TOPNAV_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXuAoDfcb0ULIPAGFpFTGtxwLfbOB2oUqhUHF7jRLM04_2mQn41242YVyt0ooenMnEya06i1YgpOXU9R4PmQIlSr4JQXZWNC2kJ1Sf1pctYioZKS-Y_QjNfHzRKDH8Zw6N2I6vLk7b7YX4cmdNdgRygC0Ry3iVzCd_g-u6MQ99D7gUDuoua5m6LDVko-U3PIUVhPLVsJNauxWn2rBwRgfo1VnCItIQtaNLFp6o0Tv18-Da0ZBA5ZDbjbrcVV_ATaFKfPTqYrB0f0uFaA";
 
 export default function Header({ layout = 'dashboard' }) {
+  const { logout } = useContext(AuthContext);
   const location = useLocation();
   const path = location.pathname;
   const navigate = useNavigate();
@@ -48,10 +50,8 @@ export default function Header({ layout = 'dashboard' }) {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setDropdownOpen(false);
-    window.location.href = '/';
+    logout({ redirect: '/' });
   };
 
   // Helper to determine the opposite dashboard role when clicking "Switch Role"
@@ -106,9 +106,6 @@ export default function Header({ layout = 'dashboard' }) {
               </Link>
               <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/freelancers' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/freelancers">
                 Freelancer
-              </Link>
-              <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/help-center' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/help-center">
-                Hỗ trợ
               </Link>
             </nav>
           </div>

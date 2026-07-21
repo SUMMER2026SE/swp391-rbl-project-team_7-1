@@ -680,16 +680,7 @@ export default function Profile() {
                   </div>
                 )}
 
-                {isPublicView && (
-                  <button
-                    type="button"
-                    onClick={() => setShowReportModal(true)}
-                    className="w-full mt-4 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 text-slate-900 text-xs font-bold rounded-xl hover:bg-amber-400 shadow-sm hover:shadow transition-all active:scale-[0.98] cursor-pointer border-none"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">report_problem</span>
-                    Báo cáo
-                  </button>
-                )}
+
 
                 {activeRole === 'EMPLOYER' && eLocation && (
                   <div className="mt-3 flex items-center gap-2 text-[#94A3B8] text-xs">

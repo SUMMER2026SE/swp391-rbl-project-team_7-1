@@ -258,8 +258,13 @@ ${candidatesSummary}
           text = text.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
         }
         text = text.trim();
-        const parsed = JSON.parse(text);
-        return parsed.comments || {};
+        try {
+          const parsed = JSON.parse(text);
+          return parsed.comments || {};
+        } catch (parseErr) {
+          console.error('[AI Recommendation] Lỗi parse JSON kết quả Gemini:', parseErr, text);
+          return {};
+        }
       }
     }
   } catch (err) {

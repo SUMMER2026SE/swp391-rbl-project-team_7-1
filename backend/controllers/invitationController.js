@@ -262,7 +262,7 @@ Lưu ý: Lời nhắn phải đại diện cho Nhà tuyển dụng (xưng "Chún
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemInstruction }] },
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { maxOutputTokens: 250, temperature: 0.7 }
+        generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
       })
     });
 

@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { chatService } from '../services/chatService';
+import { AuthContext } from '../contexts/AuthContext';
 
 const FREELANCER_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXuCioT3d29HAboKCh5FtH6yfJpreH6DQUNNdw8JVFoWTx6CMJJV0VXmJh5I4syj9A0nIm_Gn_kL4WN6hfVI3NVC1kL3X5kfRJVJyhppVo7GXsDb968rw3xdoxDmwSwigUm0d5Kj5VgB_1-w1p2eLFKTMOkAjmBe5lwKPjINix_mvuV2Cs99sGXjriNMQP2UhQRV6Xn1lM9CDkekRwQrNn2cP4aNr1sPsokHcK5zgQ6pdDtwQYOddnNJI8opkRkmtbH-OjupriQb1o5g";
 const EMPLOYER_AVATAR = "https://lh3.googleusercontent.com/aida-public/AB6AXu5Fhk-ytABwDE8c_Mn6mvYTC_3C7zksVlCcGgU8B6GSnt-6Rf9KpS5hs2iaprobtQ6UsK3MBqV8G1lHLZFeg1A3jmXRyhfwzQCqnVHUL6z0FW6pg-r4okgr9n93xAPkFgFtmjxAsawka2dQyzgThp0UUwiYARotIOrpccljPZKGv3QQAeDDpTATUEqRXqQ4bHeaMBPyMctfwD--N2zqSHdVNmNJHm5ZgG3SJ4c8Wxf7SnMEOjiwbDx3E_XSvwzRUU7fpKhAzHFoY0";
 
 export default function Sidebar() {
+  const { logout } = useContext(AuthContext);
   const location = useLocation();
   const path = location.pathname;
   const navigate = useNavigate();
@@ -73,9 +75,7 @@ export default function Sidebar() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/';
+    logout({ redirect: '/' });
   };
 
   let items = [];
