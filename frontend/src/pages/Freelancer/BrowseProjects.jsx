@@ -2,6 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { projectService } from '../../services/projectService';
 
+const getCategoryDetails = (category) => {
+  switch (category) {
+    case 'Ứng dụng Di động':
+    case 'Mobile Development':
+      return {
+        icon: 'phone_iphone',
+        bg: 'bg-blue-50 text-blue-600 border-blue-100/70 group-hover:bg-blue-100 group-hover:border-blue-200 group-hover:shadow-[0_4px_12px_rgba(59,130,246,0.15)]',
+      };
+    case 'Thiết kế UI/UX':
+    case 'UI/UX Design':
+    case 'Design':
+      return {
+        icon: 'palette',
+        bg: 'bg-rose-50 text-rose-600 border-rose-100/70 group-hover:bg-rose-100 group-hover:border-rose-200 group-hover:shadow-[0_4px_12px_rgba(244,63,94,0.15)]',
+      };
+    case 'Lập trình Web':
+    case 'Programming':
+      return {
+        icon: 'code',
+        bg: 'bg-indigo-50 text-indigo-600 border-indigo-100/70 group-hover:bg-indigo-100 group-hover:border-indigo-200 group-hover:shadow-[0_4px_12px_rgba(99,102,241,0.15)]',
+      };
+    case 'Viết nội dung':
+    case 'Writing':
+      return {
+        icon: 'edit_note',
+        bg: 'bg-amber-50 text-amber-600 border-amber-100/70 group-hover:bg-amber-100 group-hover:border-amber-200 group-hover:shadow-[0_4px_12px_rgba(245,158,11,0.15)]',
+      };
+    case 'Dịch thuật':
+    case 'Translation':
+      return {
+        icon: 'translate',
+        bg: 'bg-emerald-50 text-emerald-600 border-emerald-100/70 group-hover:bg-emerald-100 group-hover:border-emerald-200 group-hover:shadow-[0_4px_12px_rgba(16,185,129,0.15)]',
+      };
+    default:
+      return {
+        icon: 'work',
+        bg: 'bg-teal-50 text-teal-600 border-teal-100/70 group-hover:bg-teal-100 group-hover:border-teal-200 group-hover:shadow-[0_4px_12px_rgba(13,148,136,0.15)]',
+      };
+  }
+};
+
 export default function BrowseProjects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -343,27 +384,27 @@ export default function BrowseProjects() {
 
           {/* Bento Grid List */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {sortedProjects.map(project => (
-              <article 
-                key={project.id}
-                className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-[0_8px_24px_rgba(15,118,110,0.06)] hover:-translate-y-1 transition-all duration-300 relative flex flex-col group overflow-hidden"
-              >
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-50 flex items-center justify-center flex-shrink-0 text-teal-600 border border-teal-100 shadow-sm group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300">
-                    <span className="material-symbols-outlined text-[28px]">
-                      {project.category === 'Ứng dụng Di động' ? 'phone_iphone' : project.category === 'Thiết kế UI/UX' ? 'palette' : 'code'}
-                    </span>
-                  </div>
-                  <div>
+            {sortedProjects.map(project => {
+              const catDetails = getCategoryDetails(project.category);
+              return (
+                <article 
+                  key={project.id}
+                  className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-[0_8px_24px_rgba(15,118,110,0.06)] hover:-translate-y-1 transition-all duration-300 relative flex flex-col group overflow-hidden"
+                >
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 border shadow-sm transition-all duration-300 group-hover:scale-105 ${catDetails.bg}`}>
+                      <span className="material-symbols-outlined icon-fill text-[28px]">
+                        {catDetails.icon}
+                      </span>
+                    </div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="text-xl text-teal-950 mb-1.5 font-bold group-hover:text-teal-700 transition-colors cursor-pointer tracking-tight" onClick={() => navigate(`/project-details/${project.id}`)}>
                       {project.title}
                     </h3>
-                    <p className="text-sm text-slate-500 flex items-center gap-3">
-                      <span className="flex items-center gap-1 font-medium"><span className="material-symbols-outlined text-[16px] text-slate-400">domain</span> {project.company}</span>
+                    <p className="text-sm text-slate-500 flex items-center gap-2 w-full min-w-0">
+                      <span className="flex items-center gap-1 font-medium min-w-0"><span className="material-symbols-outlined text-[16px] text-slate-400 flex-shrink-0">domain</span><span className="truncate">{project.company}</span></span>
                       {project.verified && (
-                        <span className="flex items-center gap-1 text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full text-xs font-bold border border-teal-100/50">
-                          <span className="material-symbols-outlined text-[14px] font-fill-1 text-teal-600">verified</span> Đã xác thực
-                        </span>
+                        <span className="material-symbols-outlined icon-fill text-[15px] text-teal-600 leading-none select-none flex-shrink-0" title="Đã xác thực">verified</span>
                       )}
                     </p>
                   </div>
@@ -428,7 +469,8 @@ export default function BrowseProjects() {
                   </div>
                 </div>
               </article>
-            ))}
+            );
+          })}
 
             {sortedProjects.length === 0 && (
               <div className="col-span-full text-center py-20 bg-white border border-slate-100 rounded-2xl text-slate-500 shadow-sm">

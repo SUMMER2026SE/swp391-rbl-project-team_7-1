@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = () => {
       const storedUser = localStorage.getItem('user');
       const token = localStorage.getItem('token');
-      
+
       if (storedUser && token) {
         setUser(JSON.parse(storedUser));
       } else {

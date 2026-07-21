@@ -431,7 +431,8 @@ export default function Projects() {
                     ))}
                     {project.verified && (
                       <span className="px-sm py-xs bg-tertiary-container/20 text-tertiary-container rounded-lg font-label-sm text-label-sm flex items-center gap-xs">
-                        <span className="material-symbols-outlined text-[12px] font-fill-1">verified</span> Nhà tuyển dụng đã xác thực
+                        <span className="material-symbols-outlined icon-fill text-[13px] leading-none">verified</span>
+                        <span className="leading-none">Nhà tuyển dụng đã xác thực</span>
                       </span>
                     )}
                   </div>

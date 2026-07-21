@@ -10,7 +10,15 @@ export default function Footer() {
 
           {/* Column 1: Brand & Desc */}
           <div className="space-y-4">
-            <span className="text-3xl font-black text-teal-400 tracking-tighter">FJMS</span>
+            <div className="flex items-center gap-2 group cursor-pointer">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-slate-950 shadow-[0_4px_12px_rgba(20,184,166,0.25)] group-hover:rotate-6 transition-all duration-300">
+                <span className="material-symbols-outlined text-[22px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>work</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-white tracking-tighter leading-none">FJMS</span>
+                <span className="text-[9px] text-teal-400 font-bold uppercase tracking-widest mt-0.5">Platform</span>
+              </div>
+            </div>
             <p className="text-xs leading-relaxed text-slate-400">
               Hệ thống kết nối và quản lý Freelancer chuyên nghiệp. Tiên phong giải pháp thanh toán bảo đảm bằng cơ chế ký quỹ thông minh.
             </p>
@@ -39,8 +47,8 @@ export default function Footer() {
             <h4 className="text-sm font-bold text-white uppercase tracking-wider">Liên hệ hỗ trợ</h4>
             <div className="text-xs space-y-1 text-slate-400">
               <p>Email: support@fjms.vn</p>
-              <p>Hotline: 1900 1234</p>
-              <p>Địa chỉ: Khu Công nghệ cao Hòa Lạc, Hà Nội</p>
+              <p>Hotline: 0375855626</p>
+              <p>Địa chỉ: Khu Công nghệ cao FPT, Đà Nẵng</p>
             </div>
           </div>
 

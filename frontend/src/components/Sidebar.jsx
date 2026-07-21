@@ -19,7 +19,7 @@ export default function Sidebar() {
 
   const activeRole = localStorage.getItem('active_role');
   let role = activeRole || localUser?.roleDefault?.toLowerCase() || 'freelancer';
-  
+
   if (path.startsWith('/admin') || localUser?.roleDefault === 'ADMIN') {
     role = 'admin';
   }
@@ -140,13 +140,16 @@ export default function Sidebar() {
 
   return (
     <nav className="hidden md:flex flex-col h-screen fixed left-0 top-0 py-6 px-4 w-64 bg-white border-r border-slate-200 z-40 shadow-[4px_0_24px_rgba(15,23,42,0.02)] transition-all duration-300">
-      <div className="mb-8 px-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-[#0F766E] shadow-sm border border-teal-100">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-            {role === 'employer' ? 'business_center' : role === 'admin' ? 'admin_panel_settings' : 'work'}
-          </span>
-        </div>
-        <span className="text-3xl text-slate-800 font-extrabold tracking-tighter">FJMS</span>
+      <div className="mb-8 px-2">
+        <Link className="flex items-center gap-2.5 group cursor-pointer border-none text-decoration-none" to="/">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-slate-950 shadow-[0_4px_12px_rgba(20,184,166,0.2)] group-hover:rotate-6 transition-all duration-300">
+            <span className="material-symbols-outlined text-[22px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>work</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-2xl font-black text-slate-800 tracking-tighter leading-none">FJMS</span>
+            <span className="text-[9px] text-[#0F766E] font-bold uppercase tracking-widest mt-0.5">Platform</span>
+          </div>
+        </Link>
       </div>
 
       {/* User Profile */}
@@ -168,8 +171,8 @@ export default function Sidebar() {
             <li key={idx}>
               <Link
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${isActive
-                    ? 'bg-teal-50 text-[#0F766E] shadow-sm border border-teal-100/50'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  ? 'bg-teal-50 text-[#0F766E] shadow-sm border border-teal-100/50'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                   }`}
                 to={item.link}
               >

@@ -94,8 +94,14 @@ export default function Header({ layout = 'dashboard' }) {
       <header className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="flex justify-between items-center px-6 md:px-12 max-w-[1440px] mx-auto h-[80px] gap-6">
           <div className="flex items-center gap-10 shrink-0">
-            <Link className="text-4xl lg:text-5xl text-teal-700 font-extrabold tracking-tighter hover:opacity-80 transition-opacity" to="/">
-              FJMS
+            <Link className="flex items-center gap-2.5 group cursor-pointer border-none text-decoration-none" to="/">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-slate-950 shadow-[0_4px_12px_rgba(20,184,166,0.2)] group-hover:rotate-6 transition-all duration-300">
+                <span className="material-symbols-outlined text-[22px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>work</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-[#0F766E] tracking-tighter leading-none">FJMS</span>
+                <span className="text-[9px] text-[#0F766E] font-bold uppercase tracking-widest mt-0.5">Platform</span>
+              </div>
             </Link>
             <nav className="hidden lg:flex items-center gap-2 ml-6">
               <Link className={`text-[15px] font-bold px-4 py-2 rounded-xl transition-all duration-300 ${path === '/' ? 'bg-teal-50 text-teal-700' : 'text-slate-600 hover:bg-slate-50 hover:text-teal-700'}`} to="/">

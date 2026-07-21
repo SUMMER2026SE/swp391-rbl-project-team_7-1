@@ -643,8 +643,9 @@ export default function Profile() {
                     {activeRole === 'FREELANCER' && <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${avail.dot}`} title={avail.label} />}
                   </div>
                   {profile?.is_email_verified && (
-                    <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[11px] font-bold">
-                      <span className="material-symbols-outlined text-[12px]">verified</span> Đã xác thực
+                    <div className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[11px] font-bold translate-y-1.5 shadow-sm">
+                      <span className="material-symbols-outlined icon-fill text-[13px] leading-none">verified</span>
+                      <span className="leading-none">Đã xác thực</span>
                     </div>
                   )}
                 </div>
