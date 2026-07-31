@@ -117,7 +117,6 @@ export default function Sidebar() {
       { label: 'Người dùng', icon: 'group', link: '/admin-users' },
       { label: 'Tổng dự án', icon: 'work', link: '/admin-projects' },
       { label: 'Duyệt rút tiền', icon: 'payments', link: '/admin-withdrawals' },
-      { label: 'Tranh chấp', icon: 'gavel', link: '/admin-disputes' },
       { label: 'Vi phạm', icon: 'warning', link: '/admin-violations' },
       { label: 'Thống kê', icon: 'analytics', link: '/admin-analytics' }
     ];
@@ -141,15 +140,15 @@ export default function Sidebar() {
   return (
     <nav className="hidden md:flex flex-col h-screen fixed left-0 top-0 py-6 px-4 w-64 bg-white border-r border-slate-200 z-40 shadow-[4px_0_24px_rgba(15,23,42,0.02)] transition-all duration-300">
       <div className="mb-8 px-2">
-        <Link className="flex items-center gap-2.5 group cursor-pointer border-none text-decoration-none" to="/">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-slate-950 shadow-[0_4px_12px_rgba(20,184,166,0.2)] group-hover:rotate-6 transition-all duration-300">
+        <div className="flex items-center gap-2.5 group select-none">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-slate-950 shadow-[0_4px_12px_rgba(20,184,166,0.2)] transition-all duration-300">
             <span className="material-symbols-outlined text-[22px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>work</span>
           </div>
           <div className="flex flex-col">
             <span className="text-2xl font-black text-slate-800 tracking-tighter leading-none">FJMS</span>
             <span className="text-[9px] text-[#0F766E] font-bold uppercase tracking-widest mt-0.5">Platform</span>
           </div>
-        </Link>
+        </div>
       </div>
 
       {/* User Profile */}

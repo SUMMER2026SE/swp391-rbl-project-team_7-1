@@ -1,5 +1,6 @@
 import * as recommendationRepository from '../repositories/recommendationRepository.js';
 
+
 /* ─────────────── LAYER 1: SKILL MATCHING ─────────────── */
 
 const calculateSkillMatch = (freelancerSkills, projectSkills) => {
@@ -38,14 +39,14 @@ const calculateHistoricalPreference = (
   const maxBonus = 100;
 
   if (!employerHistory.length) {
-    return { score: 50, reasons: ['Chưa có lịch sử tuyển dụng từ doanh nghiệp này'] };
+    return { score: 50, reasons: [] };
   }
 
   // Check if freelancer was previously hired by this employer
   const previouslyHired = employerHistory.some(h => h.freelancer_id === freelancer.user_id);
   if (previouslyHired) {
     bonusPoints += 30;
-    reasons.push('Đã từng được thuê bởi nhà tuyển dụng này');
+    reasons.push('Đã từng hợp tác thành công với nhà tuyển dụng này');
   }
 
   // Check category preference
@@ -53,7 +54,6 @@ const calculateHistoricalPreference = (
   if (categoryMatches > 0) {
     const categoryScore = Math.min(categoryMatches * 10, 20);
     bonusPoints += categoryScore;
-    reasons.push(`Đã tuyển ${categoryMatches} freelancer cho danh mục này`);
   }
 
   // Check skill preference
@@ -64,27 +64,22 @@ const calculateHistoricalPreference = (
     if (commonSkills.length > 0) {
       const skillBonus = Math.min(commonSkills.length * 10, 20);
       bonusPoints += skillBonus;
-      reasons.push(`Doanh nghiệp thường thuê lập trình viên ${commonSkills.slice(0, 3).join(', ')}`);
+      reasons.push(`Sở hữu các kỹ năng chìa khóa (${commonSkills.slice(0, 3).join(', ')})`);
     }
   }
 
-  // Check rating preference
-  if (employerHistory.length > 0) {
-    const avgHiredRating = employerHistory.reduce((sum, h) => sum + (h.rating_average || 0), 0) / employerHistory.length;
-    if (freelancer.rating_average >= avgHiredRating) {
-      bonusPoints += 15;
-      reasons.push('Đánh giá sao phù hợp với tiêu chuẩn tuyển dụng');
-    }
+  // Check rating preference with CONCRETE STATS
+  const flRating = freelancer.rating_average ? Number(freelancer.rating_average).toFixed(1) : '5.0';
+  const flReviews = freelancer.total_reviews || freelancer.completed_projects || 0;
+  if (freelancer.rating_average >= 4.0 || flReviews > 0) {
+    bonusPoints += 15;
+    reasons.push(`Đạt ${flRating}/5.0★ (${flReviews > 0 ? `đã hoàn thành ${flReviews} dự án` : 'hồ sơ đánh giá uy tín'})`);
   }
 
-  // Check experience preference
-  if (employerHistory.length > 0) {
-    const avgExperience = employerHistory.reduce((sum, h) => sum + (h.experience_years || 0), 0) / employerHistory.length;
-    if (freelancer.experience_years >= avgExperience * 0.8) {
-      bonusPoints += 15;
-      reasons.push('Số năm kinh nghiệm đáp ứng mong muốn tuyển dụng');
-    }
-  }
+  // Check experience preference with CONCRETE YEARS STAT
+  const flExp = freelancer.experience_years || 1;
+  bonusPoints += 15;
+  reasons.push(`Có ${flExp} năm kinh nghiệm thực chiến trong nghề`);
 
   return { score: Math.min(bonusPoints, maxBonus), reasons };
 };
@@ -137,7 +132,7 @@ const calculateProposalQuality = (freelancer, proposals) => {
 
 /* ─────────────── LAYER 4: SEMANTIC MATCHING ─────────────── */
 
-const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolios) => {
+const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolios, cvText = '') => {
   const reasons = [];
   let score = 50;
 
@@ -154,7 +149,8 @@ const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolio
   const freelancerText = [
     freelancer.headline || '',
     freelancer.portfolio_summary || '',
-    portfolioTexts
+    portfolioTexts,
+    cvText
   ].join(' ').toLowerCase();
 
   if (!freelancerText.trim()) {
@@ -273,6 +269,67 @@ ${candidatesSummary}
   return {};
 };
 
+const calculateMatchScore = (freelancer, flSkills, project, portfolios) => {
+  // 1. Skill Match Score (40%)
+  const projectSkillList = (project.required_skills || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const flSkillNames = new Set(flSkills.map(s => s.skill_name.toLowerCase()));
+  
+  let matchedSkillsCount = 0;
+  if (projectSkillList.length > 0) {
+    projectSkillList.forEach(ps => {
+      if (flSkillNames.has(ps) || [...flSkillNames].some(fs => fs.includes(ps) || ps.includes(fs))) {
+        matchedSkillsCount++;
+      }
+    });
+  }
+  const skillScore = projectSkillList.length > 0
+    ? Math.round((matchedSkillsCount / projectSkillList.length) * 100)
+    : 80;
+
+  // 2. Semantic Keyword Overlap (40%)
+  const projectText = `${project.title} ${project.description} ${project.category_name || ''}`.toLowerCase();
+  const projectTokens = new Set(projectText.split(/\s+/).filter(t => t.length > 3));
+  
+  let cvText = '';
+  if (freelancer.cv_ai_evaluation) {
+    try {
+      const cv = typeof freelancer.cv_ai_evaluation === 'string' ? JSON.parse(freelancer.cv_ai_evaluation) : freelancer.cv_ai_evaluation;
+      cvText = `${cv.headline || ''} ${cv.quickSummary || ''} ${(cv.strengths || []).join(' ')}`.toLowerCase();
+    } catch {}
+  }
+  
+  const freelancerPortfolios = portfolios.filter(p => p.freelancer_id === freelancer.user_id);
+  const portfolioTexts = freelancerPortfolios.map(p => `${p.title} ${p.description}`).join(' ');
+  const freelancerText = [
+    freelancer.headline || '',
+    freelancer.portfolio_summary || '',
+    portfolioTexts,
+    cvText
+  ].join(' ').toLowerCase();
+
+  let tokenMatches = 0;
+  if (projectTokens.size > 0) {
+    for (const t of projectTokens) {
+      if (freelancerText.includes(t)) tokenMatches++;
+    }
+  }
+  const semanticScore = projectTokens.size > 0
+    ? Math.round((tokenMatches / projectTokens.size) * 100)
+    : 70;
+
+  // 3. Budget & Experience Fit (20%)
+  let budgetFitScore = 70;
+  const projMax = parseFloat(project.budget_max || 0);
+  const flHourlyRate = parseFloat(freelancer.hourly_rate || 0);
+  if (projMax > 0 && flHourlyRate > 0) {
+    budgetFitScore = 90;
+  }
+
+  const rawScore = Math.round(skillScore * 0.40 + semanticScore * 0.40 + budgetFitScore * 0.20);
+  const finalScore = Math.min(Math.max(rawScore, 10), 98);
+  return { finalScore, skillScore, semanticScore, budgetFitScore };
+};
+
 /* ─────────────── MAIN RECOMMENDATION ENGINE ─────────────── */
 
 export const getRecommendations = async (projectId) => {
@@ -295,7 +352,14 @@ export const getRecommendations = async (projectId) => {
   const freelancers = await recommendationRepository.getFreelancersForProject(projectId);
   if (!freelancers.length) return [];
 
-  // 5. Batch fetch freelancer data
+  // 5. Batch fetch freelancer data and specific project proposals to sync scores
+  const projectProposalsResult = await recommendationRepository.getProjectProposalsAIEvaluation(projectId);
+
+  const proposalsMap = {};
+  projectProposalsResult.forEach(p => {
+    proposalsMap[p.freelancer_id] = p.ai_evaluation;
+  });
+
   const freelancerIds = freelancers.map(f => f.user_id);
   const [allFreelancerSkills, allProposals, allContracts, allPortfolios] = await Promise.all([
     recommendationRepository.getFreelancerSkills(freelancerIds),
@@ -318,7 +382,19 @@ export const getRecommendations = async (projectId) => {
 
   // 7. Calculate scores for each freelancer
   const scored = freelancers.map(freelancer => {
-    const flSkills = skillsByFreelancer[freelancer.user_id] || [];
+    // Parse and combine CV skills to match the Freelancer dashboard algorithm inputs
+    let combinedSkillNames = (skillsByFreelancer[freelancer.user_id] || []).map(s => s.skill_name);
+    if (freelancer.cv_ai_evaluation) {
+      try {
+        const cv = typeof freelancer.cv_ai_evaluation === 'string'
+          ? JSON.parse(freelancer.cv_ai_evaluation)
+          : freelancer.cv_ai_evaluation;
+        if (Array.isArray(cv.skills)) {
+          combinedSkillNames = [...new Set([...combinedSkillNames, ...cv.skills])];
+        }
+      } catch {}
+    }
+    const flSkills = combinedSkillNames.map(name => ({ skill_name: name }));
 
     // Layer 1: Skill Matching (40%)
     const { score: skillScore, reasons: skillReasons } = calculateSkillMatch(flSkills, projectSkills);
@@ -331,18 +407,22 @@ export const getRecommendations = async (projectId) => {
     // Layer 3: Proposal Quality (20%)
     const { score: proposalScore, reasons: proposalReasons } = calculateProposalQuality(freelancer, allProposals);
 
-    // Layer 4: Semantic Matching (20%)
-    const { score: semanticScore, reasons: semanticReasons } = calculateSemanticMatch(
-      freelancer, flSkills, project, allPortfolios
-    );
+    // Use unified match score helper
+    const scoreObj = calculateMatchScore(freelancer, flSkills, project, allPortfolios);
+    let finalScore = scoreObj.finalScore;
+    const semanticScore = scoreObj.semanticScore;
+    const semanticReasons = [];
 
-    // Final Score
-    const finalScore = Math.round(
-      skillScore * 0.40 +
-      historyScore * 0.20 +
-      proposalScore * 0.20 +
-      semanticScore * 0.20
-    );
+    // Override score if freelancer has already submitted a proposal for this project
+    const existingAiEval = proposalsMap[freelancer.user_id];
+    if (existingAiEval) {
+      try {
+        const parsed = typeof existingAiEval === 'string' ? JSON.parse(existingAiEval) : existingAiEval;
+        if (parsed && typeof parsed.matchScore === 'number') {
+          finalScore = parsed.matchScore;
+        }
+      } catch {}
+    }
 
     // Combine unique reasons
     const allReasons = [...new Set([...skillReasons, ...historyReasons, ...proposalReasons, ...semanticReasons])];
@@ -385,7 +465,9 @@ export const getRecommendations = async (projectId) => {
     .slice(0, 10);
 
   // 9. AI Enhancement: Call Gemini ONCE for personalized comments on all top candidates
-  const topFreelancerData = top10.map(r => freelancers.find(f => f.user_id === r.userId));
+  const topFreelancerData = top10
+    .map(r => freelancers.find(f => Number(f.user_id) === Number(r.userId)))
+    .filter(Boolean);
   const aiComments = await analyzeWithGemini(project, projectSkills, topFreelancerData, skillsByFreelancer);
 
   // Attach AI comments to results
@@ -394,4 +476,111 @@ export const getRecommendations = async (projectId) => {
   }
 
   return top10;
+};
+
+export const getProjectRecommendationsForFreelancer = async (userId) => {
+  const freelancer = await recommendationRepository.getSingleFreelancerProfile(userId);
+  if (!freelancer) return [];
+
+  const openProjects = await recommendationRepository.getAllOpenProjectsWithSkills();
+  if (!openProjects.length) return [];
+
+  // Batch fetch portfolios for the freelancer
+  const allPortfolios = await recommendationRepository.getFreelancerPortfolios([userId]);
+
+  // Combine freelancer system skills and CV skills if parsed
+  let allFlSkills = [...(freelancer.skills || [])];
+  let cvText = '';
+  if (freelancer.cv_ai_evaluation) {
+    try {
+      const cv = typeof freelancer.cv_ai_evaluation === 'string'
+        ? JSON.parse(freelancer.cv_ai_evaluation)
+        : freelancer.cv_ai_evaluation;
+      cvText = `${cv.headline || ''} ${cv.quickSummary || ''} ${(cv.strengths || []).join(' ')}`.toLowerCase();
+      if (Array.isArray(cv.skills)) {
+        allFlSkills = [...new Set([...allFlSkills, ...cv.skills])];
+      }
+    } catch {}
+  }
+
+  const flSkills = allFlSkills.map(name => ({ skill_name: name }));
+  const flSkillsSet = new Set(allFlSkills.map(s => s.toLowerCase().trim()));
+  const profileText = [
+    freelancer.headline || '',
+    freelancer.bio || '',
+    cvText
+  ].join(' ').toLowerCase();
+
+  const flHourlyRate = parseFloat(freelancer.hourly_rate || 0);
+  const flExpYears = parseInt(freelancer.experience_years || 1, 10);
+
+  const scoredProjects = openProjects.map(p => {
+    // 1. Skill Match Score (40%)
+    const projectSkillList = (p.required_skills || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    let matchedSkills = [];
+    if (projectSkillList.length > 0) {
+      matchedSkills = projectSkillList.filter(ps => 
+        [...flSkillsSet].some(fs => fs.includes(ps) || ps.includes(fs))
+      );
+    }
+
+    // 2. Semantic Keyword Overlap (40%)
+    const projText = `${p.title} ${p.description} ${p.category_name || ''}`.toLowerCase();
+    const projTokens = new Set(projText.split(/\s+/).filter(t => t.length > 3));
+    let tokenMatches = 0;
+    for (const t of projTokens) {
+      if (profileText.includes(t)) tokenMatches++;
+    }
+
+    // 3. Budget & Experience Fit (20%)
+    const projMax = parseFloat(p.budget_max || 0);
+
+    // Call unified match helper
+    const scoreObj = calculateMatchScore(freelancer, flSkills, p, allPortfolios);
+    const finalScore = scoreObj.finalScore;
+
+    // Dynamic AI Reason Generation (Varied per project)
+    const reasons = [];
+    if (matchedSkills.length > 0) {
+      reasons.push(`Trùng khớp ${matchedSkills.length}/${projectSkillList.length || 1} kỹ năng yêu cầu (${matchedSkills.slice(0, 3).join(', ')})`);
+    } else if (p.category_name) {
+      reasons.push(`Phù hợp với chuyên môn danh mục ${p.category_name}`);
+    }
+
+    const titleSnippet = (p.title || '').length > 28 ? (p.title || '').substring(0, 28) + '...' : (p.title || '');
+    if (tokenMatches >= 3) {
+      reasons.push(`Nội dung dự án "${titleSnippet}" trùng khớp từ khóa chuyên môn trong CV`);
+    } else {
+      reasons.push(`Yêu cầu dự án phù hợp với hồ sơ năng lực của bạn`);
+    }
+
+    if (projMax > 10000000) {
+      reasons.push(`Ngân sách cao (${(projMax / 1000000).toFixed(0)} triệu VNĐ) tương thích số năm kinh nghiệm (${flExpYears} năm)`);
+    } else if (projMax > 0) {
+      reasons.push(`Mức thầu ${projMax.toLocaleString('vi-VN')} VNĐ phù hợp với chi phí kỳ vọng`);
+    } else {
+      reasons.push(`Mức thầu thỏa thuận linh hoạt theo năng lực của bạn`);
+    }
+
+    return {
+      projectId: p.project_id,
+      title: p.title,
+      description: p.description,
+      budgetMin: p.budget_min,
+      budgetMax: p.budget_max,
+      budgetType: p.budget_type,
+      categoryName: p.category_name,
+      companyName: p.company_name,
+      avatarUrl: p.avatar_url,
+      requiredSkills: p.required_skills,
+      createdAt: p.created_at,
+      matchScore: finalScore,
+      matchReasons: reasons
+    };
+  });
+
+  // Return top recommended projects sorted by match score
+  return scoredProjects
+    .sort((a, b) => b.matchScore - a.matchScore)
+    .slice(0, 8);
 };

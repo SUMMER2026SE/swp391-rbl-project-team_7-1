@@ -59,6 +59,10 @@ export default function ProjectModeration() {
   }, []);
 
   const handleApprove = async (projectId) => {
+    // Close detail modal immediately before showing confirm dialog
+    setShowDetail(false);
+    setSelectedProject(null);
+
     const result = await Swal.fire({
       title: 'Duyệt dự án?',
       text: 'Bạn có chắc chắn muốn duyệt dự án này?',
@@ -70,6 +74,7 @@ export default function ProjectModeration() {
       cancelButtonColor: '#94A3B8'
     });
     if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API}/${projectId}/approve`, {
         method: 'PATCH',
@@ -81,8 +86,6 @@ export default function ProjectModeration() {
         return;
       }
       setAlert({ type: 'success', msg: 'Dự án đã được duyệt thành công!' });
-      setSelectedProject(null);
-      setShowDetail(false);
       fetchProjects();
       setTimeout(() => setAlert({ type: '', msg: '' }), 4000);
     } catch (err) {
@@ -91,6 +94,10 @@ export default function ProjectModeration() {
   };
 
   const handleReject = async (projectId) => {
+    // Close detail modal immediately before showing confirm dialog
+    setShowDetail(false);
+    setSelectedProject(null);
+
     const result = await Swal.fire({
       title: 'Từ chối dự án?',
       text: 'Bạn có chắc chắn muốn từ chối dự án này?',
@@ -102,6 +109,7 @@ export default function ProjectModeration() {
       cancelButtonColor: '#94A3B8'
     });
     if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API}/${projectId}/reject`, {
         method: 'PATCH',
@@ -114,8 +122,6 @@ export default function ProjectModeration() {
         return;
       }
       setAlert({ type: 'success', msg: 'Dự án đã bị từ chối.' });
-      setSelectedProject(null);
-      setShowDetail(false);
       fetchProjects();
       setTimeout(() => setAlert({ type: '', msg: '' }), 4000);
     } catch (err) {

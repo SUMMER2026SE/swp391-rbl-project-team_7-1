@@ -234,6 +234,7 @@ export default function Profile() {
   const [portDesc, setPortDesc] = useState('');
   const [portUrl, setPortUrl] = useState('');
   const [portImage, setPortImage] = useState('');
+  const [selectedPortfolio, setSelectedPortfolio] = useState(null);
 
   /* edit - basic */
   const [eName, setEName]       = useState('');
@@ -1074,7 +1075,11 @@ export default function Profile() {
                     {portfolios.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {portfolios.map(p => (
-                          <div key={p.portfolio_id} className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex flex-col hover:shadow-sm transition-all">
+                          <div 
+                            key={p.portfolio_id} 
+                            onClick={() => setSelectedPortfolio(p)}
+                            className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex flex-col hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group"
+                          >
                             {p.image_url ? (
                               <img src={p.image_url} alt={p.title} className="w-full h-32 object-cover" />
                             ) : (
@@ -1084,13 +1089,21 @@ export default function Profile() {
                             )}
                             <div className="p-4 flex-1 flex flex-col justify-between">
                               <div>
-                                <h4 className="font-bold text-slate-800 text-sm">{p.title}</h4>
-                                <p className="text-xs text-slate-600 mt-1 line-clamp-2">{p.description}</p>
+                                <h4 className="font-bold text-slate-800 text-sm group-hover:text-[#0F766E] transition-colors">{p.title}</h4>
+                                <p className="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">{p.description}</p>
                               </div>
                               {p.project_url && (
-                                <a href={p.project_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#0F766E] mt-3 hover:underline inline-flex items-center gap-0.5">
-                                  Xem dự án <span className="material-symbols-outlined text-[12px]">open_in_new</span>
-                                </a>
+                                <div className="mt-4 flex justify-end">
+                                  <a 
+                                    href={p.project_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs font-semibold text-[#0F766E] hover:underline inline-flex items-center gap-0.5"
+                                  >
+                                    Xem dự án <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                                  </a>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -1305,10 +1318,36 @@ export default function Profile() {
                             try {
                               const res = await userService.uploadCV(formData);
                               if (res.success) {
-                                setAlert({ type: 'success', msg: 'CV đã được tải lên thành công và đã được AI phân tích.' });
                                 setShowCVUploader(false);
-                                // Reload profile
-                                load();
+                                // Auto-fill form fields from AI-extracted data
+                                // Reload profile from server first
+                                await load();
+
+                                // Auto-fill form fields from AI-extracted data
+                                if (res.extractedFields) {
+                                  const ef = res.extractedFields;
+                                  if (ef.fullName) setEName(ef.fullName);
+                                  if (ef.phone) setEPhone(ef.phone);
+                                  if (ef.headline) setETitle(ef.headline);
+                                  if (ef.bio) setEBio(ef.bio);
+                                  if (ef.hourlyRate) setERate(String(ef.hourlyRate));
+                                  if (ef.experienceYears) {
+                                    setEExp(ef.experienceYears <= 1 ? 'ENTRY' : ef.experienceYears >= 3 ? 'EXPERT' : 'INTERMEDIATE');
+                                  }
+                                  // Set skills from CV
+                                  if (Array.isArray(ef.skills) && ef.skills.length > 0) {
+                                    setESkills(ef.skills.slice(0, 15));
+                                  }
+                                  // Set links
+                                  if (ef.portfolioWebsite) setEPortfolio(ef.portfolioWebsite);
+                                  if (ef.linkedinUrl) setELinkedIn(ef.linkedinUrl);
+                                  if (ef.githubUrl) setEGitHub(ef.githubUrl);
+
+                                  setTab('professional');
+                                  setAlert({ type: 'success', msg: '✨ AI đã phân tích CV và tự động điền đầy đủ Chức danh, Giới thiệu, Kỹ năng & Link liên kết vào hồ sơ của bạn! Vui lòng kiểm tra lại rồi nhấn "Lưu thay đổi".' });
+                                } else {
+                                  setAlert({ type: 'success', msg: 'CV đã được tải lên thành công và đã được AI phân tích.' });
+                                }
                               } else {
                                 setAlert({ type: 'danger', msg: res.message || 'Lỗi khi tải lên CV.' });
                               }
@@ -1646,6 +1685,57 @@ export default function Profile() {
       </div>
     </main>
 
+    {/* ── Portfolio Detail Modal ── */}
+    {selectedPortfolio && (
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm">
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100" style={{ animation: 'fadeScale .2s ease' }}>
+          <div className="px-6 py-5 border-b border-[#F1F5F9] flex justify-between items-center">
+            <h3 className="font-extrabold text-slate-800 text-base line-clamp-1">
+              Chi tiết dự án: {selectedPortfolio.title}
+            </h3>
+            <button onClick={() => setSelectedPortfolio(null)} className="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer flex items-center justify-center p-1 rounded-full hover:bg-slate-50">
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+            {selectedPortfolio.image_url ? (
+              <img
+                src={selectedPortfolio.image_url}
+                alt={selectedPortfolio.title}
+                className="w-full h-56 object-cover rounded-2xl border border-slate-100 shadow-sm"
+              />
+            ) : (
+              <div className="w-full h-44 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-350 border border-slate-100/60">
+                <span className="material-symbols-outlined text-[48px]">image</span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Mô tả dự án</h4>
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50/50 p-4 rounded-2xl border border-slate-50">
+                {selectedPortfolio.description || 'Chưa có mô tả chi tiết cho dự án này.'}
+              </p>
+            </div>
+
+            {selectedPortfolio.project_url && (
+              <div className="pt-2">
+                <a
+                  href={selectedPortfolio.project_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 bg-[#0F766E] hover:bg-[#0D5E58] text-white rounded-xl text-xs font-bold transition-all border-none flex items-center justify-center gap-1.5 cursor-pointer no-underline text-center justify-center"
+                >
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  Mở liên kết dự án (Project Link)
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* ── Delete Modal ── */}
     {showDel && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -1713,8 +1803,76 @@ export default function Profile() {
               <Field label="Đường dẫn dự án (Website, GitHub...)">
                 <Input icon="link" type="url" value={portUrl} onChange={e => setPortUrl(e.target.value)} placeholder="https://..." />
               </Field>
-              <Field label="Đường dẫn ảnh mô tả (Hình ảnh sản phẩm)">
-                <Input icon="image" type="url" value={portImage} onChange={e => setPortImage(e.target.value)} placeholder="https://example.com/mockup.png" />
+              <Field label="Hình ảnh mô tả sản phẩm (Chọn file từ máy tính hoặc dán Link ảnh)">
+                <div className="space-y-2">
+                  <div className="flex gap-2 items-center">
+                    <div className="relative flex-1">
+                      <Input icon="image" type="url" value={portImage} onChange={e => setPortImage(e.target.value)} placeholder="Dán link ảnh (https://...) hoặc chọn file bên phải" />
+                    </div>
+                    <label className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer border border-slate-200 transition-all shrink-0 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">upload_file</span>
+                      Tải ảnh lên
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 10 * 1024 * 1024) {
+                            setAlert({ type: 'error', msg: 'Ảnh minh họa phải nhỏ hơn 10 MB.' });
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = ev => {
+                            const img = new Image();
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              const MAX_WIDTH = 800;
+                              const MAX_HEIGHT = 600;
+                              let width = img.width;
+                              let height = img.height;
+
+                              if (width > height) {
+                                if (width > MAX_WIDTH) {
+                                  height *= MAX_WIDTH / width;
+                                  width = MAX_WIDTH;
+                                }
+                              } else {
+                                if (height > MAX_HEIGHT) {
+                                  width *= MAX_HEIGHT / height;
+                                  height = MAX_HEIGHT;
+                                }
+                              }
+                              canvas.width = width;
+                              canvas.height = height;
+                              const ctx = canvas.getContext('2d');
+                              ctx.drawImage(img, 0, 0, width, height);
+                              // Fast lightweight compressed JPEG base64
+                              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+                              setPortImage(compressedDataUrl);
+                            };
+                            img.src = ev.target.result;
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {portImage && (
+                    <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
+                      <img src={portImage} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setPortImage('')}
+                        className="absolute top-2 right-2 p-1 bg-black/60 text-white hover:bg-red-600 rounded-full transition-all border-none cursor-pointer flex items-center justify-center"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">close</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </Field>
             </div>
             <div className="px-6 pb-6 flex gap-3">

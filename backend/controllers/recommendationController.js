@@ -31,3 +31,21 @@ export const getProjectRecommendations = async (req, res) => {
     });
   }
 };
+
+export const getFreelancerRecommendations = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const recommendations = await recommendationService.getProjectRecommendationsForFreelancer(userId);
+
+    res.json({
+      success: true,
+      data: recommendations
+    });
+  } catch (error) {
+    console.error('Error getting project recommendations for freelancer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi hệ thống khi tìm dự án phù hợp.'
+    });
+  }
+};

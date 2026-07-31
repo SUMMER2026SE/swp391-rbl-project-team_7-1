@@ -39,5 +39,10 @@ export const projectService = {
   deleteProject: async (id) => {
     const response = await api.delete(`/projects/${id}`);
     return response.data;
+  },
+
+  getFreelancerRecommendedProjects: async () => {
+    const response = await api.get('/recommendations/freelancer/recommended-projects');
+    return response.data;
   }
 };

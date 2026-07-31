@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { projectService } from '../../services/projectService';
 import { proposalService } from '../../services/proposalService';
+import { userService } from '../../services/userService';
 
 export default function SubmitProposal() {
   const { projectId } = useParams();
@@ -17,8 +18,13 @@ export default function SubmitProposal() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // New states for AI CV Badge & Portfolio Selection
+  const [userProfile, setUserProfile] = useState(null);
+  const [portfolios, setPortfolios] = useState([]);
+  const [selectedPortIds, setSelectedPortIds] = useState([]);
+
   useEffect(() => {
-    const fetchProject = async () => {
+    const fetchData = async () => {
       try {
         if (projectId) {
           const data = await projectService.getProjectById(projectId);
@@ -28,12 +34,28 @@ export default function SubmitProposal() {
             setBidAmount(proj.budget_max.toString());
           }
         }
+        // Fetch freelancer profile for AI CV check
+        const profData = await userService.getProfile();
+        if (profData?.user) {
+          setUserProfile(profData.user);
+        }
+        // Fetch portfolios from freelancer profile
+        const portRes = await userService.getPortfolios();
+        if (portRes?.success && Array.isArray(portRes.portfolios)) {
+          setPortfolios(portRes.portfolios);
+        }
       } catch (err) {
-        console.error("Failed to load project details", err);
+        console.error("Failed to load details for proposal", err);
       }
     };
-    fetchProject();
+    fetchData();
   }, [projectId]);
+
+  const togglePortfolioSelection = (portId) => {
+    setSelectedPortIds(prev => 
+      prev.includes(portId) ? prev.filter(id => id !== portId) : [...prev, portId]
+    );
+  };
 
   const handleAddMilestone = () => {
     setMilestones([...milestones, { name: '', amount: '' }]);
@@ -87,12 +109,15 @@ export default function SubmitProposal() {
       formData.append('proposedPrice', bidAmount);
       formData.append('deliveryTimeDays', days);
       formData.append('coverLetter', coverLetter);
+      if (selectedPortIds.length > 0) {
+        formData.append('portfolioIds', JSON.stringify(selectedPortIds));
+      }
       if (attachment) {
         formData.append('attachment', attachment);
       }
 
       await proposalService.submitProposal(projectId, formData);
-      navigate('/freelancer-dashboard', { state: { message: 'Đề xuất đã được gửi thành công!' } });
+      navigate('/freelancer-dashboard', { state: { message: 'Đề xuất đã được gửi thành công! AI đang đánh giá hồ sơ của bạn.' } });
     } catch (err) {
       setErrorMsg(err.response?.data?.message || err.message || 'Có lỗi xảy ra khi nộp đề xuất.');
     } finally {
@@ -100,15 +125,20 @@ export default function SubmitProposal() {
     }
   };
 
+  const hasCVAnalyzed = !!userProfile?.cv_ai_evaluation;
+
   return (
     <main className="flex-1 ml-0 p-margin-mobile md:p-margin-desktop overflow-y-auto bg-slate-50">
       <div className="max-w-container-max mx-auto py-10 px-6">
         {/*  Header  */}
-        <div className="mb-10">
+        <div className="mb-8">
           <h1 className="font-display-hero-mobile md:font-display-hero text-display-hero-mobile md:text-display-hero text-slate-800 mb-2">Nộp Đề Xuất</h1>
           <p className="text-base text-slate-600 max-w-2xl">
             Bạn đang nộp đề xuất cho dự án <strong className="text-on-surface text-slate-800">{project ? project.title : 'Đang tải...'}</strong>. Hãy dành thời gian viết một đề xuất hấp dẫn.
           </p>
+
+
+
           {errorMsg && (
             <div className="mt-4 p-4 bg-red-50 text-red-700 border border-red-100 rounded-xl text-sm flex items-center gap-2">
               <span className="material-symbols-outlined text-[20px]">error</span>
@@ -116,6 +146,7 @@ export default function SubmitProposal() {
             </div>
           )}
         </div>
+
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           {/*  Left Form Canvas (8 cols)  */}
           <div className="md:col-span-8 flex flex-col gap-8">
@@ -181,49 +212,97 @@ export default function SubmitProposal() {
                 onChange={(e) => setCoverLetter(e.target.value)}
               ></textarea>
             </div>
-            
-            {/* Attachments & Portfolio */}
+
+            {/* Portfolio & Supplementary Attachments Unified Card */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-[0_2px_12px_rgba(15,23,42,0.015)] hover:-translate-y-0.5 transition-all duration-300">
-              <h2 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#0F766E]">attach_file</span> Tài liệu đính kèm
+              <h2 className="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#0F766E]">folder_special</span> Hồ sơ năng lực &amp; Tài liệu đính kèm
               </h2>
-              <p className="text-sm font-medium text-slate-600 mb-6">Đính kèm các dự án tương tự hoặc portfolio của bạn để tăng khả năng được nhận.</p>
-              
-              <div 
-                onClick={handleFileClick}
-                className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:bg-slate-50 hover:border-[#0F766E] transition-all cursor-pointer"
-              >
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  accept=".pdf,.jpg,.jpeg,.png" 
-                  className="hidden" 
-                />
-                
-                {attachment ? (
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-[32px] text-[#0F766E]">insert_drive_file</span>
-                    <p className="text-base font-semibold text-slate-800">{attachment.name}</p>
-                    <p className="text-xs text-slate-500">{(attachment.size / (1024 * 1024)).toFixed(2)} MB</p>
-                    <button 
-                      type="button" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setAttachment(null);
-                      }} 
-                      className="mt-3 text-xs text-red-500 font-bold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors border-none cursor-pointer"
-                    >
-                      Xóa file
-                    </button>
+              <p className="text-sm font-medium text-slate-600 mb-6">Chọn Portfolio đã tạo trong Hồ sơ và đính kèm thêm file tài liệu nếu cần.</p>
+
+              {/* Sub-section 1: Portfolio Selection */}
+              <div className="mb-6">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-3 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#0F766E]">work</span> Portfolio từ Hồ sơ cá nhân
+                </label>
+
+                {portfolios.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {portfolios.map(port => (
+                      <label 
+                        key={port.portfolio_id}
+                        className={`flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                          selectedPortIds.includes(port.portfolio_id)
+                            ? 'border-[#0F766E] bg-teal-50/50'
+                            : 'border-slate-200 hover:border-slate-300 bg-white'
+                        }`}
+                      >
+                        <input 
+                          type="checkbox"
+                          checked={selectedPortIds.includes(port.portfolio_id)}
+                          onChange={() => togglePortfolioSelection(port.portfolio_id)}
+                          className="mt-1 accent-[#0F766E] w-4 h-4 rounded cursor-pointer"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-800 truncate">{port.title}</p>
+                          {port.description && (
+                            <p className="text-xs text-slate-600 mt-0.5 line-clamp-1">{port.description}</p>
+                          )}
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 ) : (
-                  <>
-                    <span className="material-symbols-outlined text-[32px] text-slate-600 mb-2">cloud_upload</span>
-                    <p className="text-base text-slate-800 mb-1">Click để chọn file hoặc kéo thả vào đây</p>
-                    <p className="text-sm font-medium text-slate-600">PDF, JPG, PNG tối đa 10MB</p>
-                  </>
+                  <div className="p-4 bg-slate-50 rounded-xl text-center border border-dashed border-slate-200">
+                    <p className="text-xs text-slate-600 font-medium">Chưa có dự án nào trong Hồ sơ cá nhân. <Link to="/profile" className="text-[#0F766E] font-bold hover:underline">+ Thêm Portfolio ngay</Link></p>
+                  </div>
                 )}
+              </div>
+
+              {/* Sub-section 2: File Upload */}
+              <div className="pt-4 border-t border-slate-100">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#0F766E]">attach_file</span> Tài liệu bổ sung khác (Tùy chọn)
+                </label>
+                
+                <div 
+                  onClick={handleFileClick}
+                  className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 hover:border-[#0F766E] transition-all cursor-pointer"
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    accept=".pdf,.jpg,.jpeg,.png" 
+                    className="hidden" 
+                  />
+                  
+                  {attachment ? (
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <span className="material-symbols-outlined text-[28px] text-[#0F766E]">insert_drive_file</span>
+                      <p className="text-sm font-semibold text-slate-800">{attachment.name}</p>
+                      <p className="text-[11px] text-slate-500">{(attachment.size / (1024 * 1024)).toFixed(2)} MB</p>
+                      <button 
+                        type="button" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAttachment(null);
+                        }} 
+                        className="mt-2 text-xs text-red-500 font-bold bg-red-50 hover:bg-red-100 px-3 py-1 rounded-lg transition-colors border-none cursor-pointer"
+                      >
+                        Xóa file
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="material-symbols-outlined text-[24px] text-slate-400">cloud_upload</span>
+                      <div className="text-left">
+                        <p className="text-xs font-bold text-slate-700">Tải lên tài liệu minh họa thêm (PDF, JPG, PNG &lt; 10MB)</p>
+                        <p className="text-[11px] text-slate-400">Không bắt buộc upload lại file CV</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -254,14 +333,14 @@ export default function SubmitProposal() {
                     <button 
                       type="submit" 
                       disabled={loading}
-                      className="w-full bg-[#0F766E] text-white text-base font-bold py-3.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all duration-300 active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-[#0F766E] text-white text-base font-bold py-3.5 px-4 rounded-xl shadow-sm hover:shadow-md hover:bg-[#0D5E58] transition-all duration-300 active:scale-[0.98] border-none flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {loading ? 'Đang gửi...' : 'Gửi Đề xuất'} <span className="material-symbols-outlined text-[20px]">send</span>
                     </button>
                     <button 
                       type="button" 
                       onClick={() => navigate(-1)}
-                      className="w-full mt-3 bg-white border border-slate-200 text-slate-600 text-sm font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-all"
+                      className="w-full mt-3 bg-white border border-slate-200 text-slate-600 text-sm font-semibold py-3 px-4 rounded-xl hover:bg-slate-50 transition-all cursor-pointer"
                     >
                       Hủy bỏ
                     </button>

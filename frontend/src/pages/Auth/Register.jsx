@@ -10,7 +10,9 @@ export default function Register() {
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('FREELANCER');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [toastMsg, setToastMsg] = useState('');
@@ -18,8 +20,8 @@ export default function Register() {
   const { login } = useAuth();
 
   // Inline Validation States
-  const [errors, setErrors] = useState({ fullname: '', email: '', phone: '', password: '' });
-  const [touched, setTouched] = useState({ fullname: false, email: false, phone: false, password: false });
+  const [errors, setErrors] = useState({ fullname: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [touched, setTouched] = useState({ fullname: false, email: false, phone: false, password: false, confirmPassword: false });
 
   const validateField = (field, value) => {
     let error = '';
@@ -37,6 +39,15 @@ export default function Register() {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
       if (!value) error = 'Mật khẩu không được để trống.';
       else if (!passwordRegex.test(value)) error = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm: 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt.';
+      
+      if (confirmPassword && value !== confirmPassword) {
+        setErrors(prev => ({ ...prev, confirmPassword: 'Mật khẩu xác nhận không khớp.' }));
+      } else if (confirmPassword && value === confirmPassword) {
+        setErrors(prev => ({ ...prev, confirmPassword: '' }));
+      }
+    } else if (field === 'confirmPassword') {
+      if (!value) error = 'Vui lòng xác nhận mật khẩu.';
+      else if (value !== password) error = 'Mật khẩu xác nhận không khớp.';
     }
     setErrors(prev => ({ ...prev, [field]: error }));
   };
@@ -84,20 +95,26 @@ export default function Register() {
     setErrorMsg('');
 
     // Trigger touched for all fields to show errors if they exist
-    setTouched({ fullname: true, email: true, phone: true, password: true });
+    setTouched({ fullname: true, email: true, phone: true, password: true, confirmPassword: true });
     
     // Validate all fields
     validateField('fullname', fullname);
     validateField('email', email);
     validateField('phone', phone);
     validateField('password', password);
+    validateField('confirmPassword', confirmPassword);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^(0|84|\+84)[35789][0-9]{8}$/;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
 
-    if (!fullname.trim() || !email.trim() || !phone.trim() || !password) {
+    if (!fullname.trim() || !email.trim() || !phone.trim() || !password || !confirmPassword) {
       setErrorMsg('Vui lòng điền đầy đủ tất cả các trường.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Mật khẩu xác nhận không khớp.');
       return;
     }
 
@@ -327,6 +344,45 @@ export default function Register() {
               </div>
               {touched.password && errors.password && (
                 <p className="text-red-600 text-xs font-medium mt-1.5 ml-1 leading-relaxed">{errors.password}</p>
+              )}
+            </div>
+
+            {/* Confirm Password Input */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2" htmlFor="confirmPassword">
+                Xác nhận mật khẩu
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0F766E] transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">lock</span>
+                </div>
+                <input
+                  className={`w-full bg-slate-50 border rounded-xl pl-12 pr-12 py-3.5 text-slate-800 text-sm focus:outline-none focus:bg-white transition-all placeholder:text-slate-400 font-medium ${
+                    touched.confirmPassword && errors.confirmPassword 
+                      ? 'border-red-500 focus:ring-4 focus:ring-red-100 focus:border-red-500' 
+                      : 'border-slate-100/50 focus:border-slate-200 focus:ring-4 focus:ring-slate-100'
+                  }`}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Nhập lại mật khẩu"
+                  required
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => handleFieldChange('confirmPassword', e.target.value, setConfirmPassword)}
+                  onBlur={(e) => handleBlur('confirmPassword', e.target.value)}
+                />
+                <button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer"
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {showConfirmPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              {touched.confirmPassword && errors.confirmPassword && (
+                <p className="text-red-600 text-xs font-medium mt-1.5 ml-1 leading-relaxed">{errors.confirmPassword}</p>
               )}
             </div>
 

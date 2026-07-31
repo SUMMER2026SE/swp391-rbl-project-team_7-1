@@ -78,6 +78,10 @@ export default function AdminProjects() {
   };
 
   const handleApprove = async (projectId) => {
+    // Close detail modal immediately before showing confirm dialog
+    setShowDetail(false);
+    setSelectedProject(null);
+
     const result = await Swal.fire({
       title: 'Duyệt dự án này?',
       text: 'Bạn có chắc muốn duyệt dự án này và cho phép hiển thị công khai trên hệ thống?',
@@ -101,8 +105,6 @@ export default function AdminProjects() {
         setAlert({ type: 'error', msg: data.message || 'Duyệt dự án thất bại.' });
       } else {
         setAlert({ type: 'success', msg: 'Dự án đã được duyệt thành công.' });
-        setSelectedProject(null);
-        setShowDetail(false);
         fetchProjects();
         setTimeout(() => setAlert({ type: '', msg: '' }), 4000);
       }
@@ -112,39 +114,34 @@ export default function AdminProjects() {
   };
 
   const handleReject = async (projectId) => {
-    const { value: reason } = await Swal.fire({
+    // Close detail modal immediately before showing confirm dialog
+    setShowDetail(false);
+    setSelectedProject(null);
+
+    const result = await Swal.fire({
       title: 'Từ chối duyệt dự án?',
-      input: 'textarea',
-      inputLabel: 'Lý do từ chối',
-      inputPlaceholder: 'Nhập lý do chi tiết để thông báo cho Nhà tuyển dụng...',
-      inputAttributes: { 'aria-label': 'Nhập lý do từ chối' },
+      text: 'Bạn có chắc chắn muốn từ chối duyệt dự án này không?',
+      icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#E11D48',
       cancelButtonColor: '#64748B',
-      confirmButtonText: 'Từ chối duyệt',
-      cancelButtonText: 'Hủy',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Bạn cần nhập lý do từ chối!';
-        }
-      }
+      confirmButtonText: 'Từ chối',
+      cancelButtonText: 'Hủy'
     });
 
-    if (!reason) return;
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`${API}/${projectId}/reject`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason: 'Từ chối bởi Admin' })
       });
       const data = await res.json();
       if (!res.ok) {
         setAlert({ type: 'error', msg: data.message || 'Từ chối duyệt thất bại.' });
       } else {
         setAlert({ type: 'success', msg: 'Đã từ chối duyệt dự án này.' });
-        setSelectedProject(null);
-        setShowDetail(false);
         fetchProjects();
         setTimeout(() => setAlert({ type: '', msg: '' }), 4000);
       }

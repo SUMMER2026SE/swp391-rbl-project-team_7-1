@@ -265,7 +265,7 @@ export const submitProposal = async (req, res) => {
   try {
     const { projectId } = req.params;
     const freelancerId = req.user.id; 
-    let { proposedPrice, deliveryTimeDays, coverLetter } = req.body;
+    let { proposedPrice, deliveryTimeDays, coverLetter, portfolioIds } = req.body;
 
     if (!proposedPrice || !deliveryTimeDays) {
       return res.status(400).json({ message: 'Vui lòng cung cấp giá thầu và thời gian ước tính.' });
@@ -297,7 +297,26 @@ export const submitProposal = async (req, res) => {
     let rawCoverLetter = coverLetter || '';
     if (req.file) {
       const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-      coverLetter = `${coverLetter || ''}\n\n----------------------------------------\n[Tệp đính kèm]: ${fileUrl}`;
+      coverLetter = `${coverLetter || ''}\n\n----------------------------------------\n[Tệp đính kèm bổ sung]: ${fileUrl}`;
+    }
+
+    // Parse selected portfolio IDs
+    let selectedPortfolioIds = [];
+    if (portfolioIds) {
+      try {
+        selectedPortfolioIds = typeof portfolioIds === 'string' ? JSON.parse(portfolioIds) : portfolioIds;
+      } catch {
+        selectedPortfolioIds = [];
+      }
+    }
+
+    // Save chosen portfolio IDs to proposals table as JSON string, but do NOT attach them to cover letter text
+    let portfolioIdsString = null;
+    if (Array.isArray(selectedPortfolioIds) && selectedPortfolioIds.length > 0) {
+      const validIds = selectedPortfolioIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+      if (validIds.length > 0) {
+        portfolioIdsString = JSON.stringify(validIds);
+      }
     }
 
     const insertResult = await pool.request()
@@ -307,44 +326,32 @@ export const submitProposal = async (req, res) => {
       .input('deliveryTimeDays', sql.Int, parseInt(deliveryTimeDays))
       .input('coverLetter', sql.NVarChar, coverLetter || '')
       .input('status', sql.VarChar, 'SUBMITTED')
+      .input('portfolioIds', sql.NVarChar, portfolioIdsString)
       .query(`
-        INSERT INTO proposals (project_id, freelancer_id, proposed_price, delivery_time_days, cover_letter, status, created_at)
+        INSERT INTO proposals (project_id, freelancer_id, proposed_price, delivery_time_days, cover_letter, status, portfolio_ids, created_at)
         OUTPUT INSERTED.proposal_id
-        VALUES (@projectId, @freelancerId, @proposedPrice, @deliveryTimeDays, @coverLetter, @status, SYSUTCDATETIME())
+        VALUES (@projectId, @freelancerId, @proposedPrice, @deliveryTimeDays, @coverLetter, @status, @portfolioIds, SYSUTCDATETIME())
       `);
 
     const newProposalId = insertResult.recordset[0].proposal_id;
 
-    res.status(201).json({ success: true, message: 'Nộp đề xuất ứng tuyển thành công! AI đang tiến hành phân tích CV của bạn ngầm.' });
+    res.status(201).json({ success: true, message: 'Nộp đề xuất ứng tuyển thành công! AI đang tiến hành đánh giá độ phù hợp của bạn ngầm.' });
 
-    // Kích hoạt tác vụ phân tích AI ngầm
-    if (req.file) {
-      processAIEvaluationInBackground(newProposalId, projectId, freelancerId, req.file.path, rawCoverLetter);
-    }
+    // Kích hoạt tác vụ phân tích AI ngầm dựa trên TOÀN BỘ hồ sơ cá nhân và Portfolio đã chọn
+    processAIEvaluationInBackground(newProposalId, projectId, freelancerId, rawCoverLetter, selectedPortfolioIds);
   } catch (error) {
     console.error('Error submitting proposal:', error);
     res.status(500).json({ message: 'Lỗi server khi nộp đề xuất.' });
   }
 };
 
-// Tác vụ chạy ngầm phân tích hồ sơ và CV bằng Gemini AI
-async function processAIEvaluationInBackground(proposalId, projectId, freelancerId, filePath, coverLetterText) {
+// Tác vụ chạy ngầm phân tích hồ sơ freelancer và CV đã lưu bằng Gemini AI
+async function processAIEvaluationInBackground(proposalId, projectId, freelancerId, coverLetterText, portfolioIds = []) {
   try {
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) {
       console.warn("⚠️ GEMINI_API_KEY chưa được cấu hình. Bỏ qua phân tích AI.");
       return;
-    }
-
-    let cvText = "";
-    if (filePath && fs.existsSync(filePath)) {
-      try {
-        const dataBuffer = fs.readFileSync(filePath);
-        const pdfData = await pdfParse(dataBuffer);
-        cvText = (pdfData.text || "").replace(/\s+/g, ' ').substring(0, 8000);
-      } catch (err) {
-        console.error("❌ Lỗi khi đọc và chuyển văn bản PDF:", err);
-      }
     }
 
     const pool = await poolPromise;
@@ -353,7 +360,7 @@ async function processAIEvaluationInBackground(proposalId, projectId, freelancer
     const projectRes = await pool.request()
       .input('projectId', sql.Int, projectId)
       .query(`
-        SELECT p.title, p.description, 
+        SELECT p.title, p.description, p.budget_min, p.budget_max,
                (SELECT STRING_AGG(s.skill_name, ', ') 
                 FROM project_skills ps 
                 JOIN skills s ON ps.skill_id = s.skill_id 
@@ -365,49 +372,87 @@ async function processAIEvaluationInBackground(proposalId, projectId, freelancer
     if (projectRes.recordset.length === 0) return;
     const project = projectRes.recordset[0];
 
-    // Lấy hồ sơ freelancer
+    // Lấy TOÀN BỘ hồ sơ freelancer
     const freelancerRes = await pool.request()
       .input('freelancerId', sql.Int, freelancerId)
       .query(`
         SELECT u.full_name, u.bio, 
+               fp.headline, fp.experience_years, fp.hourly_rate,
+               fp.rating_average, fp.total_reviews, fp.portfolio_summary,
+               fp.cv_ai_evaluation,
                (SELECT STRING_AGG(s.skill_name, ', ') 
                 FROM freelancer_skills fs 
                 JOIN skills s ON fs.skill_id = s.skill_id 
                 WHERE fs.freelancer_id = u.user_id) as skills
         FROM users u 
+        LEFT JOIN freelancer_profiles fp ON u.user_id = fp.freelancer_id
         WHERE u.user_id = @freelancerId
       `);
     
     if (freelancerRes.recordset.length === 0) return;
-    const freelancer = freelancerRes.recordset[0];
+    const fl = freelancerRes.recordset[0];
+
+    // Lấy chi tiết portfolio được đính kèm
+    let selectedPortfoliosText = "";
+    if (Array.isArray(portfolioIds) && portfolioIds.length > 0) {
+      const validIds = portfolioIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+      if (validIds.length > 0) {
+        const portRes = await pool.request()
+          .input('freelancerId', sql.Int, freelancerId)
+          .query(`
+            SELECT title, description, project_url 
+            FROM portfolios 
+            WHERE freelancer_id = @freelancerId AND portfolio_id IN (${validIds.join(',')})
+          `);
+        selectedPortfoliosText = portRes.recordset.map(p => `- ${p.title}: ${(p.description || '').substring(0, 200)}`).join('\n');
+      }
+    }
+
+    // Trích xuất tóm tắt CV AI đã quét trước đó
+    let cvSummary = "";
+    if (fl.cv_ai_evaluation) {
+      try {
+        const cv = JSON.parse(fl.cv_ai_evaluation);
+        cvSummary = `Chất lượng CV chung: ${cv.matchScore}/100. Tóm tắt: ${cv.quickSummary || ''}. Điểm mạnh CV: ${(cv.strengths || []).join(', ')}`;
+      } catch {}
+    }
 
     const systemInstruction = `
-      Bạn là chuyên gia nhân sự AI của nền tảng FJMS. Nhiệm vụ của bạn là so sánh CV và hồ sơ của Freelancer với yêu cầu dự án của Nhà tuyển dụng.
+      Bạn là chuyên gia nhân sự AI của nền tảng FJMS. Nhiệm vụ của bạn là so sánh toàn bộ thông tin trong Hồ sơ cá nhân (Chức danh, Kỹ năng, Số năm kinh nghiệm, Mức giá/h, Portfolio), thông tin CV và giá thầu đề xuất của Freelancer với yêu cầu dự án của Nhà tuyển dụng.
       Hãy phân tích khách quan và trả về kết quả dưới dạng chuỗi JSON thuần túy (không chứa markdown \`\`\`json), ngôn ngữ Tiếng Việt, có cấu trúc như sau:
       {
-        "matchScore": 85,
-        "quickSummary": "Ứng viên có kỹ năng React tốt trùng khớp dự án, tuy nhiên kinh nghiệm SQL Server còn hạn chế.",
-        "strengths": ["Đã làm 3 dự án React tương tự", "Có chứng chỉ chuyên môn liên quan"],
-        "gaps": ["Chưa có kinh nghiệm thực tế với SQL Server"]
+        "matchScore": 88,
+        "quickSummary": "Ứng viên sở hữu bộ kỹ năng khớp với dự án, số năm kinh nghiệm và mức thầu đề xuất rất hợp lý.",
+        "strengths": [
+          "Trùng khớp kỹ năng cốt lõi được yêu cầu trong dự án",
+          "Số năm kinh nghiệm và thông tin hồ sơ năng lực đáp ứng tốt quy mô công việc",
+          "Mức giá thầu đề xuất nằm trong khung ngân sách dự kiến của dự án",
+          "Đánh giá sao cao và có lịch sử hoàn thành công việc uy tín"
+        ],
+        "gaps": ["Cần làm rõ thêm quy trình triển khai chi tiết trong buổi trao đổi trực tiếp"]
       }
     `;
 
     const userPrompt = `
       --- YÊU CẦU DỰ ÁN ---
       Tiêu đề: ${project.title}
-      Mô tả: ${project.description}
+      Mô tả: ${(project.description || '').substring(0, 600)}
       Kỹ năng yêu cầu: ${project.required_skills || 'N/A'}
+      Ngân sách: ${project.budget_min || 0} - ${project.budget_max || 0} VNĐ
 
       --- HỒ SƠ FREELANCER ---
-      Tên: ${freelancer.full_name}
-      Kỹ năng trên hệ thống: ${freelancer.skills || 'N/A'}
-      Kinh nghiệm: ${freelancer.bio || 'Chưa cung cấp'}
+      Tên: ${fl.full_name}
+      Chức danh: ${fl.headline || 'Chưa cung cấp'}
+      Số năm kinh nghiệm: ${fl.experience_years || 0} năm
+      Giá theo giờ: ${fl.hourly_rate || 0} VNĐ/h
+      Đánh giá: ${fl.rating_average || 0}/5.0 (${fl.total_reviews || 0} đánh giá)
+      Kỹ năng trên hệ thống: ${fl.skills || 'N/A'}
+      Giới thiệu (Bio): ${(fl.bio || '').substring(0, 400)}
+      ${cvSummary ? `Đánh giá CV trước đó: ${cvSummary}` : ''}
+      ${selectedPortfoliosText ? `Portfolio đính kèm trong đề xuất:\n${selectedPortfoliosText}` : ''}
 
       --- THƯ GIỚI THIỆU (COVER LETTER) ---
-      ${coverLetterText || 'Chưa cung cấp'}
-
-      --- NỘI DUNG CV ĐÍNH KÈM ---
-      ${cvText || 'Không có file CV đính kèm.'}
+      ${(coverLetterText || '').substring(0, 500)}
     `;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
@@ -431,14 +476,27 @@ async function processAIEvaluationInBackground(proposalId, projectId, freelancer
           .input('aiEvaluation', sql.NVarChar, aiEvaluation)
           .query('UPDATE proposals SET ai_evaluation = @aiEvaluation WHERE proposal_id = @proposalId');
         
-        console.log(`[AI CV Reader] Phân tích thành công đề xuất ID: ${proposalId}`);
+        console.log(`[AI Profile Matcher] Phân tích thành công đề xuất ID: ${proposalId}`);
       }
     } else {
       const errorText = await response.text();
-      console.error(`[AI CV Reader] Lỗi từ Gemini API: ${response.status} - ${errorText}`);
+      console.error(`[AI Profile Matcher] Lỗi từ Gemini API: ${response.status} - ${errorText}`);
+
+      // Ghi nhận phản hồi fallback khi hết hạn ngạch hoặc lỗi API để không bị ẩn khung giao diện
+      const fallbackEvaluation = JSON.stringify({
+        matchScore: 50,
+        quickSummary: "Hệ thống AI của nền tảng tạm thời hết lượt yêu cầu miễn phí trong ngày (Gemini API Resource Exhausted). Vui lòng thử lại sau hoặc cấu hình gói khóa API trả phí.",
+        strengths: ["Kỹ năng cơ bản của ứng viên đáp ứng yêu cầu"],
+        gaps: ["Hạn ngạch API Gemini tạm thời vượt giới hạn"]
+      });
+
+      await pool.request()
+        .input('proposalId', sql.Int, proposalId)
+        .input('aiEvaluation', sql.NVarChar, fallbackEvaluation)
+        .query('UPDATE proposals SET ai_evaluation = @aiEvaluation WHERE proposal_id = @proposalId');
     }
   } catch (error) {
-    console.error("[AI CV Reader] Lỗi tiến trình ngầm:", error);
+    console.error("[AI Profile Matcher] Lỗi tiến trình ngầm:", error);
   }
 }
 
@@ -823,10 +881,13 @@ export const getProjectProposals = async (req, res) => {
           p.delivery_time_days,
           p.cover_letter,
           p.status,
+          p.ai_evaluation,
+          p.portfolio_ids,
           p.created_at,
           p.updated_at,
           u.full_name as freelancer_name,
           u.avatar_url as freelancer_avatar,
+          fp.headline,
           fp.rating_average,
           fp.total_reviews,
           c.contract_id
@@ -838,10 +899,75 @@ export const getProjectProposals = async (req, res) => {
         ORDER BY p.created_at DESC
       `);
 
+    const proposals = proposalsResult.recordset;
+    if (proposals.length > 0) {
+      const freelancerIds = [...new Set(proposals.map(p => p.freelancer_id))];
+      const portfoliosResult = await pool.request()
+        .query(`
+          SELECT portfolio_id, freelancer_id, title, description, project_url, image_url
+          FROM portfolios
+          WHERE freelancer_id IN (${freelancerIds.join(',')})
+        `);
+      
+      const portfoliosMap = {};
+      portfoliosResult.recordset.forEach(port => {
+        if (!portfoliosMap[port.freelancer_id]) {
+          portfoliosMap[port.freelancer_id] = [];
+        }
+        portfoliosMap[port.freelancer_id].push(port);
+      });
+
+      proposals.forEach(p => {
+        let selectedIds = [];
+        let selectedTitles = [];
+        let hasPortfolioIds = false;
+
+        if (p.portfolio_ids) {
+          try {
+            selectedIds = JSON.parse(p.portfolio_ids).map(id => parseInt(id, 10));
+            if (selectedIds.length > 0) {
+              hasPortfolioIds = true;
+            }
+          } catch {
+            selectedIds = [];
+          }
+        }
+        
+        // Fallback for old proposals: parse titles from cover letter
+        if (!hasPortfolioIds && p.cover_letter) {
+          const portMarker = '📁 [Dự án Portfolio đính kèm]:';
+          const index = p.cover_letter.indexOf(portMarker);
+          if (index !== -1) {
+            const lines = p.cover_letter.substring(index + portMarker.length).split('\n');
+            lines.forEach(line => {
+              if (line.trim().startsWith('•')) {
+                // Extract title
+                const match = line.match(/•\s*([^:(]+)/);
+                if (match) {
+                  selectedTitles.push(match[1].trim().toLowerCase());
+                }
+              }
+            });
+          }
+        }
+
+        const freelancerPorts = portfoliosMap[p.freelancer_id] || [];
+        if (hasPortfolioIds) {
+          p.portfolios = freelancerPorts.filter(port => selectedIds.includes(port.portfolio_id));
+        } else if (selectedTitles.length > 0) {
+          p.portfolios = freelancerPorts.filter(port => 
+            selectedTitles.some(title => port.title.toLowerCase().includes(title) || title.includes(port.title.toLowerCase()))
+          );
+        } else {
+          p.portfolios = [];
+        }
+      });
+    }
+
     res.json({ 
       success: true, 
       projectTitle: projectCheck.recordset[0].title,
-      proposals: proposalsResult.recordset 
+      proposals: proposals 
     });
   } catch (error) {
     console.error('Error fetching project proposals:', error);

@@ -124,6 +124,9 @@ export const initDb = async () => {
           ALTER TABLE violation_reports ADD metadata NVARCHAR(MAX) NULL;
         IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('violation_reports') AND name = 'description')
           ALTER TABLE violation_reports ADD description NVARCHAR(MAX) NULL;
+
+        IF NOT EXISTS (SELECT * FROM syscolumns WHERE id = object_id('proposals') AND name = 'portfolio_ids')
+          ALTER TABLE proposals ADD portfolio_ids NVARCHAR(MAX) NULL;
       END
     `);
 

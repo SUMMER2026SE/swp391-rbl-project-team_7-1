@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 export default function AdminWithdrawals() {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -38,7 +39,21 @@ export default function AdminWithdrawals() {
   };
 
   const handleAction = async (id, action) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn ${action === 'approve' ? 'phê duyệt' : 'từ chối'} yêu cầu rút tiền này?`)) {
+    const isApprove = action === 'approve';
+    const actionText = isApprove ? 'phê duyệt' : 'từ chối';
+
+    const result = await Swal.fire({
+      title: `${isApprove ? 'Phê duyệt' : 'Từ chối'} yêu cầu rút tiền?`,
+      text: `Bạn có chắc chắn muốn ${actionText} yêu cầu rút tiền này không?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: isApprove ? '#0F766E' : '#E11D48',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: isApprove ? 'Đồng ý' : 'Hủy',
+      cancelButtonText: 'Bỏ qua'
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -55,13 +70,16 @@ export default function AdminWithdrawals() {
       const data = await res.json();
 
       if (res.ok) {
-        setActionSuccess(data.message);
+        setActionSuccess(data.message || `Đã ${actionText} yêu cầu rút tiền thành công.`);
         fetchWithdrawals();
+        setTimeout(() => setActionSuccess(''), 4000);
       } else {
         setActionError(data.message || 'Có lỗi xảy ra');
+        setTimeout(() => setActionError(''), 4000);
       }
     } catch (err) {
       setActionError('Lỗi kết nối đến server');
+      setTimeout(() => setActionError(''), 4000);
     } finally {
       setLoading(false);
     }

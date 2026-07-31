@@ -4,6 +4,21 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { chatService } from '../../services/chatService';
 
+const getAvatarUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http://localhost:5000')) {
+    const activeApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const activeOrigin = activeApiUrl.replace(/\/api$/, '');
+    return url.replace('http://localhost:5000', activeOrigin);
+  }
+  if (url.startsWith('/uploads')) {
+    const activeApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const activeOrigin = activeApiUrl.replace(/\/api$/, '');
+    return `${activeOrigin}${url}`;
+  }
+  return url;
+};
+
 export default function MessagesEmployer() {
   const { user } = useAuth();
   const location = useLocation();
@@ -36,6 +51,7 @@ export default function MessagesEmployer() {
   const activeConvRef = useRef(null);
   const conversationsRef = useRef([]);
   const messagesEndRef = useRef(null);
+  const chatHistoryRef = useRef(null);
 
   useEffect(() => {
     conversationsRef.current = conversations;
@@ -219,9 +235,13 @@ export default function MessagesEmployer() {
     };
   }, [user]);
 
-  // Scroll to bottom whenever messages list changes
+  // Scroll to bottom whenever messages list changes without jumping the page scroll
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatHistoryRef.current) {
+      chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    }
   }, [messages]);
 
   const loadMessages = async (conv) => {
@@ -274,9 +294,9 @@ export default function MessagesEmployer() {
   );
 
   return (
-    <main className="flex-1 h-full flex flex-col bg-slate-50 font-sans">
+    <main className="flex-1 h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] flex flex-col bg-slate-50 font-sans overflow-hidden">
       {/*  Messages Dual Pane Layout  */}
-      <div className="flex-1 flex overflow-hidden p-6 gap-6">
+      <div className="flex-1 flex overflow-hidden p-6 gap-6 h-full min-h-0">
         {/*  Left Pane: Conversation List  */}
         <aside className="w-80 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-[0_4px_20px_rgba(15,23,42,0.02)] overflow-hidden shrink-0">
           {/*  Search  */}
@@ -311,7 +331,7 @@ export default function MessagesEmployer() {
                   <div className="flex gap-3 w-full min-w-0 transition-transform duration-200 group-hover:translate-x-1">
                     <div className="relative shrink-0">
                       {conv.avatarUrl ? (
-                        <img alt={conv.name} className="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm" src={conv.avatarUrl} />
+                        <img alt={conv.name} className="w-10 h-10 rounded-full object-cover border border-slate-100 shadow-sm" src={getAvatarUrl(conv.avatarUrl)} />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 text-[#0F766E] flex items-center justify-center font-extrabold text-sm border border-teal-200 shadow-sm">
                           {conv.name.charAt(0).toUpperCase()}
@@ -362,7 +382,7 @@ export default function MessagesEmployer() {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     {activeConv.avatarUrl ? (
-                      <img alt={activeConv.name} className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm" src={activeConv.avatarUrl} />
+                      <img alt={activeConv.name} className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm" src={getAvatarUrl(activeConv.avatarUrl)} />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-100 to-teal-200 text-[#0F766E] flex items-center justify-center font-extrabold text-sm border border-teal-200">
                         {activeConv.name.charAt(0).toUpperCase()}
@@ -395,7 +415,7 @@ export default function MessagesEmployer() {
               </div>
 
               {/*  Chat History  */}
-              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-slate-50">
+              <div ref={chatHistoryRef} className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-slate-50">
                 {(() => {
                   const lastViolationIndex = [...messages].reverse().findIndex(msg => containsOffPlatformKeyword(msg.message_content));
                   const actualLastViolationIndex = lastViolationIndex !== -1 ? messages.length - 1 - lastViolationIndex : -1;
@@ -410,7 +430,7 @@ export default function MessagesEmployer() {
                             <img 
                               alt={msg.sender_name || 'Partner'} 
                               className="w-8 h-8 rounded-full object-cover shrink-0 mt-0.5 shadow-sm border border-slate-200" 
-                              src={msg.sender_avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8HmHJcnrB-_zZ4oWacG9OTeL65c8Vo_kJc6J_X7O0u97vFVJGDINe9MyCoIizF9E2PioDbKjGwStuC925yCyCe60Ci9hcxAacK5pby7VkBsYZ7DTfDlZOpcWYPAZLcMMm-hR3F4pp6dDi2KTaD05gO_C9u0YrU6F5EEfDB7fLgeLtm0FXBsb5Lw0QBQNelOyFJxxegHiZhR_t7DKZXSMVvzWkSoku9uaWCJyS33fXgfqW4Y7j44UJReky1WDiCrEHWf3D7LTUoY8'} 
+                              src={getAvatarUrl(msg.sender_avatar) || 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8HmHJcnrB-_zZ4oWacG9OTeL65c8Vo_kJc6J_X7O0u97vFVJGDINe9MyCoIizF9E2PioDbKjGwStuC925yCyCe60Ci9hcxAacK5pby7VkBsYZ7DTfDlZOpcWYPAZLcMMm-hR3F4pp6dDi2KTaD05gO_C9u0YrU6F5EEfDB7fLgeLtm0FXBsb5Lw0QBQNelOyFJxxegHiZhR_t7DKZXSMVvzWkSoku9uaWCJyS33fXgfqW4Y7j44UJReky1WDiCrEHWf3D7LTUoY8'} 
                             />
                           )}
                           <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>

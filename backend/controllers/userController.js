@@ -37,24 +37,34 @@ export const getProfile = async (req, res) => {
         JOIN skills s ON fs.skill_id = s.skill_id
         WHERE fs.freelancer_id = @userId
       `);
-    const skills = skillsResult.recordset.map(r => r.skill_name);
+    let skills = skillsResult.recordset.map(r => r.skill_name);
+
+    // Parse AI CV evaluation for extra fields (LinkedIn, GitHub, Portfolio Website)
+    let cvData = {};
+    if (fl.cv_ai_evaluation) {
+      try { cvData = typeof fl.cv_ai_evaluation === 'string' ? JSON.parse(fl.cv_ai_evaluation) : fl.cv_ai_evaluation; } catch {}
+    }
+
+    if (skills.length === 0 && Array.isArray(cvData.skills) && cvData.skills.length > 0) {
+      skills = cvData.skills;
+    }
 
     // 4. Construct bio_extras compatibility object for frontend
     const bioExtrasObj = {
-      title: fl.headline || '',
-      hourlyRate: fl.hourly_rate !== undefined ? fl.hourly_rate.toString() : '',
+      title: fl.headline || cvData.headline || '',
+      hourlyRate: fl.hourly_rate !== undefined && fl.hourly_rate !== null ? fl.hourly_rate.toString() : (cvData.hourlyRate ? cvData.hourlyRate.toString() : ''),
       availability: fl.availability_status || 'AVAILABLE',
-      experience: fl.experience_years !== undefined ? 
+      experience: fl.experience_years !== undefined && fl.experience_years !== null ? 
         (fl.experience_years <= 1 ? 'ENTRY' : fl.experience_years <= 3 ? 'INTERMEDIATE' : 'EXPERT') : 'INTERMEDIATE',
       skills: skills,
-      portfolio: fl.portfolio_summary || '',
-      linkedin: '', 
-      github: '',
+      portfolio: user.website_url || fl.portfolio_summary || cvData.portfolioWebsite || '',
+      linkedin: cvData.linkedinUrl || '', 
+      github: cvData.githubUrl || '',
       companyName: user.company_name || '',
       industry: '',
       companySize: '',
-      website: user.website_url || '',
-      companyDesc: user.bio || '',
+      website: user.website_url || cvData.portfolioWebsite || '',
+      companyDesc: user.bio || cvData.bio || '',
       location: user.address || ''
     };
 
@@ -576,12 +586,20 @@ export const addPortfolio = async (req, res) => {
     }
 
     const pool = await poolPromise;
+
+    // Ensure image_url column in SQL Server has NVARCHAR(MAX) size to hold image data
+    try {
+      await pool.request().query('ALTER TABLE portfolios ALTER COLUMN image_url NVARCHAR(MAX)');
+    } catch (e) {
+      // Ignore if already MAX or constraint
+    }
+
     await pool.request()
       .input('freelancerId', sql.Int, freelancerId)
       .input('title', sql.NVarChar, title)
       .input('description', sql.NVarChar, description || null)
       .input('projectUrl', sql.NVarChar, projectUrl || null)
-      .input('imageUrl', sql.NVarChar, imageUrl || null)
+      .input('imageUrl', sql.NVarChar(sql.MAX), imageUrl || null)
       .query(`
         INSERT INTO portfolios (freelancer_id, title, description, project_url, image_url, created_at)
         VALUES (@freelancerId, @title, @description, @projectUrl, @imageUrl, SYSUTCDATETIME())
@@ -606,6 +624,13 @@ export const updatePortfolio = async (req, res) => {
 
     const pool = await poolPromise;
 
+    // Ensure image_url column in SQL Server has NVARCHAR(MAX) size
+    try {
+      await pool.request().query('ALTER TABLE portfolios ALTER COLUMN image_url NVARCHAR(MAX)');
+    } catch (e) {
+      // Ignore
+    }
+
     // Verify ownership
     const checkResult = await pool.request()
       .input('portfolioId', sql.Int, portfolioId)
@@ -624,7 +649,7 @@ export const updatePortfolio = async (req, res) => {
       .input('title', sql.NVarChar, title)
       .input('description', sql.NVarChar, description || null)
       .input('projectUrl', sql.NVarChar, projectUrl || null)
-      .input('imageUrl', sql.NVarChar, imageUrl || null)
+      .input('imageUrl', sql.NVarChar(sql.MAX), imageUrl || null)
       .query(`
         UPDATE portfolios 
         SET title = @title, 
@@ -851,16 +876,25 @@ export const uploadCV = async (req, res) => {
     }
 
     // Call Gemini to analyze CV generally and extract profile fields
-    const systemInstruction = `Bạn là trợ lý AI phân tích CV của hệ thống FJMS. Hãy phân tích nội dung CV của freelancer và trả về kết quả dưới dạng JSON có các key sau:
+    // Call Gemini to analyze CV generally and extract profile fields for ALL CV types
+    const systemInstruction = `Bạn là chuyên gia phân tích CV trí tuệ nhân tạo của hệ thống FJMS.
+Nhiệm vụ của bạn là trích xuất CHÍNH XÁC thông tin nguyên văn hoặc tự nhiên nhất mà chính người dùng ĐÃ VIẾT TRONG CV của họ.
+
+Hãy trả về kết quả dưới dạng chuỗi JSON thuần túy (không chứa markdown \`\`\`json) với các key sau:
 - matchScore: điểm từ 0-100 đánh giá chất lượng hồ sơ chung (số nguyên)
-- quickSummary: tóm tắt tối đa 2 câu về freelancer
-- strengths: mảng chứa tối đa 3 điểm mạnh nhất của họ
-- gaps: mảng chứa tối đa 3 mặt hạn chế hoặc điểm cần cải thiện của họ
-- headline: tiêu đề chuyên môn tóm gọn (ví dụ: "Lập trình viên React", "UI/UX Designer")
-- bio: giới thiệu bản thân ngắn gọn đúc kết từ kinh nghiệm (khoảng 2-3 câu)
-- skills: mảng chứa các tên kỹ năng kỹ thuật tìm thấy trong CV (ví dụ: ["React", "JavaScript", "Node.js"])
-- experienceYears: số năm kinh nghiệm (số nguyên)
-- hourlyRate: mức giá đề xuất mỗi giờ bằng VND (nếu không có hoặc không rõ, tự động điền một con số hợp lý từ 50000 đến 150000 tùy theo năng lực và số năm kinh nghiệm)
+- quickSummary: tóm tắt 1-2 câu về trình độ và kinh nghiệm nổi bật nhất
+- strengths: mảng chứa 2-3 điểm mạnh cốt lõi về kỹ năng hoặc dự án
+- gaps: mảng chứa 1-2 điểm cần trau dồi thêm
+- fullName: trích xuất Họ và tên của ứng viên viết trên đầu CV nếu có
+- phone: trích xuất Số điện thoại liên hệ nếu có trong CV
+- headline: LẤY ĐÚNG tiêu đề chuyên môn/chức danh mà ứng viên đã viết trong CV (Ví dụ: "Full-Stack Developer", "Lập trình viên Frontend", "Chuyên viên Digital Marketing"). Nếu không có, tự tổng hợp ngắn gọn.
+- bio: LẤY NGUYÊN VĂN hoặc tóm gọn CHÍNH XÁC đoạn "Giới thiệu bản thân" / "Mục tiêu nghề nghiệp" (Objective / About Me / Summary) do CHÍNH ỨNG VIÊN VIẾT TRONG CV (khoảng 2-4 câu). Không tự bịa văn mẫu AI nếu CV đã có sẵn đoạn giới thiệu.
+- skills: mảng chứa toàn bộ các từ khóa Kỹ năng, Công nghệ, Ngôn ngữ, Phần mềm xuất hiện trong CV (Ví dụ: ["React", "JavaScript", "Node.js", "Python", "Photoshop", "SQL", "HTML/CSS"])
+- experienceYears: tổng số năm kinh nghiệm làm việc/dự án (số nguyên). Nếu là sinh viên/fresher, tự động điền 1.
+- hourlyRate: mức giá thầu đề xuất mỗi giờ bằng VNĐ (từ 80000 đến 300000 tùy năng lực và số năm kinh nghiệm).
+- portfolioWebsite: trích xuất URL website cá nhân hoặc portfolio nếu có trong CV (Ví dụ: "https://myportfolio.com" hoặc ""), nếu không có thì để rỗng.
+- linkedinUrl: trích xuất URL hồ sơ LinkedIn nếu có trong CV (Ví dụ: "https://linkedin.com/in/..." hoặc ""), nếu không có thì để rỗng.
+- githubUrl: trích xuất URL GitHub/Behance/Dribbble nếu có trong CV (Ví dụ: "https://github.com/..." hoặc ""), nếu không có thì để rỗng.
 
 Chỉ trả về đúng chuỗi JSON hợp lệ, không chứa khối code hay ký tự định dạng khác.`;
     const userPrompt = `Dưới đây là nội dung CV của freelancer:\n\n${cvText.substring(0, 8000)}`;
@@ -871,7 +905,7 @@ Chỉ trả về đúng chuỗi JSON hợp lệ, không chứa khối code hay k
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemInstruction }] },
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { maxOutputTokens: 1024, temperature: 0.5, responseMimeType: "application/json" }
+        generationConfig: { maxOutputTokens: 1024, temperature: 0.3, responseMimeType: "application/json" }
       })
     });
 
@@ -903,28 +937,125 @@ Chỉ trả về đúng chuỗi JSON hợp lệ, không chứa khối code hay k
     const pool = await poolPromise;
 
     // Save AI general evaluation to freelancer_profiles
-    await pool.request()
+    const existingProfile = await pool.request()
       .input('freelancerId', sql.Int, userId)
-      .input('cvUrl', sql.VarChar, cvUrl)
-      .input('cvAiEvaluation', sql.NVarChar, aiResultStr)
-      .query(`
-        IF EXISTS (SELECT 1 FROM freelancer_profiles WHERE freelancer_id = @freelancerId)
-        BEGIN
+      .query('SELECT headline, experience_years, hourly_rate FROM freelancer_profiles WHERE freelancer_id = @freelancerId');
+
+    const hasProfile = existingProfile.recordset.length > 0;
+
+    // Smart values with fallbacks to fit ALL CV types
+    const newHeadline = parsedAI.headline || 'Chuyên viên tự do';
+    const newExpYears = parsedAI.experienceYears ? parseInt(parsedAI.experienceYears) : 1;
+    const newHourlyRate = parsedAI.hourlyRate ? parseFloat(parsedAI.hourlyRate) : 120000;
+    const newBio = parsedAI.bio || parsedAI.quickSummary || 'Freelancer chuyên nghiệp sẵn sàng hỗ trợ triển khai dự án.';
+
+    if (hasProfile) {
+      await pool.request()
+        .input('freelancerId', sql.Int, userId)
+        .input('cvUrl', sql.VarChar, cvUrl)
+        .input('cvAiEvaluation', sql.NVarChar, aiResultStr)
+        .input('newHeadline', sql.NVarChar, newHeadline)
+        .input('newExpYears', sql.Int, newExpYears)
+        .input('newHourlyRate', sql.Decimal(12, 2), newHourlyRate)
+        .query(`
           UPDATE freelancer_profiles 
-          SET cv_url = @cvUrl, cv_ai_evaluation = @cvAiEvaluation, updated_at = GETDATE()
-          WHERE freelancer_id = @freelancerId;
-        END
-        ELSE
-        BEGIN
-          INSERT INTO freelancer_profiles (freelancer_id, availability_status, rating_average, total_reviews, cv_url, cv_ai_evaluation, created_at)
-          VALUES (@freelancerId, 'AVAILABLE', 0.00, 0, @cvUrl, @cvAiEvaluation, GETDATE());
-        END
-      `);
+          SET cv_url = @cvUrl, 
+              cv_ai_evaluation = @cvAiEvaluation, 
+              headline = @newHeadline,
+              experience_years = @newExpYears,
+              hourly_rate = @newHourlyRate,
+              updated_at = GETDATE() 
+          WHERE freelancer_id = @freelancerId
+        `);
+    } else {
+      await pool.request()
+        .input('freelancerId', sql.Int, userId)
+        .input('cvUrl', sql.VarChar, cvUrl)
+        .input('cvAiEvaluation', sql.NVarChar, aiResultStr)
+        .input('headline', sql.NVarChar, newHeadline)
+        .input('expYears', sql.Int, newExpYears)
+        .input('hourlyRate', sql.Decimal(12, 2), newHourlyRate)
+        .query(`
+          INSERT INTO freelancer_profiles (freelancer_id, headline, experience_years, hourly_rate, availability_status, rating_average, total_reviews, cv_url, cv_ai_evaluation, created_at)
+          VALUES (@freelancerId, @headline, @expYears, @hourlyRate, 'AVAILABLE', 0.00, 0, @cvUrl, @cvAiEvaluation, GETDATE())
+        `);
+    }
+
+    // Always update bio in users table
+    await pool.request()
+      .input('userId', sql.Int, userId)
+      .input('bio', sql.NVarChar, newBio)
+      .query('UPDATE users SET bio = @bio WHERE user_id = @userId');
+
+    if (parsedAI.fullName) {
+      await pool.request()
+        .input('userId', sql.Int, userId)
+        .input('fullName', sql.NVarChar, parsedAI.fullName)
+        .query('UPDATE users SET full_name = @fullName WHERE user_id = @userId');
+    }
+    if (parsedAI.phone) {
+      await pool.request()
+        .input('userId', sql.Int, userId)
+        .input('phone', sql.VarChar, parsedAI.phone)
+        .query('UPDATE users SET phone = @phone WHERE user_id = @userId');
+    }
+
+    // Update website_url in users table if CV contains portfolio website URL
+    if (parsedAI.portfolioWebsite) {
+      await pool.request()
+        .input('userId', sql.Int, userId)
+        .input('websiteUrl', sql.NVarChar, parsedAI.portfolioWebsite)
+        .query('UPDATE users SET website_url = @websiteUrl WHERE user_id = @userId');
+    }
+
+    // Auto-merge skills from CV into freelancer_skills (add new ones, keep existing)
+    if (Array.isArray(parsedAI.skills) && parsedAI.skills.length > 0) {
+      // Get existing skills for this freelancer
+      const existingSkills = await pool.request()
+        .input('freelancerId', sql.Int, userId)
+        .query(`
+          SELECT s.skill_name FROM freelancer_skills fs
+          JOIN skills s ON fs.skill_id = s.skill_id
+          WHERE fs.freelancer_id = @freelancerId
+        `);
+      const existingSkillNames = new Set(existingSkills.recordset.map(r => r.skill_name.toLowerCase()));
+
+      for (const skillName of parsedAI.skills) {
+        if (!skillName || existingSkillNames.has(skillName.toLowerCase())) continue;
+        // Find or create skill
+        let skillIdResult = await pool.request()
+          .input('skillName', sql.NVarChar, skillName)
+          .query('SELECT skill_id FROM skills WHERE skill_name = @skillName');
+        let skillId;
+        if (skillIdResult.recordset.length === 0) {
+          const insertResult = await pool.request()
+            .input('skillName', sql.NVarChar, skillName)
+            .query('INSERT INTO skills (skill_name, created_at) VALUES (@skillName, SYSUTCDATETIME()); SELECT SCOPE_IDENTITY() AS skill_id;');
+          skillId = insertResult.recordset[0].skill_id;
+        } else {
+          skillId = skillIdResult.recordset[0].skill_id;
+        }
+        // Insert into freelancer_skills
+        await pool.request()
+          .input('freelancerId', sql.Int, userId)
+          .input('skillId', sql.Int, skillId)
+          .query(`
+            IF NOT EXISTS (SELECT 1 FROM freelancer_skills WHERE freelancer_id = @freelancerId AND skill_id = @skillId)
+            BEGIN
+              INSERT INTO freelancer_skills (freelancer_id, skill_id, skill_level, created_at)
+              VALUES (@freelancerId, @skillId, 'INTERMEDIATE', SYSUTCDATETIME());
+            END
+          `);
+        existingSkillNames.add(skillName.toLowerCase());
+      }
+      console.log(`[AI CV] Merged ${parsedAI.skills.length} skills from CV for user ${userId}`);
+    }
 
     res.json({
       success: true,
       message: 'CV đã được tải lên và phân tích thành công!',
-      cvUrl
+      cvUrl,
+      extractedFields: parsedAI
     });
 
   } catch (error) {

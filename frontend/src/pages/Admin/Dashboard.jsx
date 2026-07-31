@@ -148,19 +148,6 @@ export default function AdminDashboard() {
       textHover: "hover:text-indigo-700"
     },
     {
-      title: "Tranh chấp cần phán quyết",
-      value: dashboardData?.pendingDisputes || 0,
-      subtitle: "Hợp đồng bị khiếu nại chưa giải quyết",
-      icon: "gavel",
-      link: "/admin-disputes",
-      topColor: "bg-amber-500",
-      iconBg: "bg-amber-50",
-      iconText: "text-amber-600",
-      borderHover: "hover:border-amber-100",
-      bgHover: "hover:bg-amber-50",
-      textHover: "hover:text-amber-700"
-    },
-    {
       title: "Báo cáo vi phạm mới",
       value: dashboardData?.pendingReports || 0,
       subtitle: "Tài khoản bị báo cáo vi phạm",
@@ -186,7 +173,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Actionable KPIs - Pending Items */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {PENDING_ACTIONS.map((action, idx) => (
             <ActionCard key={idx} {...action} />
           ))}
