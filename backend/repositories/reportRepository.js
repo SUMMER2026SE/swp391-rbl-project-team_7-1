@@ -112,6 +112,11 @@ export const fetchReports = async ({ status, entity_type, violation_type, search
       own.full_name AS owner_name,
       own.email AS owner_email,
       own.avatar_url AS owner_avatar,
+      fl.full_name AS freelancer_name,
+      p.deadline AS project_deadline,
+      p.status AS project_status,
+      CASE WHEN ws.submission_id IS NOT NULL THEN 1 ELSE 0 END AS has_submission,
+      CASE WHEN d.dispute_id IS NOT NULL THEN 1 ELSE 0 END AS has_dispute,
       CASE 
         WHEN vr.entity_type = 'PROJECT' THEN p.title
         WHEN vr.entity_type = 'USER' THEN tgt.full_name
@@ -122,6 +127,14 @@ export const fetchReports = async ({ status, entity_type, violation_type, search
     LEFT JOIN users own ON vr.owner_id = own.user_id
     LEFT JOIN users tgt ON vr.entity_type = 'USER' AND vr.entity_id = tgt.user_id
     LEFT JOIN projects p ON vr.entity_type = 'PROJECT' AND vr.entity_id = p.project_id
+    LEFT JOIN contracts c ON c.project_id = p.project_id
+    LEFT JOIN users fl ON c.freelancer_id = fl.user_id
+    LEFT JOIN (
+      SELECT contract_id, MAX(submission_id) AS submission_id
+      FROM work_submissions
+      GROUP BY contract_id
+    ) ws ON c.contract_id = ws.contract_id
+    LEFT JOIN disputes d ON c.contract_id = d.contract_id
     ${whereSql}
     ORDER BY vr.created_at DESC
     OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
@@ -137,6 +150,7 @@ export const fetchReports = async ({ status, entity_type, violation_type, search
     reports: listResult.recordset || []
   };
 };
+
 
 export const getReportById = async (reportId) => {
   const id = toInt(reportId);
@@ -168,6 +182,15 @@ export const getReportById = async (reportId) => {
         own.full_name AS owner_name,
         own.email AS owner_email,
         own.avatar_url AS owner_avatar,
+        c.contract_id,
+        c.total_amount,
+        p.deadline AS project_deadline,
+        p.status AS project_status,
+        fl.full_name AS freelancer_name,
+        ws.description AS submission_description,
+        ws.file_url AS submission_file_url,
+        ws.submitted_at AS submission_created_at,
+        ea.status AS escrow_status,
         CASE 
           WHEN vr.entity_type = 'PROJECT' THEN p.title
           WHEN vr.entity_type = 'USER' THEN tgt.full_name
@@ -182,11 +205,21 @@ export const getReportById = async (reportId) => {
       LEFT JOIN users own ON vr.owner_id = own.user_id
       LEFT JOIN users tgt ON vr.entity_type = 'USER' AND vr.entity_id = tgt.user_id
       LEFT JOIN projects p ON vr.entity_type = 'PROJECT' AND vr.entity_id = p.project_id
+      LEFT JOIN contracts c ON c.project_id = p.project_id
+      LEFT JOIN users fl ON c.freelancer_id = fl.user_id
+      LEFT JOIN EscrowAccounts ea ON ea.project_id = p.project_id
+      LEFT JOIN (
+        SELECT contract_id, description, file_url, submitted_at,
+               ROW_NUMBER() OVER (PARTITION BY contract_id ORDER BY submitted_at DESC) as rn
+        FROM work_submissions
+      ) ws ON c.contract_id = ws.contract_id AND ws.rn = 1
       WHERE vr.report_id = @reportId
     `);
 
   return result.recordset[0] || null;
 };
+
+
 
 export const createReport = async ({ reporterId, entityType, entityId, ownerId, violationType, description, metadata }) => {
   const pool = await poolPromise;

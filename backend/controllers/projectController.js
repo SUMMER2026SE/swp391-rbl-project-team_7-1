@@ -51,7 +51,9 @@ export const getProjects = async (req, res) => {
 
     const request = pool.request();
 
-    if (isFreelancer && userInfo.userId && filter === 'my') {
+    const isReportSearch = req.query.report === 'true';
+
+    if (isFreelancer && userInfo.userId && filter === 'my' && !isReportSearch) {
       // Freelancer: projects linked via proposals OR contracts
       const freelancerId = userInfo.userId;
       request.input('freelancerId', sql.Int, freelancerId);
@@ -63,14 +65,21 @@ export const getProjects = async (req, res) => {
         ) AS 参与 ON p.project_id = 参与.project_id
         WHERE 1=1
       `;
-    } else if (isEmployer && userInfo.userId && filter === 'my') {
+    } else if (isEmployer && userInfo.userId && filter === 'my' && !isReportSearch) {
       // Employer: only projects they posted
       request.input('employerId', sql.Int, userInfo.userId);
       query += ` WHERE p.employer_id = @employerId`;
     } else {
-      // Anonymous / public (or logged-in browsing): only OPEN projects
-      query += ` WHERE p.status = 'OPEN'`;
+      // Anonymous / public (or logged-in browsing): show OPEN or IN_PROGRESS or COMPLETED if reporting/searching specifically
+      if (q || isReportSearch) {
+        query += ` WHERE p.status IN ('OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'CLOSED', 'REJECTED')`;
+      } else {
+        query += ` WHERE p.status = 'OPEN'`;
+      }
     }
+
+
+
 
     if (filter !== 'my') {
       // Apply filters for public browsing

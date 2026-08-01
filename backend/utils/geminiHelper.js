@@ -11,7 +11,8 @@ export const callGeminiAPI = async (userPrompt, systemInstruction = null, mimeTy
     keys = process.env.GEMINI_API_KEYS.split(',').map(k => k.trim()).filter(Boolean);
   }
   if (process.env.GEMINI_API_KEY) {
-    keys.push(process.env.GEMINI_API_KEY.trim());
+    const splitKey = process.env.GEMINI_API_KEY.split(',').map(k => k.trim()).filter(Boolean);
+    keys.push(...splitKey);
   }
   
   // Deduplicate

@@ -30,7 +30,7 @@ export const fetchDisputes = async ({ status, limit = 25, offset = 0 }) => {
   const pool = await poolPromise;
   const { whereSql, params } = buildDisputeFilters({ status });
 
-  const safeLimit = Math.min(Math.max(parseInt(offset, 10) >= 0 ? parseInt(limit, 10) : 25, 1), 100);
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) >= 0 ? parseInt(limit, 10) : 25, 1), 100);
   const safeOffset = parseInt(offset, 10) >= 0 ? parseInt(offset, 10) : 0;
 
   const countRequest = pool.request();

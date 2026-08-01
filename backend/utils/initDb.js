@@ -3,7 +3,7 @@ import { poolPromise } from '../config/db.js';
 export const initDb = async () => {
   try {
     const pool = await poolPromise;
-    
+
     // Create Wallet Table
     await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Wallet' and xtype='U')

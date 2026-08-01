@@ -42,7 +42,7 @@ const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW = 60; // seconds
 
 // Init Redis on startup (non-blocking)
-initRedis().catch(() => {});
+initRedis().catch(() => { });
 
 /**
  * Sanitize description text (XSS prevention)
@@ -136,6 +136,15 @@ export const getReportDetails = async (reportId) => {
     createdAt: report.created_at,
     updatedAt: report.updated_at,
     resolvedAt: report.resolved_at,
+    contract_id: report.contract_id || null,
+    total_amount: report.total_amount || null,
+    escrow_status: report.escrow_status || null,
+    project_deadline: report.project_deadline || null,
+    project_status: report.project_status || null,
+    freelancer_name: report.freelancer_name || null,
+    submission_description: report.submission_description || null,
+    submission_file_url: report.submission_file_url || null,
+    submission_created_at: report.submission_created_at || null,
     history: history.map(h => ({
       id: h.id,
       admin: { id: h.admin_id, name: h.admin_name, avatar: h.admin_avatar },
@@ -149,6 +158,8 @@ export const getReportDetails = async (reportId) => {
 
   return { status: 200, data: enriched };
 };
+
+
 
 /**
  * Create new report — NEVER trusts client-provided ownerId
@@ -357,9 +368,172 @@ const moderationAction = async (reportId, adminId, action, newStatus, note) => {
   return { status: 200, data: { reportId, status: newStatus } };
 };
 
-export const resolveReport = async (reportId, adminId, action, note) => {
+export const resolveReport = async (reportId, adminId, action, note, decision) => {
+  const reportDetails = await getReportById(reportId);
+  if (!reportDetails) {
+    return { status: 404, error: 'Report not found.' };
+  }
+
+  // Handle Escrow payment/refund decision if specified
+  if (decision && (decision === 'PAY_FREELANCER' || decision === 'REFUND_EMPLOYER')) {
+    const { sql, poolPromise } = await import('../config/db.js');
+    const pool = await poolPromise;
+
+    if (reportDetails.entity_type !== 'PROJECT') {
+      return { status: 400, error: 'Escrow decisions can only be applied to PROJECT entities.' };
+    }
+
+    const projectId = reportDetails.entity_id;
+
+    // Check if there is an active contract and funded escrow
+    const escrowRes = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query("SELECT * FROM EscrowAccounts WHERE project_id = @projectId AND status = 'FUNDED'");
+
+    if (escrowRes.recordset.length === 0) {
+      return { status: 400, error: 'No active funded escrow found for this project.' };
+    }
+
+    const escrow = escrowRes.recordset[0];
+    const contractRes = await pool.request()
+      .input('projectId', sql.Int, projectId)
+      .query("SELECT * FROM contracts WHERE project_id = @projectId AND status <> 'COMPLETED' AND status <> 'CANCELLED'");
+
+    if (contractRes.recordset.length === 0) {
+      return { status: 400, error: 'No active or processing contract found for this project.' };
+    }
+
+
+    const contract = contractRes.recordset[0];
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    try {
+      if (decision === 'PAY_FREELANCER') {
+        // Approve payment: Release money to freelancer (95%) and platform (5%)
+        await transaction.request()
+          .input('escrowId', sql.Int, escrow.escrow_id)
+          .query("UPDATE EscrowAccounts SET status = 'RELEASED' WHERE escrow_id = @escrowId");
+
+        await transaction.request()
+          .input('escrowIdTr', sql.Int, escrow.escrow_id)
+          .input('amountTr', sql.Decimal(18, 2), escrow.amount)
+          .query("INSERT INTO EscrowTransactions (escrow_id, amount, type, status) VALUES (@escrowIdTr, @amountTr, 'RELEASE', 'COMPLETED')");
+
+        // Find or create Freelancer Wallet
+        const walletRes = await transaction.request()
+          .input('freelancerId', sql.Int, contract.freelancer_id)
+          .query("SELECT wallet_id FROM Wallet WHERE user_id = @freelancerId");
+
+        let walletId;
+        if (walletRes.recordset.length === 0) {
+          const newWalletRes = await transaction.request()
+            .input('freelancerId', sql.Int, contract.freelancer_id)
+            .query("INSERT INTO Wallet (user_id, balance, created_at, updated_at) VALUES (@freelancerId, 0, GETDATE(), GETDATE()); SELECT SCOPE_IDENTITY() as wallet_id;");
+          walletId = newWalletRes.recordset[0].wallet_id;
+        } else {
+          walletId = walletRes.recordset[0].wallet_id;
+        }
+
+        const escrowAmountNum = Number(escrow.amount);
+        const serviceFee = escrowAmountNum * 0.05;
+        const releaseAmount = escrowAmountNum - serviceFee;
+
+        // Add funds to Freelancer Wallet (95%)
+        await transaction.request()
+          .input('walletId', sql.Int, walletId)
+          .input('amount', sql.Decimal(18, 2), releaseAmount)
+          .query("UPDATE Wallet SET balance = balance + @amount, updated_at = GETDATE() WHERE wallet_id = @walletId");
+
+        // Insert WalletTransaction record for Freelancer (95%)
+        await transaction.request()
+          .input('walletIdF', sql.Int, walletId)
+          .input('amountF', sql.Decimal(18, 2), releaseAmount)
+          .input('descF', sql.NVarChar(255), `Giải ngân phán quyết tranh chấp (đã trừ 5% phí): ${contract.contract_title}`)
+          .query("INSERT INTO WalletTransaction (wallet_id, transaction_type, amount, description) VALUES (@walletIdF, 'ESCROW_RELEASE', @amountF, @descF)");
+
+        // Insert WalletTransaction record for Platform Service Fee (5%)
+        await transaction.request()
+          .input('walletIdP', sql.Int, walletId)
+          .input('feeAmountP', sql.Decimal(18, 2), serviceFee)
+          .input('descFeeP', sql.NVarChar(255), `Phí dịch vụ phán quyết tranh chấp (5%): ${contract.contract_title}`)
+          .query("INSERT INTO WalletTransaction (wallet_id, transaction_type, amount, description) VALUES (@walletIdP, 'SERVICE_FEE', @feeAmountP, @descFeeP)");
+
+        // Update contract status to COMPLETED
+        await transaction.request()
+          .input('contractId', sql.Int, contract.contract_id)
+          .query("UPDATE contracts SET status = 'COMPLETED', completed_at = SYSUTCDATETIME(), updated_at = SYSUTCDATETIME() WHERE contract_id = @contractId");
+
+        // Update project status to COMPLETED
+        await transaction.request()
+          .input('projectId', sql.Int, projectId)
+          .query("UPDATE projects SET status = 'COMPLETED', updated_at = SYSUTCDATETIME() WHERE project_id = @projectId");
+
+      } else if (decision === 'REFUND_EMPLOYER') {
+        // Refund employer: Refund 100% money back to Employer wallet
+        await transaction.request()
+          .input('escrowId', sql.Int, escrow.escrow_id)
+          .query("UPDATE EscrowAccounts SET status = 'REFUNDED' WHERE escrow_id = @escrowId");
+
+        await transaction.request()
+          .input('escrowIdTr', sql.Int, escrow.escrow_id)
+          .input('amountTr', sql.Decimal(18, 2), escrow.amount)
+          .query("INSERT INTO EscrowTransactions (escrow_id, amount, type, status) VALUES (@escrowIdTr, @amountTr, 'REFUND', 'COMPLETED')");
+
+        // Find or create Employer Wallet
+        const walletRes = await transaction.request()
+          .input('employerId', sql.Int, contract.employer_id)
+          .query("SELECT wallet_id FROM Wallet WHERE user_id = @employerId");
+
+        let walletId;
+        if (walletRes.recordset.length === 0) {
+          const newWalletRes = await transaction.request()
+            .input('employerId', sql.Int, contract.employer_id)
+            .query("INSERT INTO Wallet (user_id, balance, created_at, updated_at) VALUES (@employerId, 0, GETDATE(), GETDATE()); SELECT SCOPE_IDENTITY() as wallet_id;");
+          walletId = newWalletRes.recordset[0].wallet_id;
+        } else {
+          walletId = walletRes.recordset[0].wallet_id;
+        }
+
+        const escrowAmountNum = Number(escrow.amount);
+
+        // Refund funds to Employer Wallet (100%)
+        await transaction.request()
+          .input('walletId', sql.Int, walletId)
+          .input('amount', sql.Decimal(18, 2), escrowAmountNum)
+          .query("UPDATE Wallet SET balance = balance + @amount, updated_at = GETDATE() WHERE wallet_id = @walletId");
+
+        // Insert WalletTransaction record for Employer (100%)
+        await transaction.request()
+          .input('walletIdE', sql.Int, walletId)
+          .input('amountE', sql.Decimal(18, 2), escrowAmountNum)
+          .input('descE', sql.NVarChar(255), `Hoàn trả ký quỹ phán quyết tranh chấp: ${contract.contract_title}`)
+          .query("INSERT INTO WalletTransaction (wallet_id, transaction_type, amount, description) VALUES (@walletIdE, 'ESCROW_REFUND', @amountE, @descE)");
+
+        // Update contract status to CANCELED
+        await transaction.request()
+          .input('contractId', sql.Int, contract.contract_id)
+          .query("UPDATE contracts SET status = 'CANCELED', completed_at = SYSUTCDATETIME(), updated_at = SYSUTCDATETIME() WHERE contract_id = @contractId");
+
+        // Update project status to CANCELED
+        await transaction.request()
+          .input('projectId', sql.Int, projectId)
+          .query("UPDATE projects SET status = 'CANCELED', updated_at = SYSUTCDATETIME() WHERE project_id = @projectId");
+      }
+
+      await transaction.commit();
+
+
+    } catch (err) {
+      await transaction.rollback();
+      console.error('Failed to process financial decision transaction:', err);
+      return { status: 500, error: 'Failed to process financial decision.' };
+    }
+  }
+
   return moderationAction(reportId, adminId, 'RESOLVE', 'RESOLVED', note);
 };
+
 
 export const dismissReport = async (reportId, adminId, note) => {
   return moderationAction(reportId, adminId, 'DISMISS', 'DISMISSED', note);
@@ -444,6 +618,11 @@ export const getAdminReportsList = async (filters, requesterId) => {
       status: report.status,
       createdAt: report.created_at,
       updatedAt: report.updated_at,
+      freelancer_name: report.freelancer_name || null,
+      project_deadline: report.project_deadline || null,
+      project_status: report.project_status || null,
+      has_submission: report.has_submission === 1,
+      has_dispute: report.has_dispute === 1,
       history: history.map(h => ({
         id: h.id,
         admin: { id: h.admin_id, name: h.admin_name },
@@ -458,3 +637,4 @@ export const getAdminReportsList = async (filters, requesterId) => {
 
   return { total: result.total, reports: enrichedReports };
 };
+

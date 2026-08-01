@@ -128,9 +128,9 @@ export const patchResolveReport = async (req, res) => {
   try {
     const { id } = req.params;
     const adminId = req.user?.id;
-    const { note, action } = req.body;
+    const { note, action, decision } = req.body;
 
-    const result = await reportService.resolveReport(id, adminId, action || 'RESOLVE', note);
+    const result = await reportService.resolveReport(id, adminId, action || 'RESOLVE', note, decision);
 
     if (result.error) {
       return res.status(result.status).json({ message: result.error });
@@ -148,6 +148,7 @@ export const patchResolveReport = async (req, res) => {
     return res.status(500).json({ message: 'Failed to resolve report.' });
   }
 };
+
 
 /**
  * PATCH /admin/reports/:id/dismiss
@@ -300,3 +301,36 @@ export const patchReopenReport = async (req, res) => {
     return res.status(500).json({ message: 'Failed to reopen report.' });
   }
 };
+
+/**
+ * POST /reports/upload-evidence-images
+ * Upload evidence images and return their public URLs
+ * Supports up to 5 images at once
+ */
+export const uploadEvidenceImages = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded.' });
+    }
+
+    // Build base URL for uploaded files
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const baseUrl = `${protocol}://${host}`;
+
+    const uploadedImages = req.files.map(file => ({
+      fileName: file.originalname,
+      fileSize: file.size,
+      mimeType: file.mimetype,
+      url: `${baseUrl}/uploads/evidence/${file.filename}`
+    }));
+
+    return res.status(200).json({
+      success: true,
+      images: uploadedImages
+    });
+  } catch (error) {
+    console.error('Error uploading evidence images:', error);
+    return res.status(500).json({ message: 'Failed to upload images. Please try again.' });
+  }
+};

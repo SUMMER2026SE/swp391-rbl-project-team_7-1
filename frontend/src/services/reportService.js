@@ -25,7 +25,7 @@ import api from './api';
  */
 export const buildReportPayload = ({ entityType, entityId, violationType, description }) => {
   const normalizedEntityType = (entityType || '').toUpperCase();
-  
+
   return {
     entityType: normalizedEntityType,
     entityId: Number(entityId),
@@ -65,9 +65,15 @@ export const reportService = {
   /**
    * Resolve a report
    * PATCH /api/admin/reports/:id/resolve
+   * @param {number} reportId
+   * @param {string} note
+   * @param {string} [decision] - 'PAY_FREELANCER' | 'REFUND_EMPLOYER'
    */
-  resolveReport: async (reportId, note) => {
-    const response = await api.patch(`/admin/reports/${reportId}/resolve`, { note });
+  resolveReport: async (reportId, note, decision) => {
+    const response = await api.patch(`/admin/reports/${reportId}/resolve`, {
+      note,
+      ...(decision ? { decision } : {})
+    });
     return response.data;
   },
 
@@ -114,6 +120,21 @@ export const reportService = {
   addEvidence: async (reportId, { fileUrl, fileType, fileName, fileSize }) => {
     const response = await api.post(`/reports/${reportId}/evidence`, {
       fileUrl, fileType, fileName, fileSize
+    });
+    return response.data;
+  },
+
+  /**
+   * Upload evidence images and get back public URLs
+   * POST /api/reports/upload-evidence-images
+   * @param {File[]} imageFiles - Array of File objects
+   * @returns {{ success: boolean, images: { url, fileName, fileSize, mimeType }[] }}
+   */
+  uploadEvidenceImages: async (imageFiles) => {
+    const formData = new FormData();
+    imageFiles.forEach(file => formData.append('images', file));
+    const response = await api.post('/reports/upload-evidence-images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
   }

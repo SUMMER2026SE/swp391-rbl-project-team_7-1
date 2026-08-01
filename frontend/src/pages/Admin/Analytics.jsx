@@ -68,9 +68,11 @@ function StatusBadge({ label, count, color }) {
       RESOLVED: 'Đã giải quyết',
       DISMISSED: 'Đã bác bỏ',
       CANCELLED: 'Đã hủy',
+      CANCELED: 'Đã hủy',
       REJECTED: 'Đã từ chối',
       SUBMITTED: 'Đã nộp bài',
-      WITHDRAWN: 'Đã rút lại'
+      WITHDRAWN: 'Đã rút lại',
+      IN_PROGRESS: 'Đang thực hiện'
     };
     return labels[status] || status;
   };

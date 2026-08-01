@@ -41,7 +41,7 @@ export default function DisputeManagement() {
       const response = await disputeService.getAdminDisputes(params);
       const list = response.disputes || [];
       setDisputes(list);
-      
+
       if (list.length > 0) {
         if (shouldSelectFirst || !selectedDispute) {
           setSelectedDispute(list[0]);
@@ -124,14 +124,14 @@ export default function DisputeManagement() {
   return (
     <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#F8FAFC] min-h-screen">
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-6 pb-12">
-        
+
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Giải quyết tranh chấp</h1>
             <p className="text-xs text-slate-450 font-semibold">Xem xét, kiểm thử tài liệu chứng cứ và đưa ra phán quyết phân chia tiền ký quỹ (Escrow) công bằng.</p>
           </div>
-          
+
           <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái:</span>
             <select
@@ -148,11 +148,10 @@ export default function DisputeManagement() {
 
         {/* Notifications */}
         {(error || success) && (
-          <div className={`px-4 py-3 rounded-xl border flex items-center gap-2 text-xs font-bold animate-in slide-in-from-top-1 ${
-            success 
-              ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+          <div className={`px-4 py-3 rounded-xl border flex items-center gap-2 text-xs font-bold animate-in slide-in-from-top-1 ${success
+              ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
               : 'bg-rose-50 border-rose-100 text-rose-800'
-          }`}>
+            }`}>
             <span className="material-symbols-outlined text-[16px]">
               {success ? 'check_circle' : 'error'}
             </span>
@@ -161,11 +160,11 @@ export default function DisputeManagement() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
+
           {/* Dispute List (Left Column) */}
           <div className="lg:col-span-4 flex flex-col gap-3">
             <h3 className="font-bold text-[10px] text-slate-400 tracking-wider uppercase">Danh sách tranh chấp ({disputes.length})</h3>
-            
+
             <div className="space-y-2.5 overflow-y-auto max-h-[600px] pr-1.5 custom-scrollbar">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200 text-slate-400">
@@ -183,11 +182,10 @@ export default function DisputeManagement() {
                     <div
                       key={dispute.dispute_id}
                       onClick={() => setSelectedDispute(dispute)}
-                      className={`p-4 bg-white rounded-2xl border transition-all cursor-pointer text-left ${
-                        isSelected 
-                          ? 'border-[#0F766E] shadow-sm ring-2 ring-[#0F766E]/5' 
+                      className={`p-4 bg-white rounded-2xl border transition-all cursor-pointer text-left ${isSelected
+                          ? 'border-[#0F766E] shadow-sm ring-2 ring-[#0F766E]/5'
                           : 'border-slate-200 hover:border-slate-300 hover:shadow-[0_2px_8px_rgba(15,23,42,0.01)]'
-                      }`}
+                        }`}
                     >
                       <div className="flex justify-between items-center mb-3">
                         <span className={`inline-flex px-2 py-0.5 rounded-lg text-[9px] font-bold border ${badgeClasses[dispute.status]}`}>
@@ -197,7 +195,7 @@ export default function DisputeManagement() {
                       </div>
                       <h4 className="font-bold text-slate-800 text-xs">Hợp đồng: #{dispute.contract_id}</h4>
                       <p className="text-xs text-slate-500 mt-2 line-clamp-2 font-semibold">Lý do: {dispute.reason || 'Không có lý do chi tiết'}</p>
-                      
+
                       <div className="mt-4 flex justify-between items-center pt-2.5 border-t border-slate-50">
                         <span className="text-[9px] font-bold text-[#0F766E] bg-teal-50 px-2 py-0.5 rounded border border-teal-100/50">Mã tranh chấp: #{dispute.dispute_id}</span>
                         <span className="material-symbols-outlined text-slate-400 text-base">chevron_right</span>
@@ -213,7 +211,7 @@ export default function DisputeManagement() {
           <div className="lg:col-span-8">
             {selectedDispute ? (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_2px_12px_rgba(15,23,42,0.015)] overflow-hidden flex flex-col min-h-[580px]">
-                
+
                 {/* Detail Header */}
                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="text-left">
@@ -257,9 +255,9 @@ export default function DisputeManagement() {
                       <span className="text-xs font-bold text-emerald-900 mt-1 block leading-relaxed">
                         Quyết định thực thi: <span className="font-extrabold">{
                           selectedDispute.decision === 'REFUND_EMPLOYER' ? 'Hoàn tiền cho Doanh nghiệp (Employer)' :
-                          selectedDispute.decision === 'PAY_FREELANCER' ? 'Thanh toán cho Freelancer' :
-                          selectedDispute.decision === 'SPLIT_PAYMENT' ? 'Chia đôi tiền ký quỹ (50/50)' :
-                          'Đóng lại và không can thiệp'
+                            selectedDispute.decision === 'PAY_FREELANCER' ? 'Thanh toán cho Freelancer' :
+                              selectedDispute.decision === 'SPLIT_PAYMENT' ? 'Chia đôi tiền ký quỹ (50/50)' :
+                                'Đóng lại và không can thiệp'
                         }</span>
                       </span>
                       {selectedDispute.resolved_at && (
@@ -304,7 +302,7 @@ export default function DisputeManagement() {
                     </div>
                   </div>
                 )}
-                
+
               </div>
             ) : (
               <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.015)] p-16 text-center text-slate-450 flex flex-col justify-center items-center min-h-[580px]">
@@ -313,7 +311,7 @@ export default function DisputeManagement() {
               </div>
             )}
           </div>
-          
+
         </div>
       </div>
     </main>
