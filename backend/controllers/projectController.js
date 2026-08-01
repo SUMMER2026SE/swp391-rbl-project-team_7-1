@@ -1,4 +1,5 @@
 import { sql, poolPromise } from '../config/db.js';
+import { callGeminiAPI } from '../utils/geminiHelper.js';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import { createRequire } from 'module';
@@ -348,9 +349,9 @@ export const submitProposal = async (req, res) => {
 // Tác vụ chạy ngầm phân tích hồ sơ freelancer và CV đã lưu bằng Gemini AI
 async function processAIEvaluationInBackground(proposalId, projectId, freelancerId, coverLetterText, portfolioIds = []) {
   try {
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEYS;
     if (!geminiKey) {
-      console.warn("⚠️ GEMINI_API_KEY chưa được cấu hình. Bỏ qua phân tích AI.");
+      console.warn("⚠️ GEMINI_API_KEY hoặc GEMINI_API_KEYS chưa được cấu hình. Bỏ qua phân tích AI.");
       return;
     }
 
@@ -455,32 +456,18 @@ async function processAIEvaluationInBackground(proposalId, projectId, freelancer
       ${(coverLetterText || '').substring(0, 500)}
     `;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-      })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-        const aiEvaluation = data.candidates[0].content.parts[0].text.trim();
-        
-        // Cập nhật Database
-        await pool.request()
-          .input('proposalId', sql.Int, proposalId)
-          .input('aiEvaluation', sql.NVarChar, aiEvaluation)
-          .query('UPDATE proposals SET ai_evaluation = @aiEvaluation WHERE proposal_id = @proposalId');
-        
-        console.log(`[AI Profile Matcher] Phân tích thành công đề xuất ID: ${proposalId}`);
-      }
-    } else {
-      const errorText = await response.text();
-      console.error(`[AI Profile Matcher] Lỗi từ Gemini API: ${response.status} - ${errorText}`);
+    try {
+      const aiEvaluation = await callGeminiAPI(userPrompt, systemInstruction, "application/json", 0.2);
+      
+      // Cập nhật Database
+      await pool.request()
+        .input('proposalId', sql.Int, proposalId)
+        .input('aiEvaluation', sql.NVarChar, aiEvaluation)
+        .query('UPDATE proposals SET ai_evaluation = @aiEvaluation WHERE proposal_id = @proposalId');
+      
+      console.log(`[AI Profile Matcher] Phân tích thành công đề xuất ID: ${proposalId}`);
+    } catch (apiErr) {
+      console.error(`[AI Profile Matcher] Lỗi từ Gemini API:`, apiErr.message);
 
       // Ghi nhận phản hồi fallback khi hết hạn ngạch hoặc lỗi API để không bị ẩn khung giao diện
       const fallbackEvaluation = JSON.stringify({

@@ -1,4 +1,5 @@
 import { sql, poolPromise } from '../config/db.js';
+import { callGeminiAPI } from '../utils/geminiHelper.js';
 
 /**
   * Employer invites a freelancer to a project
@@ -190,9 +191,9 @@ export const respondToInvitation = async (req, res) => {
  */
 export const draftAIInvitation = async (req, res) => {
   try {
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) {
-      return res.status(500).json({ success: false, message: 'Gemini API Key chưa được cấu hình ở Server.' });
+    const hasGemini = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEYS;
+    if (!hasGemini) {
+      return res.status(500).json({ success: false, message: 'API Key Gemini chưa được cấu hình ở Server.' });
     }
 
     const { projectId, freelancerId } = req.body;
@@ -256,23 +257,13 @@ Hãy viết lời mời hợp tác ngắn gọn (khoảng 60-80 từ) gửi cho 
 Lưu ý: Lời nhắn phải đại diện cho Nhà tuyển dụng (xưng "Chúng tôi/Tôi"), nêu ngắn gọn lý do kỹ năng phù hợp và ngỏ lời mời ứng tuyển. Trả về đúng lời nhắn hoàn chỉnh.
 `.trim();
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
-      })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const text = data.candidates[0]?.content?.parts[0]?.text?.trim() || '';
+    try {
+      const text = await callGeminiAPI(userPrompt, systemInstruction, null, 0.7);
       return res.json({ success: true, draft: text });
+    } catch (apiErr) {
+      console.error('[AI Invitation Draft] Error calling Gemini:', apiErr.message);
+      return res.status(500).json({ success: false, message: 'Không thể tạo lời nhắn bằng AI do lỗi API.' });
     }
-
-    res.status(500).json({ success: false, message: 'Không thể tạo lời nhắn bằng AI.' });
   } catch (error) {
     console.error('Error drafting AI invitation:', error);
     res.status(500).json({ success: false, message: 'Lỗi server khi soạn lời mời bằng AI.' });

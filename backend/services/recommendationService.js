@@ -1,4 +1,5 @@
 import * as recommendationRepository from '../repositories/recommendationRepository.js';
+import { callGeminiAPI } from '../utils/geminiHelper.js';
 
 
 /* ─────────────── LAYER 1: SKILL MATCHING ─────────────── */
@@ -202,7 +203,7 @@ const calculateSemanticMatch = (freelancer, freelancerSkills, project, portfolio
 /* ─────────────── AI ENHANCEMENT: GEMINI ANALYSIS ─────────────── */
 
 const analyzeWithGemini = async (project, projectSkills, topFreelancers, skillsByFreelancer) => {
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEYS;
   if (!geminiKey || topFreelancers.length === 0) return {};
 
   try {
@@ -235,36 +236,24 @@ Kỹ năng yêu cầu: ${requiredSkills || 'N/A'}
 ${candidatesSummary}
     `.trim();
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1024, temperature: 0.2 }
-      })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      let text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-      if (text) {
-        // Clear markdown code blocks if any
-        if (text.startsWith('```')) {
-          text = text.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
-        }
-        text = text.trim();
-        try {
-          const parsed = JSON.parse(text);
-          return parsed.comments || {};
-        } catch (parseErr) {
-          console.error('[AI Recommendation] Lỗi parse JSON kết quả Gemini:', parseErr, text);
-          return {};
-        }
+    const responseText = await callGeminiAPI(userPrompt, systemInstruction, "application/json", 0.2);
+    let text = responseText.trim();
+    if (text) {
+      // Clear markdown code blocks if any
+      if (text.startsWith('```')) {
+        text = text.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      text = text.trim();
+      try {
+        const parsed = JSON.parse(text);
+        return parsed.comments || {};
+      } catch (parseErr) {
+        console.error('[AI Recommendation] Lỗi parse JSON kết quả Gemini:', parseErr, text);
+        return {};
       }
     }
   } catch (err) {
-    console.error('[AI Recommendation] Lỗi khi gọi Gemini:', err);
+    console.error('[AI Recommendation] Lỗi khi gọi Gemini:', err.message);
   }
   return {};
 };

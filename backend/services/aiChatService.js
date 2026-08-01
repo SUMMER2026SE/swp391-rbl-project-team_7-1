@@ -1,5 +1,6 @@
 import * as aiChatRepository from '../repositories/aiChatRepository.js';
 import { sql, poolPromise } from '../config/db.js';
+import { callGeminiAPI } from '../utils/geminiHelper.js';
 
 const SYSTEM_PROMPT = `You are FJMS AI Assistant, a helpful, direct, and concise virtual assistant for the Freelance Job Management System (FJMS).
 
@@ -248,7 +249,8 @@ const generateAIResponse = async (prompt, originalMessage, userRole, userId, pre
     }
   }
   
-  if (geminiKey) {
+  const hasGemini = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEYS;
+  if (hasGemini) {
     try {
       const systemInstructionText = `${SYSTEM_PROMPT}\n\n${ROLE_CONTEXT[userRole] || ROLE_CONTEXT.FREELANCER}${liveDataContext ? '\n\n' + liveDataContext : ''}`;
       
@@ -271,29 +273,12 @@ const generateAIResponse = async (prompt, originalMessage, userRole, userId, pre
         });
       }
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemInstructionText }]
-          },
-          contents: contents,
-          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 }
-        })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
-          return data.candidates[0].content.parts[0].text.trim();
-        }
-      } else {
-        const errorText = await response.text();
-        console.error('Gemini API response error status:', response.status, errorText);
+      const aiResponse = await callGeminiAPI(contents, systemInstructionText, null, 0.7);
+      if (aiResponse) {
+        return aiResponse;
       }
     } catch (err) {
-      console.error('Gemini API error:', err);
+      console.error('Gemini API error in chatbot:', err.message);
     }
   }
   

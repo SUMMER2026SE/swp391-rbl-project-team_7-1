@@ -339,24 +339,24 @@ export default function MyProjects() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[850px] align-middle">
+              <table className="w-full text-left border-collapse min-w-full align-middle">
                 <thead>
                   <tr className="border-b border-slate-100 text-slate-400 text-[11px] uppercase font-bold tracking-wider bg-slate-50/30">
-                    <th className="py-4 px-6 font-semibold">Tên dự án</th>
-                    <th className="py-4 px-6 font-semibold w-[150px]">Danh mục</th>
-                    <th className="py-4 px-6 font-semibold w-[140px]">Ngân sách</th>
-                    <th className="py-4 px-6 font-semibold text-center w-[140px]">Trạng thái</th>
-                    <th className="py-4 px-6 font-semibold text-right w-[320px]">Thao tác</th>
+                    <th className="py-4 px-4 font-semibold">Tên dự án</th>
+                    <th className="py-4 px-4 font-semibold w-[110px]">Danh mục</th>
+                    <th className="py-4 px-4 font-semibold w-[120px]">Ngân sách</th>
+                    <th className="py-4 px-4 font-semibold text-center w-[110px]">Trạng thái</th>
+                    <th className="py-4 px-4 font-semibold text-right w-[260px]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100/70">
                   {filteredProjects.map((project) => (
                     <tr key={project.project_id} className="hover:bg-slate-50/40 transition-all duration-200 group">
-                      <td className="py-6 px-6 max-w-xs md:max-w-sm">
+                      <td className="py-4 px-4 max-w-xs md:max-w-sm">
                         <div className="flex flex-col min-w-0">
                           <Link 
                             to={`/project-details/${project.project_id}`} 
-                            className="font-extrabold text-slate-800 hover:text-[#0F766E] transition-colors truncate text-[15px]"
+                            className="font-extrabold text-slate-800 hover:text-[#0F766E] transition-colors truncate text-[14px]"
                           >
                             {project.title}
                           </Link>
@@ -367,15 +367,15 @@ export default function MyProjects() {
                         </div>
                       </td>
 
-                      <td className="py-6 px-6 whitespace-nowrap">
-                        <span className="inline-flex items-center px-3 py-1 rounded-lg text-[11px] font-bold bg-[#F1F5F9] text-slate-600 border border-slate-200/40">
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-[#F1F5F9] text-slate-600 border border-slate-200/40">
                           {project.category_name || 'Lập trình Web'}
                         </span>
                       </td>
 
-                      <td className="py-6 px-6 whitespace-nowrap">
+                      <td className="py-4 px-4 whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span className="font-extrabold text-[14px] text-[#0F766E] tracking-tight">
+                          <span className="font-extrabold text-[13px] text-[#0F766E] tracking-tight">
                             {project.budget_max ? `${Math.round(project.budget_max).toLocaleString('vi-VN')} đ` : 'Thương lượng'}
                           </span>
                           <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">
@@ -384,8 +384,8 @@ export default function MyProjects() {
                         </div>
                       </td>
 
-                      <td className="py-6 px-6 text-center whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wide border whitespace-nowrap ${
+                      <td className="py-4 px-4 text-center whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide border whitespace-nowrap ${
                           project.status === 'OPEN' 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
                           : project.status === 'IN_PROGRESS'
@@ -409,15 +409,15 @@ export default function MyProjects() {
                         </span>
                       </td>
 
-                      <td className="py-6 px-6 text-right whitespace-nowrap">
-                        <div className="flex justify-end items-center gap-3">
+                      <td className="py-4 px-4 text-right whitespace-nowrap">
+                        <div className="flex justify-end items-center gap-2">
                           <Link 
                             to={`/manage-proposals/${project.project_id}`} 
-                            className="px-4 py-2 bg-teal-50 hover:bg-teal-100 text-[#0F766E] font-bold text-xs rounded-xl transition-all flex items-center gap-2 border border-teal-100/60 shrink-0"
+                            className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-[#0F766E] font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 border border-teal-100/60 shrink-0"
                           >
-                            <span className="material-symbols-outlined text-[16px]">group</span>
+                            <span className="material-symbols-outlined text-[15px]">group</span>
                             <span>Hồ sơ ứng tuyển</span>
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-black bg-[#0F766E] text-white min-w-[18px] shadow-[0_1px_2px_rgba(15,118,110,0.15)]">
+                            <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#0F766E] text-white min-w-[16px] shadow-[0_1px_2px_rgba(15,118,110,0.15)]">
                               {project.proposalsCount || 0}
                             </span>
                           </Link>

@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { sql, poolPromise } from '../config/db.js';
+import { callGeminiAPI } from '../utils/geminiHelper.js';
 import { getUserById, fetchAllUsers, updateUserStatusById, approveContractById, getDashboardStats, fetchUsersWithFilters } from '../services/userService.js';
 import { PDFParse } from 'pdf-parse';
 import fs from 'fs';
@@ -870,9 +871,9 @@ export const uploadCV = async (req, res) => {
     const parsedPdf = await parser.getText();
     const cvText = parsedPdf.text || '';
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) {
-      return res.status(500).json({ success: false, message: 'Gemini API Key is not set.' });
+    const hasGemini = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEYS;
+    if (!hasGemini) {
+      return res.status(500).json({ success: false, message: 'API Key Gemini chưa được cấu hình.' });
     }
 
     // Call Gemini to analyze CV generally and extract profile fields
@@ -899,26 +900,14 @@ Hãy trả về kết quả dưới dạng chuỗi JSON thuần túy (không ch�
 Chỉ trả về đúng chuỗi JSON hợp lệ, không chứa khối code hay ký tự định dạng khác.`;
     const userPrompt = `Dưới đây là nội dung CV của freelancer:\n\n${cvText.substring(0, 8000)}`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemInstruction }] },
-        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-        generationConfig: { maxOutputTokens: 1024, temperature: 0.3, responseMimeType: "application/json" }
-      })
-    });
-
     let aiResultStr = '';
     console.log("Calling Gemini API for CV analysis...");
-    if (response.ok) {
-      const resData = await response.json();
-      aiResultStr = resData.candidates[0]?.content?.parts[0]?.text?.trim() || '';
+    try {
+      aiResultStr = await callGeminiAPI(userPrompt, systemInstruction, "application/json", 0.3);
       console.log("Gemini API Response Status: OK");
       console.log("Raw Gemini Output:", aiResultStr);
-    } else {
-      const errText = await response.text();
-      console.error("Gemini API Request Failed. Status:", response.status, "Error:", errText);
+    } catch (err) {
+      console.error("Gemini API Request Failed. Error:", err.message);
     }
 
     // Parse extracted information

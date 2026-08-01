@@ -791,12 +791,21 @@ export default function FreelancerDashboard() {
                             </span>
                           </div>
 
-                          <Link 
-                            to={`/submit-proposal/${proj.projectId}`}
-                            className="w-full py-2.5 bg-[#0F766E] hover:bg-[#0D5E58] text-white rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5"
-                          >
-                            Ứng tuyển ngay <span className="material-symbols-outlined text-[16px]">send</span>
-                          </Link>
+                          <div className="flex gap-2.5">
+                            <Link 
+                              to={`/project-details/${proj.projectId}`}
+                              className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-200 transition-all text-center flex items-center justify-center gap-1.5"
+                            >
+                              <span className="material-symbols-outlined text-[15px]">visibility</span>
+                              Xem chi tiết
+                            </Link>
+                            <Link 
+                              to={`/submit-proposal/${proj.projectId}`}
+                              className="flex-grow flex-1 py-2 bg-[#0F766E] hover:bg-[#0D5E58] text-white rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5"
+                            >
+                              Ứng tuyển ngay <span className="material-symbols-outlined text-[15px]">send</span>
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     ))}

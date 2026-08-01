@@ -10,38 +10,38 @@ export default function VisualEscrowTimeline({ contract, hasSubmissions }) {
     currentStep = 4;
   } else if (hasSubmissions) {
     currentStep = 3;
-  } else if (contract?.status === 'FUNDED') {
+  } else if (contract?.status === 'ACTIVE' || contract?.status === 'FUNDED') {
     currentStep = 2;
   }
 
   const steps = [
     {
       id: 1,
-      title: 'Chuyển khoản (VNPay)',
-      description: 'Nhà tuyển dụng thanh toán',
+      title: 'Nạp tiền (VNPAY)',
+      description: 'Nhà tuyển dụng nạp ví',
       icon: <CreditCard size={20} />,
-      color: 'blue'
+      activeClass: 'border-blue-500 text-blue-500 bg-blue-50'
     },
     {
       id: 2,
-      title: 'Ví Ký quỹ (Escrow)',
-      description: 'Tiền khóa tạm thời an toàn',
+      title: 'Ký quỹ dự án',
+      description: 'Hệ thống giữ tiền an toàn',
       icon: <ShieldCheck size={20} />,
-      color: 'amber'
+      activeClass: 'border-amber-500 text-amber-500 bg-amber-50'
     },
     {
       id: 3,
-      title: 'Nộp bài làm',
-      description: 'Freelancer bàn giao sản phẩm',
+      title: 'Nộp sản phẩm',
+      description: 'Freelancer bàn giao kết quả',
       icon: <UploadCloud size={20} />,
-      color: 'purple'
+      activeClass: 'border-purple-500 text-purple-500 bg-purple-50'
     },
     {
       id: 4,
-      title: 'Mở khóa tiền',
+      title: 'Giải ngân (Release)',
       description: 'Tiền chuyển về ví Freelancer',
       icon: <Banknote size={20} />,
-      color: 'emerald'
+      activeClass: 'border-emerald-500 text-emerald-500 bg-emerald-50'
     }
   ];
 
@@ -77,10 +77,10 @@ export default function VisualEscrowTimeline({ contract, hasSubmissions }) {
               )}
 
               <div 
-                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-500 ease-in-out bg-white z-10
-                  ${isCompleted ? `border-${step.color}-500 text-${step.color}-500 bg-${step.color}-50` : ''}
+                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-500 ease-in-out z-10
+                  ${isCompleted ? step.activeClass : ''}
                   ${isCurrent ? 'border-[#0F766E] bg-[#0F766E] text-white ring-4 ring-teal-50 shadow-md scale-110' : ''}
-                  ${isPending ? 'border-slate-200 text-slate-300' : ''}
+                  ${isPending ? 'border-slate-200 text-slate-300 bg-white' : ''}
                 `}
               >
                 {isCompleted ? <CheckCircle2 size={24} /> : step.icon}
